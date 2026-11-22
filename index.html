@@ -794,4 +794,87 @@
         card.className =
           "p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2";
 
-        const heading = document.create
+        const heading = document.createElement("div");
+        heading.className = "text-xs font-bold text-blue-700";
+        heading.textContent = `No. ${idx + 1} • ${q.subtest} (${q.category})`;
+
+        const answer = document.createElement("p");
+        answer.className = "text-xs";
+
+        if (q.subtest === "TKP") {
+          const points = userAns === null ? 0 : (q.scores?.[userAns] ?? 0);
+          const bestIndex = q.scores?.indexOf(5) ?? -1;
+          const bestAnswer =
+            bestIndex >= 0 ? letters[bestIndex] : "tidak tersedia";
+
+          answer.textContent =
+            `Jawaban Anda: ${
+              userAns === null
+                ? "Kosong (0 poin)"
+                : `${letters[userAns]} (${points} poin)`
+            } • Poin tertinggi: ${bestAnswer}`;
+        } else {
+          answer.textContent =
+            `Jawaban Anda: ${
+              userAns === null ? "Kosong" : letters[userAns]
+            } • Kunci benar: ${letters[q.answer]}`;
+        }
+
+        const question = document.createElement("p");
+        question.className = "text-sm text-slate-800 font-medium";
+        question.textContent = q.question;
+
+        const explanation = document.createElement("p");
+        explanation.className =
+          "text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200";
+        explanation.textContent = `Pembahasan: ${q.explanation}`;
+
+        card.append(heading, answer, question, explanation);
+        list.appendChild(card);
+      });
+    }
+
+    // =========================================================================
+    // PENGAMBILAN BANK SOAL DINAMIS DARI GOOGLE SHEETS (doGet)
+    // =========================================================================
+    async function muatBankSoalDariSheet() {
+      const badge = document.getElementById("scriptConfigBadge");
+      const statusEl = document.getElementById("bankLoadStatus");
+
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
+        badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
+        badge.className = "font-semibold text-amber-700";
+        updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
+        return;
+      }
+
+      badge.textContent = "Terhubung ke Google Sheets";
+      badge.className = "font-semibold text-emerald-700";
+      statusEl.textContent = "Memuat soal terbaru dari tab BankSoal...";
+
+      try {
+        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const json = await res.json();
+
+        if (
+          json.status === "sukses" &&
+          Array.isArray(json.soal) &&
+          json.soal.length > 0
+        ) {
+          questionBank = json.soal;
+          updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
+        } else {
+          updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
+        }
+      } catch (err) {
+        console.warn("Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.", err);
+        updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      muatBankSoalDariSheet();
+    });
+  </script>
+</body>
+</html>
