@@ -402,18 +402,14 @@
     let lastExamPayload = null;
 
     function updateQuestionStatsUI(sourceLabel) {
-      const twkCount = questionBank.filter(q => q.subtest === "TWK").length;
-      const tiuCount = questionBank.filter(q => q.subtest === "TIU").length;
-      const tkpCount = questionBank.filter(q => q.subtest === "TKP").length;
-      const total = questionBank.length;
-
+      // Tetap tampilkan standar resmi BKN: 110 Soal (30 TWK, 35 TIU, 45 TKP)
       document.getElementById("heroQuestionSummaryBadge").textContent =
-        `${total} Soal • TWK (${twkCount}) • TIU (${tiuCount}) • TKP (${tkpCount})`;
-      document.getElementById("twkCountLabel").textContent = `1. TWK (${twkCount} Soal)`;
-      document.getElementById("tiuCountLabel").textContent = `2. TIU (${tiuCount} Soal)`;
-      document.getElementById("tkpCountLabel").textContent = `3. TKP (${tkpCount} Soal)`;
+        "110 Soal • TWK (30) • TIU (35) • TKP (45)";
+      document.getElementById("twkCountLabel").textContent = "1. TWK (30 Soal)";
+      document.getElementById("tiuCountLabel").textContent = "2. TIU (35 Soal)";
+      document.getElementById("tkpCountLabel").textContent = "3. TKP (45 Soal)";
       document.getElementById("toggleReviewBtn").textContent =
-        `Lihat Kunci Jawaban & Pembahasan (${total} Soal)`;
+        "Lihat Kunci Jawaban & Pembahasan (110 Soal)";
 
       if (sourceLabel) {
         document.getElementById("bankLoadStatus").textContent = sourceLabel;
@@ -522,21 +518,30 @@
       examModeLabel = durationMinutes === 130 ? "Disabilitas (130 Menit)" : "Reguler (100 Menit)";
       remainingSeconds = durationMinutes * 60;
 
-      const twkPool = questionBank.filter(q => q.subtest === "TWK");
-      const tiuPool = questionBank.filter(q => q.subtest === "TIU");
-      const tkpPool = questionBank.filter(q => q.subtest === "TKP");
+      const defaultBank = buildDefaultQuestionBank();
 
-      // Jika bank soal memiliki lebih dari kuota BKN (30 TWK, 35 TIU, 45 TKP),
-      // acak seluruh stok dan ambil tepat 30 TWK, 35 TIU, 45 TKP per sesi ujian
-      const twk = (twkPool.length > 30 || orderMode === "shuffled")
-        ? shuffleArray(twkPool).slice(0, 30)
-        : [...twkPool];
-      const tiu = (tiuPool.length > 35 || orderMode === "shuffled")
-        ? shuffleArray(tiuPool).slice(0, 35)
-        : [...tiuPool];
-      const tkp = (tkpPool.length > 45 || orderMode === "shuffled")
-        ? shuffleArray(tkpPool).slice(0, 45)
-        : [...tkpPool];
+      function buildSubtestQuota(subtest, targetCount) {
+        const sheetItems = questionBank.filter(q => q.subtest === subtest);
+        const fallbackItems = defaultBank.filter(q => q.subtest === subtest);
+        let pool = orderMode === "shuffled" ? shuffleArray(sheetItems) : [...sheetItems];
+
+        if (pool.length >= targetCount) {
+          return pool.slice(0, targetCount);
+        }
+
+        // Jika stok di BankSoal belum mencapai kuota BKN (misal baru 10 atau 13 soal),
+        // lengkapi kekurangannya secara otomatis dari bank soal bawaan BKN hingga genap targetCount
+        const needed = targetCount - pool.length;
+        const extraPool = orderMode === "shuffled" ? shuffleArray(fallbackItems) : fallbackItems;
+        for (let i = 0; i < needed; i++) {
+          pool.push({ ...extraPool[i % extraPool.length] });
+        }
+        return orderMode === "shuffled" ? shuffleArray(pool) : pool;
+      }
+
+      const twk = buildSubtestQuota("TWK", 30);
+      const tiu = buildSubtestQuota("TIU", 35);
+      const tkp = buildSubtestQuota("TKP", 45);
 
       questionBank = [...twk, ...tiu, ...tkp];
 
