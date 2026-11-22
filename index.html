@@ -20,7 +20,7 @@
        ===================================================================== -->
 <script>
   const GOOGLE_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbyrdbe6xc2Q8VvIzvc4BpQp5TXO8-U-onNPoBmKdU-E0ZxIy3AABSuyHE-VMxmqKTijXw/exec";
+    "https://script.google.com/macros/s/AKfycbx4f0t2uH5fcGIQSdMpp4DqH8aQTbeUiCoh396HzJWqRoEpk8KDKK-K_f9gH0-KHv3I3A/exec";
 </script>
 
   <!-- HEADER UTAMA -->
@@ -862,7 +862,7 @@ function loadCustomJson() {
 </body>
 </html>
 async function muatBankSoalDariSheet() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) return;
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbx4f0t2uH5fcGIQSdMpp4DqH8aQTbeUiCoh396HzJWqRoEpk8KDKK-K_f9gH0-KHv3I3A/exec")) return;
   try {
     const res = await fetch(GOOGLE_SCRIPT_URL);
     const json = await res.json();
