@@ -879,19 +879,29 @@ function loadCustomJson() {
 }
 
 async function muatBankSoalDariSheet() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbx4f0t2uH5fcGIQSdMpp4DqH8aQTbeUiCoh396HzJWqRoEpk8KDKK-K_f9gH0-KHv3I3A/exec")) return;
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
+    return;
+  }
+
   try {
     const res = await fetch(GOOGLE_SCRIPT_URL);
     const json = await res.json();
-    if (json.status === "sukses" && Array.isArray(json.soal) && json.soal.length > 0) {
+
+    if (
+      json.status === "sukses" &&
+      Array.isArray(json.soal) &&
+      json.soal.length > 0
+    ) {
       questionBank = json.soal;
       console.log(`Berhasil memuat ${questionBank.length} soal dari Google Sheets.`);
     }
   } catch (err) {
-    console.warn("Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.", err);
+    console.warn(
+      "Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.",
+      err
+    );
   }
 }
-
 window.addEventListener("DOMContentLoaded", () => {
   muatBankSoalDariSheet();
 });
