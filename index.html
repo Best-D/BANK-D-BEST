@@ -110,22 +110,7 @@
             </div>
           </div>
 
-          <!-- Impor JSON Kustom Opsional -->
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Bank Soal Tambahan (Opsional - Format JSON)</span>
-              <button type="button" onclick="toggleJsonBox()" class="text-xs font-semibold text-blue-600 hover:underline">Buka / Tutup</button>
-            </div>
-            <p id="bankSourceDescription" class="text-xs text-slate-500">Memeriksa bank soal dari Google Sheets (default 110 soal tersedia jika Sheet belum diisi).</p>
-            <div id="customJsonContainer" class="hidden mt-3 space-y-2">
-              <textarea id="customJsonInput" rows="4" placeholder='[{"subtest":"TWK","category":"Nasionalisme","question":"...","options":["A","B","C","D","E"],"answer":0,"explanation":"..."}]'
-                class="w-full p-2.5 text-xs font-mono border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-              <button type="button" onclick="loadCustomJson()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
-                Terapkan Soal Kustom
-              </button>
-              <span id="jsonStatusMsg" class="text-xs ml-2 font-medium"></span>
-            </div>
-          </div>
+
 
           <div class="pt-2">
             <button id="startExamBtn" onclick="startExam()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition text-base">
@@ -893,7 +878,6 @@
     async function muatBankSoalDariSheet() {
       const badge = document.getElementById("scriptConfigBadge");
       const statusEl = document.getElementById("bankLoadStatus");
-      const descEl = document.getElementById("bankSourceDescription");
 
       if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
         badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
@@ -916,7 +900,6 @@
           json.soal.length > 0
         ) {
           questionBank = json.soal;
-          descEl.textContent = `Bank soal aktif diambil langsung dari Google Sheets (stok ${questionBank.length} soal; otomatis diacak menjadi paket 30 TWK, 35 TIU, 45 TKP saat ujian dimulai).`;
           updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
         } else {
           updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
