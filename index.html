@@ -90,56 +90,30 @@
             </label>
             <input type="text" id="participantNameInput" placeholder="Masukkan nama lengkap Anda..."
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
-            <p class="text-xs text-slate-500 mt-1">Nama ini akan tercatat pada sertifikat hasil dan rekap database Google Sheets.</p>
+            <p class="text-xs text-slate-500 mt-1">Nama ini akan tercatat pada hasil ujian dan rekap database Google Sheets.</p>
           </div>
 
-          <!-- Formasi & Instansi yang Dilamar -->
+          <!-- Formasi & Instansi yang Dilamar (Bebas Diketik Peserta) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="appliedFormationInput" class="block text-sm font-bold text-slate-700 mb-1.5">
                 Formasi yang Dilamar <span class="text-rose-600">*</span>
               </label>
-              <input type="text" id="appliedFormationInput" list="formationSuggestions"
+              <input type="text" id="appliedFormationInput"
                 placeholder="Contoh: Terampil - Pranata Komputer"
-                oninput="updateFormationDescription()"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
-              <datalist id="formationSuggestions">
-                <option value="Terampil - Pranata Komputer"></option>
-                <option value="Ahli Pertama - Pranata Komputer"></option>
-                <option value="Penata Layanan Operasional"></option>
-                <option value="Analis Kebijakan"></option>
-                <option value="Analis Sumber Daya Manusia Aparatur"></option>
-                <option value="Pengelola Pengadaan Barang/Jasa"></option>
-              </datalist>
+              <p class="text-[11px] text-slate-500 mt-1">Ketik formasi yang dilamar (misal: Terampil - Pranata Komputer).</p>
             </div>
 
             <div>
               <label for="appliedInstitutionInput" class="block text-sm font-bold text-slate-700 mb-1.5">
-                Instansi yang Dilamar (Lengkap) <span class="text-rose-600">*</span>
+                Instansi yang Dilamar <span class="text-rose-600">*</span>
               </label>
-              <input type="text" id="appliedInstitutionInput" list="institutionSuggestions"
-                value="Kementerian Pertahanan"
+              <input type="text" id="appliedInstitutionInput"
                 placeholder="Contoh: Kementerian Pertahanan"
-                oninput="updateFormationDescription()"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
-              <datalist id="institutionSuggestions">
-                <option value="Kementerian Pertahanan"></option>
-                <option value="Kementerian Keuangan"></option>
-                <option value="Kementerian Dalam Negeri"></option>
-                <option value="Kementerian Sekretariat Negara"></option>
-                <option value="Badan Kepegawaian Negara"></option>
-              </datalist>
+              <p class="text-[11px] text-slate-500 mt-1">Ketik nama lengkap instansi (misal: Kementerian Pertahanan).</p>
             </div>
-          </div>
-
-          <!-- Deskripsi Formasi & Instansi Otomatis -->
-          <div>
-            <label for="formationDescriptionInput" class="block text-sm font-bold text-slate-700 mb-1.5">
-              Deskripsi Formasi & Instansi (Otomatis)
-            </label>
-            <textarea id="formationDescriptionInput" rows="3" readonly
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm text-slate-700 leading-relaxed outline-none"></textarea>
-            <p class="text-[11px] text-slate-500 mt-1">Deskripsi terisi otomatis sesuai formasi dan nama lengkap instansi yang Anda masukkan.</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -278,8 +252,7 @@
           </span>
           <h2 id="resultParticipantTitle" class="text-2xl font-extrabold">Hasil Simulasi CAT SKD CPNS</h2>
           <p id="resultFormationInfo" class="text-xs sm:text-sm text-amber-300 font-semibold mt-1"></p>
-          <p id="resultDescriptionInfo" class="text-xs text-slate-300 mt-1 leading-relaxed"></p>
-          <p id="resultMetaInfo" class="text-xs text-slate-400 mt-2"></p>
+          <p id="resultMetaInfo" class="text-xs text-slate-400 mt-1.5"></p>
         </div>
         <div class="bg-white/10 backdrop-blur px-6 py-4 rounded-2xl text-center border border-white/15">
           <div class="text-xs uppercase tracking-wider text-slate-300">Total Skor SKD</div>
@@ -354,45 +327,6 @@
   </section>
 
   <script>
-    // =========================================================================
-    // GENERATOR DESKRIPSI FORMASI & INSTANSI OTOMATIS
-    // =========================================================================
-    const FORMATION_TASK_TEMPLATES = {
-      "terampil - pranata komputer":
-        "melaksanakan kegiatan teknologi informasi berbasis komputer yang meliputi tata kelola teknologi informasi, infrastruktur teknologi informasi, serta sistem informasi dan multimedia secara akurat dan akuntabel.",
-      "ahli pertama - pranata komputer":
-        "melaksanakan analisis, perancangan, pengembangan, implementasi, dan evaluasi sistem informasi serta tata kelola teknologi informasi di lingkungan instansi.",
-      "penata layanan operasional":
-        "melaksanakan dukungan operasional layanan perkantoran, tata usaha, pengelolaan data, serta koordinasi pelayanan administrasi unit kerja.",
-      "analis kebijakan":
-        "melaksanakan kajian, analisis, serta penyusunan rekomendasi kebijakan strategis guna mendukung pengambilan keputusan pimpinan instansi.",
-      "analis sumber daya manusia aparatur":
-        "melaksanakan pengelolaan perencanaan, pengembangan kompetensi, kinerja, dan administrasi kepegawaian aparatur sipil negara.",
-      "pengelola pengadaan barang/jasa":
-        "melaksanakan perencanaan, pemilihan penyedia, pengelolaan kontrak, serta penatausahaan pengadaan barang/jasa pemerintah sesuai regulasi."
-    };
-
-    function buildFormationDescription(formation, institution) {
-      const cleanFormation = (formation || "").trim() || "Formasi yang Dilamar";
-      const cleanInstitution = (institution || "").trim() || "Kementerian Pertahanan";
-      const key = cleanFormation.toLowerCase();
-
-      const taskSummary =
-        FORMATION_TASK_TEMPLATES[key] ||
-        "melaksanakan tugas jabatan aparatur sipil negara secara profesional, berintegritas, serta berorientasi pada pelayanan publik dan pertahanan negara.";
-
-      return `Pelamar formasi ${cleanFormation} pada instansi ${cleanInstitution}, dengan ruang lingkup tugas ${taskSummary}`;
-    }
-
-    function updateFormationDescription() {
-      const formationEl = document.getElementById("appliedFormationInput");
-      const institutionEl = document.getElementById("appliedInstitutionInput");
-      const descEl = document.getElementById("formationDescriptionInput");
-      if (!formationEl || !institutionEl || !descEl) return;
-
-      descEl.value = buildFormationDescription(formationEl.value, institutionEl.value);
-    }
-
     // =========================================================================
     // GENERATOR BANK SOAL LENGKAP 110 SOAL (30 TWK + 35 TIU + 45 TKP)
     // =========================================================================
@@ -473,7 +407,6 @@
     let participantName = "";
     let appliedFormation = "";
     let appliedInstitution = "";
-    let formationDescription = "";
     let examModeLabel = "Reguler (100 Menit)";
     let lastExamPayload = null;
 
@@ -511,12 +444,12 @@
         return;
       }
       if (!formationVal) {
-        alert("Silakan isi Formasi yang Dilamar terlebih dahulu (contoh: Terampil - Pranata Komputer).");
+        alert("Silakan ketik Formasi yang Dilamar terlebih dahulu.");
         document.getElementById("appliedFormationInput").focus();
         return;
       }
       if (!institutionVal) {
-        alert("Silakan isi nama lengkap Instansi yang Dilamar (contoh: Kementerian Pertahanan).");
+        alert("Silakan ketik Instansi yang Dilamar terlebih dahulu.");
         document.getElementById("appliedInstitutionInput").focus();
         return;
       }
@@ -524,7 +457,6 @@
       participantName = nameVal;
       appliedFormation = formationVal;
       appliedInstitution = institutionVal;
-      formationDescription = buildFormationDescription(appliedFormation, appliedInstitution);
 
       const durationMinutes = parseInt(document.getElementById("durationSelect").value, 10);
       const orderMode = document.getElementById("orderSelect").value;
@@ -764,8 +696,7 @@
       document.getElementById("resultScreen").classList.remove("hidden");
 
       document.getElementById("resultParticipantTitle").textContent = `Hasil Ujian: ${participantName}`;
-      document.getElementById("resultFormationInfo").textContent = `${appliedFormation} — ${appliedInstitution}`;
-      document.getElementById("resultDescriptionInfo").textContent = formationDescription;
+      document.getElementById("resultFormationInfo").textContent = `${appliedFormation} • ${appliedInstitution}`;
       document.getElementById("resultMetaInfo").textContent = `${examModeLabel} • Selesai pada ${new Date().toLocaleString("id-ID")}`;
       document.getElementById("totalScoreDisplay").textContent = totalScore;
 
@@ -787,7 +718,7 @@
         nama: participantName,
         formasi: appliedFormation,
         instansi: appliedInstitution,
-        deskripsi_formasi: formationDescription,
+        deskripsi_formasi: "-",
         mode: examModeLabel,
         twk: twkScore,
         tiu: tiuScore,
@@ -863,88 +794,4 @@
         card.className =
           "p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2";
 
-        const heading = document.createElement("div");
-        heading.className = "text-xs font-bold text-blue-700";
-        heading.textContent = `No. ${idx + 1} • ${q.subtest} (${q.category})`;
-
-        const answer = document.createElement("p");
-        answer.className = "text-xs";
-
-        if (q.subtest === "TKP") {
-          const points = userAns === null ? 0 : (q.scores?.[userAns] ?? 0);
-          const bestIndex = q.scores?.indexOf(5) ?? -1;
-          const bestAnswer =
-            bestIndex >= 0 ? letters[bestIndex] : "tidak tersedia";
-
-          answer.textContent =
-            `Jawaban Anda: ${
-              userAns === null
-                ? "Kosong (0 poin)"
-                : `${letters[userAns]} (${points} poin)`
-            } • Poin tertinggi: ${bestAnswer}`;
-        } else {
-          answer.textContent =
-            `Jawaban Anda: ${
-              userAns === null ? "Kosong" : letters[userAns]
-            } • Kunci benar: ${letters[q.answer]}`;
-        }
-
-        const question = document.createElement("p");
-        question.className = "text-sm text-slate-800 font-medium";
-        question.textContent = q.question;
-
-        const explanation = document.createElement("p");
-        explanation.className =
-          "text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200";
-        explanation.textContent = `Pembahasan: ${q.explanation}`;
-
-        card.append(heading, answer, question, explanation);
-        list.appendChild(card);
-      });
-    }
-
-    // =========================================================================
-    // PENGAMBILAN BANK SOAL DINAMIS DARI GOOGLE SHEETS (doGet)
-    // =========================================================================
-    async function muatBankSoalDariSheet() {
-      const badge = document.getElementById("scriptConfigBadge");
-      const statusEl = document.getElementById("bankLoadStatus");
-
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
-        badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
-        badge.className = "font-semibold text-amber-700";
-        updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
-        return;
-      }
-
-      badge.textContent = "Terhubung ke Google Sheets";
-      badge.className = "font-semibold text-emerald-700";
-      statusEl.textContent = "Memuat soal terbaru dari tab BankSoal...";
-
-      try {
-        const res = await fetch(GOOGLE_SCRIPT_URL);
-        const json = await res.json();
-
-        if (
-          json.status === "sukses" &&
-          Array.isArray(json.soal) &&
-          json.soal.length > 0
-        ) {
-          questionBank = json.soal;
-          updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
-        } else {
-          updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
-        }
-      } catch (err) {
-        console.warn("Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.", err);
-        updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal)");
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      updateFormationDescription();
-      muatBankSoalDariSheet();
-    });
-  </script>
-</body>
-</html>
+        const heading = document.create
