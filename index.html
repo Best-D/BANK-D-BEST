@@ -35,7 +35,7 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
   <!-- =====================================================================
-       KONFIGURASI INTEGRASI GOOGLE APPS SCRIPT (TEMPEL URL WEB APP DI SINI)
+       KONFIGURASI INTEGRASI GOOGLE APPS SCRIPT (URL WEB APP TERBARU)
        ===================================================================== -->
   <script>
     const GOOGLE_SCRIPT_URL =
@@ -93,9 +93,58 @@
             <p class="text-xs text-slate-500 mt-1">Nama ini akan tercatat pada sertifikat hasil dan rekap database Google Sheets.</p>
           </div>
 
+          <!-- Formasi & Instansi yang Dilamar -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label for="durationSelect" class="block text-sm font-bold text-slate-700 mb-1.5">Formasi & Durasi Ujian</label>
+              <label for="appliedFormationInput" class="block text-sm font-bold text-slate-700 mb-1.5">
+                Formasi yang Dilamar <span class="text-rose-600">*</span>
+              </label>
+              <input type="text" id="appliedFormationInput" list="formationSuggestions"
+                placeholder="Contoh: Terampil - Pranata Komputer"
+                oninput="updateFormationDescription()"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+              <datalist id="formationSuggestions">
+                <option value="Terampil - Pranata Komputer"></option>
+                <option value="Ahli Pertama - Pranata Komputer"></option>
+                <option value="Penata Layanan Operasional"></option>
+                <option value="Analis Kebijakan"></option>
+                <option value="Analis Sumber Daya Manusia Aparatur"></option>
+                <option value="Pengelola Pengadaan Barang/Jasa"></option>
+              </datalist>
+            </div>
+
+            <div>
+              <label for="appliedInstitutionInput" class="block text-sm font-bold text-slate-700 mb-1.5">
+                Instansi yang Dilamar (Lengkap) <span class="text-rose-600">*</span>
+              </label>
+              <input type="text" id="appliedInstitutionInput" list="institutionSuggestions"
+                value="Kementerian Pertahanan"
+                placeholder="Contoh: Kementerian Pertahanan"
+                oninput="updateFormationDescription()"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+              <datalist id="institutionSuggestions">
+                <option value="Kementerian Pertahanan"></option>
+                <option value="Kementerian Keuangan"></option>
+                <option value="Kementerian Dalam Negeri"></option>
+                <option value="Kementerian Sekretariat Negara"></option>
+                <option value="Badan Kepegawaian Negara"></option>
+              </datalist>
+            </div>
+          </div>
+
+          <!-- Deskripsi Formasi & Instansi Otomatis -->
+          <div>
+            <label for="formationDescriptionInput" class="block text-sm font-bold text-slate-700 mb-1.5">
+              Deskripsi Formasi & Instansi (Otomatis)
+            </label>
+            <textarea id="formationDescriptionInput" rows="3" readonly
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm text-slate-700 leading-relaxed outline-none"></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">Deskripsi terisi otomatis sesuai formasi dan nama lengkap instansi yang Anda masukkan.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="durationSelect" class="block text-sm font-bold text-slate-700 mb-1.5">Jalur & Durasi Ujian</label>
               <select id="durationSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium">
                 <option value="100">Jalur Reguler (100 Menit)</option>
                 <option value="130">Disabilitas Sensorik Netra (130 Menit)</option>
@@ -109,8 +158,6 @@
               </select>
             </div>
           </div>
-
-
 
           <div class="pt-2">
             <button id="startExamBtn" onclick="startExam()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition text-base">
@@ -225,12 +272,14 @@
   <section id="resultScreen" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div id="resultBanner" class="p-6 sm:p-8 text-white bg-slate-900 flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div class="max-w-2xl">
           <span id="resultStatusBadge" class="inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-emerald-500 text-white">
             MEMENUHI PASSING GRADE
           </span>
           <h2 id="resultParticipantTitle" class="text-2xl font-extrabold">Hasil Simulasi CAT SKD CPNS</h2>
-          <p id="resultMetaInfo" class="text-xs sm:text-sm text-slate-300 mt-1"></p>
+          <p id="resultFormationInfo" class="text-xs sm:text-sm text-amber-300 font-semibold mt-1"></p>
+          <p id="resultDescriptionInfo" class="text-xs text-slate-300 mt-1 leading-relaxed"></p>
+          <p id="resultMetaInfo" class="text-xs text-slate-400 mt-2"></p>
         </div>
         <div class="bg-white/10 backdrop-blur px-6 py-4 rounded-2xl text-center border border-white/15">
           <div class="text-xs uppercase tracking-wider text-slate-300">Total Skor SKD</div>
@@ -305,6 +354,45 @@
   </section>
 
   <script>
+    // =========================================================================
+    // GENERATOR DESKRIPSI FORMASI & INSTANSI OTOMATIS
+    // =========================================================================
+    const FORMATION_TASK_TEMPLATES = {
+      "terampil - pranata komputer":
+        "melaksanakan kegiatan teknologi informasi berbasis komputer yang meliputi tata kelola teknologi informasi, infrastruktur teknologi informasi, serta sistem informasi dan multimedia secara akurat dan akuntabel.",
+      "ahli pertama - pranata komputer":
+        "melaksanakan analisis, perancangan, pengembangan, implementasi, dan evaluasi sistem informasi serta tata kelola teknologi informasi di lingkungan instansi.",
+      "penata layanan operasional":
+        "melaksanakan dukungan operasional layanan perkantoran, tata usaha, pengelolaan data, serta koordinasi pelayanan administrasi unit kerja.",
+      "analis kebijakan":
+        "melaksanakan kajian, analisis, serta penyusunan rekomendasi kebijakan strategis guna mendukung pengambilan keputusan pimpinan instansi.",
+      "analis sumber daya manusia aparatur":
+        "melaksanakan pengelolaan perencanaan, pengembangan kompetensi, kinerja, dan administrasi kepegawaian aparatur sipil negara.",
+      "pengelola pengadaan barang/jasa":
+        "melaksanakan perencanaan, pemilihan penyedia, pengelolaan kontrak, serta penatausahaan pengadaan barang/jasa pemerintah sesuai regulasi."
+    };
+
+    function buildFormationDescription(formation, institution) {
+      const cleanFormation = (formation || "").trim() || "Formasi yang Dilamar";
+      const cleanInstitution = (institution || "").trim() || "Kementerian Pertahanan";
+      const key = cleanFormation.toLowerCase();
+
+      const taskSummary =
+        FORMATION_TASK_TEMPLATES[key] ||
+        "melaksanakan tugas jabatan aparatur sipil negara secara profesional, berintegritas, serta berorientasi pada pelayanan publik dan pertahanan negara.";
+
+      return `Pelamar formasi ${cleanFormation} pada instansi ${cleanInstitution}, dengan ruang lingkup tugas ${taskSummary}`;
+    }
+
+    function updateFormationDescription() {
+      const formationEl = document.getElementById("appliedFormationInput");
+      const institutionEl = document.getElementById("appliedInstitutionInput");
+      const descEl = document.getElementById("formationDescriptionInput");
+      if (!formationEl || !institutionEl || !descEl) return;
+
+      descEl.value = buildFormationDescription(formationEl.value, institutionEl.value);
+    }
+
     // =========================================================================
     // GENERATOR BANK SOAL LENGKAP 110 SOAL (30 TWK + 35 TIU + 45 TKP)
     // =========================================================================
@@ -383,11 +471,13 @@
     let timerInterval = null;
     let remainingSeconds = 100 * 60;
     let participantName = "";
+    let appliedFormation = "";
+    let appliedInstitution = "";
+    let formationDescription = "";
     let examModeLabel = "Reguler (100 Menit)";
     let lastExamPayload = null;
 
     function updateQuestionStatsUI(sourceLabel) {
-      // Tetap tampilkan standar resmi BKN: 110 Soal (30 TWK, 35 TIU, 45 TKP)
       document.getElementById("heroQuestionSummaryBadge").textContent =
         "110 Soal • TWK (30) • TIU (35) • TKP (45)";
       document.getElementById("twkCountLabel").textContent = "1. TWK (30 Soal)";
@@ -398,85 +488,6 @@
 
       if (sourceLabel) {
         document.getElementById("bankLoadStatus").textContent = sourceLabel;
-      }
-    }
-
-    function toggleJsonBox() {
-      document.getElementById("customJsonContainer").classList.toggle("hidden");
-    }
-
-    function loadCustomJson() {
-      const raw = document.getElementById("customJsonInput").value.trim();
-      const status = document.getElementById("jsonStatusMsg");
-
-      try {
-        const parsed = JSON.parse(raw);
-
-        if (!Array.isArray(parsed) || parsed.length === 0) {
-          throw new Error("Format harus berupa array soal.");
-        }
-
-        const normalized = parsed.map((q, idx) => {
-          const number = idx + 1;
-          if (!q || typeof q !== "object") {
-            throw new Error(`Data soal nomor ${number} tidak valid.`);
-          }
-
-          const subtest = String(q.subtest || "").toUpperCase();
-          if (!["TWK", "TIU", "TKP"].includes(subtest)) {
-            throw new Error(`Subtes soal nomor ${number} harus TWK, TIU, atau TKP.`);
-          }
-
-          if (typeof q.question !== "string" || !q.question.trim()) {
-            throw new Error(`Teks soal nomor ${number} wajib diisi.`);
-          }
-
-          if (
-            !Array.isArray(q.options) ||
-            q.options.length !== 5 ||
-            q.options.some(option => typeof option !== "string" || !option.trim())
-          ) {
-            throw new Error(`Soal nomor ${number} harus memiliki 5 pilihan teks.`);
-          }
-
-          if (subtest === "TKP") {
-            if (
-              !Array.isArray(q.scores) ||
-              q.scores.length !== 5 ||
-              q.scores.some(score => !Number.isInteger(score) || score < 1 || score > 5)
-            ) {
-              throw new Error(`Soal TKP nomor ${number} harus memiliki 5 skor bernilai 1–5.`);
-            }
-          } else if (
-            !Number.isInteger(q.answer) ||
-            q.answer < 0 ||
-            q.answer >= q.options.length
-          ) {
-            throw new Error(`Kunci jawaban soal nomor ${number} tidak valid.`);
-          }
-
-          return {
-            id: number,
-            subtest,
-            category: typeof q.category === "string" ? q.category : "Umum",
-            question: q.question,
-            options: q.options,
-            answer: q.answer,
-            scores: subtest === "TKP" ? q.scores : null,
-            explanation: typeof q.explanation === "string"
-              ? q.explanation
-              : "Pembahasan belum tersedia.",
-            svg: null
-          };
-        });
-
-        questionBank = normalized;
-        updateQuestionStatsUI(`Sumber Soal: JSON Kustom (${questionBank.length} soal)`);
-        status.textContent = `Bank soal kustom berhasil dimuat (${questionBank.length} soal).`;
-        status.className = "text-xs ml-2 font-semibold text-emerald-700";
-      } catch (error) {
-        status.textContent = `JSON tidak valid: ${error.message}`;
-        status.className = "text-xs ml-2 font-semibold text-rose-600";
       }
     }
 
@@ -491,13 +502,30 @@
 
     function startExam() {
       const nameVal = document.getElementById("participantNameInput").value.trim();
+      const formationVal = document.getElementById("appliedFormationInput").value.trim();
+      const institutionVal = document.getElementById("appliedInstitutionInput").value.trim();
+
       if (!nameVal) {
         alert("Silakan isi Nama Lengkap Peserta terlebih dahulu sebelum memulai ujian.");
         document.getElementById("participantNameInput").focus();
         return;
       }
+      if (!formationVal) {
+        alert("Silakan isi Formasi yang Dilamar terlebih dahulu (contoh: Terampil - Pranata Komputer).");
+        document.getElementById("appliedFormationInput").focus();
+        return;
+      }
+      if (!institutionVal) {
+        alert("Silakan isi nama lengkap Instansi yang Dilamar (contoh: Kementerian Pertahanan).");
+        document.getElementById("appliedInstitutionInput").focus();
+        return;
+      }
 
       participantName = nameVal;
+      appliedFormation = formationVal;
+      appliedInstitution = institutionVal;
+      formationDescription = buildFormationDescription(appliedFormation, appliedInstitution);
+
       const durationMinutes = parseInt(document.getElementById("durationSelect").value, 10);
       const orderMode = document.getElementById("orderSelect").value;
       examModeLabel = durationMinutes === 130 ? "Disabilitas (130 Menit)" : "Reguler (100 Menit)";
@@ -514,8 +542,6 @@
           return pool.slice(0, targetCount);
         }
 
-        // Jika stok di BankSoal belum mencapai kuota BKN (misal baru 10 atau 13 soal),
-        // lengkapi kekurangannya secara otomatis dari bank soal bawaan BKN hingga genap targetCount
         const needed = targetCount - pool.length;
         const extraPool = orderMode === "shuffled" ? shuffleArray(fallbackItems) : fallbackItems;
         for (let i = 0; i < needed; i++) {
@@ -540,8 +566,8 @@
       headerCtrl.classList.remove("hidden");
       headerCtrl.classList.add("flex");
 
-      document.getElementById("headerParticipantName").textContent = participantName;
-      document.getElementById("headerExamMode").textContent = examModeLabel;
+      document.getElementById("headerParticipantName").textContent = `${participantName} • ${appliedInstitution}`;
+      document.getElementById("headerExamMode").textContent = `${appliedFormation} (${examModeLabel})`;
 
       renderQuestion();
       renderGrid();
@@ -738,6 +764,8 @@
       document.getElementById("resultScreen").classList.remove("hidden");
 
       document.getElementById("resultParticipantTitle").textContent = `Hasil Ujian: ${participantName}`;
+      document.getElementById("resultFormationInfo").textContent = `${appliedFormation} — ${appliedInstitution}`;
+      document.getElementById("resultDescriptionInfo").textContent = formationDescription;
       document.getElementById("resultMetaInfo").textContent = `${examModeLabel} • Selesai pada ${new Date().toLocaleString("id-ID")}`;
       document.getElementById("totalScoreDisplay").textContent = totalScore;
 
@@ -757,6 +785,9 @@
 
       lastExamPayload = {
         nama: participantName,
+        formasi: appliedFormation,
+        instansi: appliedInstitution,
+        deskripsi_formasi: formationDescription,
         mode: examModeLabel,
         twk: twkScore,
         tiu: tiuScore,
@@ -800,7 +831,7 @@
           },
           body: JSON.stringify(payload)
         });
-        syncText.textContent = "Rekap nilai berhasil dikirim ke database Google Sheets!";
+        syncText.textContent = "Rekap nilai, formasi, dan instansi berhasil dikirim ke database Google Sheets!";
       } catch (err) {
         syncText.textContent = "Gagal mengirim rekap nilai ke Google Sheets. Periksa koneksi internet Anda.";
         retryBtn.classList.remove("hidden");
@@ -911,6 +942,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      updateFormationDescription();
       muatBankSoalDariSheet();
     });
   </script>
