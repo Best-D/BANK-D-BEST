@@ -90,6 +90,7 @@
             </label>
             <input type="text" id="participantNameInput" placeholder="Masukkan nama lengkap Anda..."
               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+            <p id="nameProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1.5"></p>
             <p class="text-xs text-slate-500 mt-1">Nama ini akan tercatat pada hasil ujian dan rekap database Google Sheets.</p>
           </div>
 
@@ -442,6 +443,83 @@
       return copy;
     }
 
+    // =========================================================================
+    // FILTER KATA KASAR / PENGHINAAN PADA NAMA PESERTA
+    // =========================================================================
+    function normalizeForProfanityCheck(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/4|@/g, "a")
+        .replace(/3/g, "e")
+        .replace(/1|!|\|/g, "i")
+        .replace(/0/g, "o")
+        .replace(/5|\$/g, "s")
+        .replace(/7/g, "t")
+        .replace(/[^a-z\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function findProfanityInName(rawName) {
+      const normalized = normalizeForProfanityCheck(rawName);
+      if (!normalized) return [];
+
+      const fullOrPrefixWords = [
+        "anjing", "anj", "anjir", "anjay", "anjrit", "anying",
+        "babi", "bangsat", "bajingan", "kampret", "keparat",
+        "tolol", "goblok", "bego", "idiot", "bodoh", "dungu", "oon",
+        "kontol", "memek", "ngentot", "entot", "pepek", "jembut",
+        "asu", "monyet", "kunyuk", "bedebah", "brengsek", "sialan", "perek", "lonte"
+      ];
+
+      const tokens = normalized.split(" ").filter(Boolean);
+      const hits = new Set();
+
+      for (const token of tokens) {
+        for (const bad of fullOrPrefixWords) {
+          if (token === bad || (bad.length >= 3 && token.startsWith(bad) && token.length <= bad.length + 4)) {
+            hits.add(bad);
+          }
+        }
+      }
+
+      const compact = normalized.replace(/\s+/g, "");
+      const strictCompactWords = [
+        "anjing", "anjir", "anjay", "anying", "babi", "bangsat",
+        "bajingan", "kampret", "keparat", "tolol", "goblok", "ngentot",
+        "kontol", "memek", "pepek", "jembut", "brengsek"
+      ];
+      for (const strictWord of strictCompactWords) {
+        if (compact.includes(strictWord)) {
+          hits.add(strictWord);
+        }
+      }
+
+      return Array.from(hits);
+    }
+
+    function validateNameInputRealtime() {
+      const inputEl = document.getElementById("participantNameInput");
+      const warnEl = document.getElementById("nameProfanityWarning");
+      if (!inputEl || !warnEl) return true;
+
+      const hits = findProfanityInName(inputEl.value);
+      if (hits.length > 0) {
+        warnEl.textContent =
+          `⚠️ Nama tidak diperbolehkan: terdeteksi kata kasar/penghinaan ("${hits.join(", ")}"). Silakan gunakan nama yang sopan.`;
+        warnEl.classList.remove("hidden");
+        inputEl.classList.remove("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
+        inputEl.classList.add("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
+        return false;
+      } else {
+        warnEl.textContent = "";
+        warnEl.classList.add("hidden");
+        inputEl.classList.remove("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
+        inputEl.classList.add("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
+        return true;
+      }
+    }
+
     function checkInputAnomalyPreview(nameVal, formationVal, institutionVal) {
       const issues = [];
       if (nameVal.length < 3 || /^[^a-zA-Z\s]+$/.test(nameVal)) {
@@ -473,6 +551,19 @@
         document.getElementById("participantNameInput").focus();
         return;
       }
+
+      const profanityHits = findProfanityInName(nameVal);
+      if (profanityHits.length > 0) {
+        validateNameInputRealtime();
+        alert(
+          "⛔ NAMA DITOLAK:\n" +
+          `Nama mengandung kata kasar/penghinaan (${profanityHits.join(", ")}). ` +
+          "Ujian tidak dapat dimulai sebelum nama diganti dengan nama yang wajar dan sopan."
+        );
+        document.getElementById("participantNameInput").focus();
+        return;
+      }
+
       if (!formationVal) {
         alert("Silakan ketik Formasi yang Dilamar terlebih dahulu.");
         document.getElementById("appliedFormationInput").focus();
@@ -755,6 +846,11 @@
         String(payload.instansi || "").trim()
       );
 
+      const profanityHits = findProfanityInName(payload.nama);
+      if (profanityHits.length > 0) {
+        warnings.push(`Kata kasar/penghinaan pada nama (${profanityHits.join(", ")})`);
+      }
+
       if (
         payload.twk < 0 || payload.twk > 150 ||
         payload.tiu < 0 || payload.tiu > 175 ||
@@ -1035,6 +1131,11 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      const nameInput = document.getElementById("participantNameInput");
+      if (nameInput) {
+        nameInput.addEventListener("input", validateNameInputRealtime);
+        nameInput.addEventListener("blur", validateNameInputRealtime);
+      }
       muatBankSoalDariSheet();
     });
   </script>
