@@ -103,6 +103,7 @@
               <input type="text" id="appliedFormationInput"
                 placeholder="Contoh: Terampil - Pranata Komputer"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+              <p id="formationProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1"></p>
               <p class="text-[11px] text-slate-500 mt-1">Ketik formasi yang dilamar (misal: Terampil - Pranata Komputer).</p>
             </div>
 
@@ -113,6 +114,7 @@
               <input type="text" id="appliedInstitutionInput"
                 placeholder="Contoh: Kementerian Pertahanan"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+              <p id="institutionProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1"></p>
               <p class="text-[11px] text-slate-500 mt-1">Ketik nama lengkap instansi (misal: Kementerian Pertahanan).</p>
             </div>
           </div>
@@ -444,7 +446,7 @@
     }
 
     // =========================================================================
-    // FILTER KATA KASAR / PENGHINAAN PADA NAMA PESERTA (DIPERLUAS)
+    // FILTER KATA KASAR / PENGHINAAN PADA NAMA, FORMASI & INSTANSI
     // =========================================================================
     const PROFANITY_CONFIG = {
       prefixOrExactWords: [
@@ -489,8 +491,8 @@
       return cleaned;
     }
 
-    function findProfanityInName(rawName) {
-      const normalized = normalizeForProfanityCheck(rawName);
+    function findProfanityInName(rawText) {
+      const normalized = normalizeForProfanityCheck(rawText);
       if (!normalized) return [];
 
       const tokens = normalized.split(" ").filter(Boolean);
@@ -522,15 +524,15 @@
       return Array.from(hits);
     }
 
-    function validateNameInputRealtime() {
-      const inputEl = document.getElementById("participantNameInput");
-      const warnEl = document.getElementById("nameProfanityWarning");
+    function validateFieldProfanityRealtime(inputId, warningId, fieldLabel) {
+      const inputEl = document.getElementById(inputId);
+      const warnEl = document.getElementById(warningId);
       if (!inputEl || !warnEl) return true;
 
       const hits = findProfanityInName(inputEl.value);
       if (hits.length > 0) {
         warnEl.textContent =
-          `⚠️ Nama tidak diperbolehkan: terdeteksi kata kasar/penghinaan ("${hits.join(", ")}"). Silakan gunakan nama yang sopan.`;
+          `⚠️ ${fieldLabel} tidak diperbolehkan: terdeteksi kata kasar/penghinaan ("${hits.join(", ")}"). Silakan gunakan isian yang sopan.`;
         warnEl.classList.remove("hidden");
         inputEl.classList.remove("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
         inputEl.classList.add("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
@@ -542,6 +544,30 @@
         inputEl.classList.add("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
         return true;
       }
+    }
+
+    function validateNameInputRealtime() {
+      return validateFieldProfanityRealtime(
+        "participantNameInput",
+        "nameProfanityWarning",
+        "Nama peserta"
+      );
+    }
+
+    function validateFormationInputRealtime() {
+      return validateFieldProfanityRealtime(
+        "appliedFormationInput",
+        "formationProfanityWarning",
+        "Formasi yang dilamar"
+      );
+    }
+
+    function validateInstitutionInputRealtime() {
+      return validateFieldProfanityRealtime(
+        "appliedInstitutionInput",
+        "institutionProfanityWarning",
+        "Instansi yang dilamar"
+      );
     }
 
     function checkInputAnomalyPreview(nameVal, formationVal, institutionVal) {
@@ -561,6 +587,9 @@
       }
       if (formationVal.length < 3 || institutionVal.length < 3) {
         issues.push("Formasi atau instansi terlalu singkat");
+      }
+      if (/^[^a-zA-Z\s]+$/.test(formationVal) || /^[^a-zA-Z\s]+$/.test(institutionVal)) {
+        issues.push("Formasi atau instansi tidak menggunakan huruf wajar");
       }
       return issues;
     }
@@ -593,8 +622,33 @@
         document.getElementById("appliedFormationInput").focus();
         return;
       }
+
+      const formationProfanity = findProfanityInName(formationVal);
+      if (formationProfanity.length > 0) {
+        validateFormationInputRealtime();
+        alert(
+          "⛔ FORMASI DITOLAK:\n" +
+          `Formasi yang dilamar mengandung kata kasar/penghinaan (${formationProfanity.join(", ")}). ` +
+          "Silakan perbaiki sebelum memulai ujian."
+        );
+        document.getElementById("appliedFormationInput").focus();
+        return;
+      }
+
       if (!institutionVal) {
         alert("Silakan ketik Instansi yang Dilamar terlebih dahulu.");
+        document.getElementById("appliedInstitutionInput").focus();
+        return;
+      }
+
+      const institutionProfanity = findProfanityInName(institutionVal);
+      if (institutionProfanity.length > 0) {
+        validateInstitutionInputRealtime();
+        alert(
+          "⛔ INSTANSI DITOLAK:\n" +
+          `Instansi yang dilamar mengandung kata kasar/penghinaan (${institutionProfanity.join(", ")}). ` +
+          "Silakan perbaiki sebelum memulai ujian."
+        );
         document.getElementById("appliedInstitutionInput").focus();
         return;
       }
@@ -873,6 +927,16 @@
       const profanityHits = findProfanityInName(payload.nama);
       if (profanityHits.length > 0) {
         warnings.push(`Kata kasar/penghinaan pada nama (${profanityHits.join(", ")})`);
+      }
+
+      const formationHits = findProfanityInName(payload.formasi);
+      if (formationHits.length > 0) {
+        warnings.push(`Kata kasar/penghinaan pada formasi (${formationHits.join(", ")})`);
+      }
+
+      const institutionHits = findProfanityInName(payload.instansi);
+      if (institutionHits.length > 0) {
+        warnings.push(`Kata kasar/penghinaan pada instansi (${institutionHits.join(", ")})`);
       }
 
       if (
@@ -1160,6 +1224,19 @@
         nameInput.addEventListener("input", validateNameInputRealtime);
         nameInput.addEventListener("blur", validateNameInputRealtime);
       }
+
+      const formationInput = document.getElementById("appliedFormationInput");
+      if (formationInput) {
+        formationInput.addEventListener("input", validateFormationInputRealtime);
+        formationInput.addEventListener("blur", validateFormationInputRealtime);
+      }
+
+      const institutionInput = document.getElementById("appliedInstitutionInput");
+      if (institutionInput) {
+        institutionInput.addEventListener("input", validateInstitutionInputRealtime);
+        institutionInput.addEventListener("blur", validateInstitutionInputRealtime);
+      }
+
       muatBankSoalDariSheet();
     });
   </script>
