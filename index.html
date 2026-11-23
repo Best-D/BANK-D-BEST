@@ -444,10 +444,32 @@
     }
 
     // =========================================================================
-    // FILTER KATA KASAR / PENGHINAAN PADA NAMA PESERTA
+    // FILTER KATA KASAR / PENGHINAAN PADA NAMA PESERTA (DIPERLUAS)
     // =========================================================================
+    const PROFANITY_CONFIG = {
+      prefixOrExactWords: [
+        "anjing", "anj", "anjg", "anjir", "njir", "anjay", "njay",
+        "anjrit", "njrit", "anying", "anyg",
+        "bangsat", "bngst", "bgst", "bgsd",
+        "bajingan", "kampret", "keparat", "brengsek", "bedebah",
+        "tolol", "goblok", "goblog", "ngentot", "ngentd", "entot", "entod",
+        "kontol", "kntl", "memek", "mmk", "pepek", "jembut",
+        "jancok", "jancuk", "dancok", "bangke", "bangkai", "taik", "laknat", "bejad"
+      ],
+      exactOnlyWords: [
+        "babi", "asu", "monyet", "kunyuk", "kebo", "onta",
+        "bego", "idiot", "bodoh", "dungu", "oon", "sialan", "tai", "cok", "cuk"
+      ],
+      compactWords: [
+        "anjing", "anjir", "anjay", "anjrit", "anying",
+        "bangsat", "bajingan", "kampret", "keparat", "brengsek",
+        "tolol", "goblok", "goblog", "ngentot", "kontol", "memek",
+        "pepek", "jembut", "jancok", "jancuk", "dancok", "bangkai"
+      ]
+    };
+
     function normalizeForProfanityCheck(text) {
-      return String(text || "")
+      let cleaned = String(text || "")
         .toLowerCase()
         .replace(/4|@/g, "a")
         .replace(/3/g, "e")
@@ -458,38 +480,40 @@
         .replace(/[^a-z\s]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
+
+      cleaned = cleaned.replace(/([a-z])\1{2,}/g, "$1");
+      cleaned = cleaned.replace(/\b([a-z])(?:\s+([a-z])){2,}\b/g, (match) =>
+        match.replace(/\s+/g, "")
+      );
+
+      return cleaned;
     }
 
     function findProfanityInName(rawName) {
       const normalized = normalizeForProfanityCheck(rawName);
       if (!normalized) return [];
 
-      const fullOrPrefixWords = [
-        "anjing", "anj", "anjir", "anjay", "anjrit", "anying",
-        "babi", "bangsat", "bajingan", "kampret", "keparat",
-        "tolol", "goblok", "bego", "idiot", "bodoh", "dungu", "oon",
-        "kontol", "memek", "ngentot", "entot", "pepek", "jembut",
-        "asu", "monyet", "kunyuk", "bedebah", "brengsek", "sialan", "perek", "lonte"
-      ];
-
       const tokens = normalized.split(" ").filter(Boolean);
       const hits = new Set();
 
       for (const token of tokens) {
-        for (const bad of fullOrPrefixWords) {
-          if (token === bad || (bad.length >= 3 && token.startsWith(bad) && token.length <= bad.length + 4)) {
+        for (const bad of PROFANITY_CONFIG.prefixOrExactWords) {
+          if (
+            token === bad ||
+            (bad.length >= 3 && token.startsWith(bad) && token.length <= bad.length + 4)
+          ) {
             hits.add(bad);
+          }
+        }
+        for (const exactBad of PROFANITY_CONFIG.exactOnlyWords) {
+          if (token === exactBad) {
+            hits.add(exactBad);
           }
         }
       }
 
       const compact = normalized.replace(/\s+/g, "");
-      const strictCompactWords = [
-        "anjing", "anjir", "anjay", "anying", "babi", "bangsat",
-        "bajingan", "kampret", "keparat", "tolol", "goblok", "ngentot",
-        "kontol", "memek", "pepek", "jembut", "brengsek"
-      ];
-      for (const strictWord of strictCompactWords) {
+      for (const strictWord of PROFANITY_CONFIG.compactWords) {
         if (compact.includes(strictWord)) {
           hits.add(strictWord);
         }
