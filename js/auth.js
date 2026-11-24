@@ -238,8 +238,8 @@ async function handleRegisterSubmit() {
     showAuthFeedback("Masukkan alamat email yang valid.", true);
     return;
   }
-  if (!passVal || passVal.length < 4) {
-    showAuthFeedback("Password minimal 4 karakter.", true);
+  if (!passVal || passVal.length < 6) {
+    showAuthFeedback("Password minimal 6 karakter.", true);
     return;
   }
 
@@ -386,8 +386,8 @@ async function handleConfirmResetOtp() {
     showAuthFeedback("Lengkapi email, kode 6 digit dari email, dan password baru.", true);
     return;
   }
-  if (newPassVal.length < 4) {
-    showAuthFeedback("Password baru minimal 4 karakter.", true);
+  if (newPassVal.length < 6) {
+    showAuthFeedback("Password baru minimal 6 karakter.", true);
     return;
   }
 
