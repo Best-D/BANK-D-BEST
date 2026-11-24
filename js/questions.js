@@ -401,17 +401,24 @@ function sanitizeQuestionMedia(rawMarkup) {
 }
 
 function updateQuestionStatsUI(sourceLabel) {
-  document.getElementById("heroQuestionSummaryBadge").textContent =
-    "110 Soal • TWK (30) • TIU (35) • TKP (45)";
-  document.getElementById("twkCountLabel").textContent = "1. TWK (30 Soal)";
-  document.getElementById("tiuCountLabel").textContent = "2. TIU (35 Soal)";
-  document.getElementById("tkpCountLabel").textContent = "3. TKP (45 Soal)";
-  document.getElementById("toggleReviewBtn").textContent =
-    "Lihat Kunci Jawaban & Pembahasan (110 Soal)";
+  const badge = document.getElementById("heroQuestionSummaryBadge");
+  const twkLabel = document.getElementById("twkCountLabel");
+  const tiuLabel = document.getElementById("tiuCountLabel");
+  const tkpLabel = document.getElementById("tkpCountLabel");
+  const reviewBtn = document.getElementById("toggleReviewBtn");
+  const statusEl = document.getElementById("bankLoadStatus");
 
-  if (sourceLabel) {
-    document.getElementById("bankLoadStatus").textContent = sourceLabel;
-  }
+  const twkTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TWK").length;
+  const tiuTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TIU").length;
+  const tkpTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TKP").length;
+  const allTotal = questionBank.length;
+
+  if (badge) badge.textContent = `${allTotal} Soal • TWK (${twkTotal}) • TIU (${tiuTotal}) • TKP (${tkpTotal})`;
+  if (twkLabel) twkLabel.textContent = `1. TWK (${twkTotal} Soal)`;
+  if (tiuLabel) tiuLabel.textContent = `2. TIU (${tiuTotal} Soal)`;
+  if (tkpLabel) tkpLabel.textContent = `3. TKP (${tkpTotal} Soal)`;
+  if (reviewBtn) reviewBtn.textContent = `Lihat Kunci Jawaban & Pembahasan (${allTotal} Soal)`;
+  if (sourceLabel && statusEl) statusEl.textContent = sourceLabel;
 }
 
 async function muatBankSoalDariSheet() {
@@ -419,26 +426,60 @@ async function muatBankSoalDariSheet() {
   const statusEl = document.getElementById("bankLoadStatus");
 
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
-    badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
-    badge.className = "font-semibold text-amber-700";
+    if (badge) {
+      badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
+      badge.className = "font-semibold text-amber-700";
+    }
     updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
     return;
   }
 
-  badge.textContent = "Terhubung ke Google Sheets";
-  badge.className = "font-semibold text-emerald-700";
-  statusEl.textContent = "Memuat soal terbaru dari tab BankSoal...";
+  if (badge) {
+    badge.textContent = "Terhubung ke Google Sheets";
+    badge.className = "font-semibold text-emerald-700";
+  }
+  if (statusEl) statusEl.textContent = "Memuat soal terbaru dari tab BankSoal...";
 
   try {
-    const res = await fetch(GOOGLE_SCRIPT_URL);
+    const res = await fetch(`${GOOGLE_SCRIPT_URL}?mode=soal`);
     const json = await res.json();
 
     if (
+      json &&
       json.status === "sukses" &&
       Array.isArray(json.soal) &&
       json.soal.length > 0
     ) {
-      questionBank = json.soal;
+      questionBank = json.soal.map((item, idx) => {
+        const subtest = String(item.subtest || "TWK").trim().toUpperCase();
+        const normalized = {
+          id: item.id || idx + 1,
+          subtest,
+          category: item.category || "Umum",
+          question: item.question || "",
+          options: Array.isArray(item.options) ? item.options : [],
+          explanation: item.explanation || "",
+          svg: item.svg || ""
+        };
+
+        if (subtest === "TKP") {
+          if (Array.isArray(item.scores)) {
+            normalized.scores = item.scores.map(Number);
+          } else if (item.keyRaw) {
+            normalized.scores = String(item.keyRaw).split(",").map(s => Number(s.trim()) || 0);
+          } else {
+            normalized.scores = [1, 2, 3, 4, 5];
+          }
+        } else {
+          if (typeof item.answer === "number") {
+            normalized.answer = item.answer;
+          } else {
+            const letterIdx = ["A", "B", "C", "D", "E"].indexOf(String(item.keyRaw || "A").trim().toUpperCase());
+            normalized.answer = letterIdx >= 0 ? letterIdx : 0;
+          }
+        }
+        return normalized;
+      });
       updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
     } else {
       updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
