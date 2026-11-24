@@ -474,8 +474,13 @@ async function muatBankSoalDariSheet() {
           if (typeof item.answer === "number") {
             normalized.answer = item.answer;
           } else {
-            const letterIdx = ["A", "B", "C", "D", "E"].indexOf(String(item.keyRaw || "A").trim().toUpperCase());
-            normalized.answer = letterIdx >= 0 ? letterIdx : 0;
+            const rawKey = String(item.keyRaw || "A").trim().toUpperCase();
+            if (/^[0-4]$/.test(rawKey)) {
+              normalized.answer = Number(rawKey);
+            } else {
+              const letterIdx = ["A", "B", "C", "D", "E"].indexOf(rawKey);
+              normalized.answer = letterIdx >= 0 ? letterIdx : 0;
+            }
           }
         }
         return normalized;
