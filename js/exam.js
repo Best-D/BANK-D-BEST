@@ -131,6 +131,15 @@ function resetAndRestartFromSetup() {
 
 function startExam(customWeakQuestions = null) {
   const nameVal = document.getElementById("participantNameInput").value.trim();
+  if (!loggedUser || !loggedUser.nama) 
+  {alert(
+      "Silakan Daftar Akun atau Login terlebih dahulu pada bagian Akun Peserta Unik sebelum memulai ujian."
+    );
+    switchAuthMode("login");
+    document.getElementById("loginUsernameInput")?.focus();
+    return;
+  }
+
   const formationVal = document.getElementById("appliedFormationInput").value.trim();
   const institutionVal = document.getElementById("appliedInstitutionInput").value.trim();
 
