@@ -10,6 +10,7 @@ let questionBank = [];
 let reviewQuestions = [];
 let reviewAnswers = [];
 let reviewDurations = [];
+let reviewDoubts = [];
 let reviewMetaLabel = "";
 let reviewOnlyWeakMode = false;
 let userAnswers = [];
@@ -23,6 +24,7 @@ let remainingSeconds = 100 * 60;
 let examEndTime = 0;
 let loggedUser = null;
 let participantName = "";
+let participantEducation = "";
 let appliedFormation = "";
 let appliedInstitution = "";
 let examModeLabel = "Reguler (100 Menit)";
@@ -36,6 +38,10 @@ let dashboardTop10Only = false;
 
 function normalizeAccountKey(rawName) {
   return String(rawName || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function normalizeUsernameKey(rawUser) {
+  return String(rawUser || "").trim().replace(/\s+/g, "").toLowerCase();
 }
 
 function isValidEmailAddress(email) {
@@ -69,6 +75,11 @@ function showScreen(screenName) {
   document.getElementById("examScreen").classList.toggle("hidden", screenName !== "exam");
   document.getElementById("resultScreen").classList.toggle("hidden", screenName !== "result");
   document.getElementById("dashboardScreen").classList.toggle("hidden", screenName !== "dashboard");
+
+  const reviewSec = document.getElementById("reviewSection");
+  if (reviewSec && screenName === "setup") {
+    reviewSec.classList.add("hidden");
+  }
 
   const isExam = screenName === "exam";
   document.getElementById("navHeaderControls").classList.toggle("hidden", isExam);
