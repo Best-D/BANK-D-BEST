@@ -1235,6 +1235,24 @@ function getCurrentChatSenderName() {
   return (document.getElementById("participantNameInput")?.value || "").trim() || "Peserta";
 }
 
+async function pingOnlinePresence_() {
+  const endpoint = getScriptEndpoint();
+  const myKey = getCurrentChatUserKey();
+  if (!endpoint || endpoint.includes("TEMPEL_URL") || !myKey) return;
+  try {
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "ping_online",
+        user_key: myKey,
+        nama: getCurrentChatSenderName(),
+        username: myKey
+      })
+    });
+  } catch (err) {}
+}
+
 function startChatPolling_() {
   stopChatPolling_();
   chatPollTimer = setInterval(() => {
@@ -1243,7 +1261,8 @@ function startChatPolling_() {
     if (isHidden || (typeof isExamActive !== "undefined" && isExamActive)) {
       return;
     }
-    loadChatMessages(false, true);
+    pingOnlinePresence_();
+    loadChatMessages(true, true);
   }, 15000);
 }
 
@@ -1262,6 +1281,7 @@ function openChatPanel() {
   const panel = document.getElementById("chatPanel");
   if (!panel) return;
   panel.classList.remove("hidden");
+  pingOnlinePresence_();
   loadChatMessages(true, true);
   startChatPolling_();
   panel.scrollIntoView({ behavior: "smooth" });
@@ -1380,6 +1400,30 @@ async function handleChatImageChange(event) {
   }
 }
 
+function renderOnlineRecipientsBar_(peers) {
+  const barEl = document.getElementById("onlineRecipientsBar");
+  if (!barEl) return;
+  barEl.replaceChildren();
+
+  const onlinePeers = (Array.isArray(peers) ? peers : []).filter(p => Boolean(p.is_online));
+  if (onlinePeers.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "text-[11px] text-slate-500";
+    empty.textContent = "Belum ada peserta lain yang sedang online—Anda tetap bisa mengirim pesan dan akan dibalas saat aktif.";
+    barEl.appendChild(empty);
+    return;
+  }
+
+  onlinePeers.forEach(p => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-[11px] font-bold transition";
+    chip.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>${safeText(p.nama)}`;
+    chip.onclick = () => prepareReplyToSender(p.key);
+    barEl.appendChild(chip);
+  });
+}
+
 function populateChatRecipientDropdowns(accounts, myKey) {
   const recSelect = document.getElementById("chatRecipientSelect");
   if (!recSelect) return;
@@ -1388,6 +1432,8 @@ function populateChatRecipientDropdowns(accounts, myKey) {
   const peers = (Array.isArray(accounts) ? accounts : [])
     .filter(acc => acc && acc.key && acc.key !== myKey);
 
+  renderOnlineRecipientsBar_(peers);
+
   recSelect.replaceChildren();
   const defaultRec = document.createElement("option");
   defaultRec.value = "";
@@ -1395,7 +1441,8 @@ function populateChatRecipientDropdowns(accounts, myKey) {
   recSelect.appendChild(defaultRec);
 
   peers.forEach(p => {
-    const label = `${p.nama}${p.username ? ` (@${p.username})` : ""}`;
+    const statusLabel = p.is_online ? " • Online" : "";
+    const label = `${p.nama}${p.username ? ` (@${p.username})` : ""}${statusLabel}`;
     const opt1 = document.createElement("option");
     opt1.value = p.key;
     opt1.dataset.nama = p.nama;
@@ -1660,6 +1707,7 @@ async function sendChatMessage(event) {
   }
 
   try {
+    await pingOnlinePresence_();
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
