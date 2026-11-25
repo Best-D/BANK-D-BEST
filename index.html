@@ -971,7 +971,7 @@
     </div>
   </section>
 
-  <!-- PANEL CHAT LANGSUNG KE PESERTA TERTENTU -->
+ <!-- PANEL CHAT LANGSUNG KE PESERTA TERTENTU -->
   <section id="chatPanel" class="hidden max-w-4xl w-full mx-auto px-4 pb-8 no-print">
     <div class="bg-white rounded-2xl shadow-sm border border-teal-200 overflow-hidden">
       <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 px-5 py-4 text-white flex items-center justify-between gap-3">
@@ -994,6 +994,13 @@
       </div>
 
       <div class="p-5 space-y-3">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+          <div class="text-[11px] font-bold text-slate-600">Peserta Online Saat Ini (Klik untuk Pilih Tujuan)</div>
+          <div id="onlineRecipientsBar" class="flex flex-wrap gap-1.5 text-xs">
+            <span class="text-[11px] text-slate-400">Memuat status online...</span>
+          </div>
+        </div>
+
         <div>
           <label for="chatRecipientSelect" class="block text-[11px] font-bold text-slate-600 mb-1">Kirim Pesan Ke Peserta</label>
           <select id="chatRecipientSelect"
