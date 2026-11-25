@@ -1,6 +1,8 @@
 let fullTrendSeriesMode = "ALL";
 let focusTrendSeriesMode = "ALL";
 let cachedChatMessages = [];
+let pendingChatImageData = "";
+let chatPollTimer = null;
 
 const STANDARD_EDUCATION_LEVELS = [
   "SMA/SMK/Sederajat",
@@ -1194,6 +1196,10 @@ async function loadVerifiedDonationsForDashboard() {
   }
 }
 
+let cachedChatMessages = [];
+let pendingChatImageData = "";
+let chatPollTimer = null;
+
 function normalizeChatUserKey(raw) {
   if (typeof normalizeUsernameKey === "function") {
     return normalizeUsernameKey(raw || "");
@@ -1233,6 +1239,25 @@ function getCurrentChatSenderName() {
   return (document.getElementById("participantNameInput")?.value || "").trim() || "Peserta";
 }
 
+function startChatPolling_() {
+  stopChatPolling_();
+  chatPollTimer = setInterval(() => {
+    const panel = document.getElementById("chatPanel");
+    const isHidden = !panel || panel.classList.contains("hidden");
+    if (isHidden || (typeof isExamActive !== "undefined" && isExamActive)) {
+      return;
+    }
+    loadChatMessages(false, true);
+  }, 15000);
+}
+
+function stopChatPolling_() {
+  if (chatPollTimer) {
+    clearInterval(chatPollTimer);
+    chatPollTimer = null;
+  }
+}
+
 function openChatPanel() {
   if (typeof isExamActive !== "undefined" && isExamActive) {
     alert("Selesaikan ujian terlebih dahulu sebelum membuka kotak pesan.");
@@ -1242,10 +1267,12 @@ function openChatPanel() {
   if (!panel) return;
   panel.classList.remove("hidden");
   loadChatMessages(true, true);
+  startChatPolling_();
   panel.scrollIntoView({ behavior: "smooth" });
 }
 
 function closeChatPanel() {
+  stopChatPolling_();
   const panel = document.getElementById("chatPanel");
   if (panel) panel.classList.add("hidden");
 }
@@ -1257,6 +1284,103 @@ function toggleChatPanel() {
     openChatPanel();
   } else {
     closeChatPanel();
+  }
+}
+
+function clearChatImageSelection() {
+  pendingChatImageData = "";
+  const fileInput = document.getElementById("chatImageInput");
+  const boxEl = document.getElementById("chatImagePreviewBox");
+  const imgEl = document.getElementById("chatImagePreviewImg");
+  const infoEl = document.getElementById("chatImagePreviewInfo");
+  if (fileInput) fileInput.value = "";
+  if (imgEl) imgEl.src = "";
+  if (infoEl) infoEl.textContent = "";
+  if (boxEl) boxEl.classList.add("hidden");
+}
+
+function compressChatImageFile_(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Gagal membaca file gambar."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("File tidak dapat diproses sebagai gambar."));
+      img.onload = () => {
+        const maxDim = 720;
+        let w = img.width || 1;
+        let h = img.height || 1;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas tidak tersedia."));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+
+        let quality = 0.72;
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+        while (dataUrl.length > 340000 && quality > 0.35) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
+
+        if (dataUrl.length > 420000) {
+          reject(new Error("Ukuran gambar masih terlalu besar setelah dikompresi. Pilih gambar yang lebih ringan."));
+          return;
+        }
+        resolve({ dataUrl, width: w, height: h });
+      };
+      img.src = String(reader.result || "");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleChatImageChange(event) {
+  const file = event?.target?.files?.[0];
+  const fbEl = document.getElementById("chatFeedbackText");
+  if (!file) return;
+
+  if (!/^image\/(jpeg|jpg|png|webp)$/i.test(file.type)) {
+    if (fbEl) {
+      fbEl.textContent = "Gunakan format gambar JPG, PNG, atau WEBP.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    clearChatImageSelection();
+    return;
+  }
+
+  try {
+    const compressed = await compressChatImageFile_(file);
+    pendingChatImageData = compressed.dataUrl;
+    const boxEl = document.getElementById("chatImagePreviewBox");
+    const imgEl = document.getElementById("chatImagePreviewImg");
+    const infoEl = document.getElementById("chatImagePreviewInfo");
+
+    if (imgEl) imgEl.src = compressed.dataUrl;
+    if (infoEl) infoEl.textContent = `${file.name} (${compressed.width}×${compressed.height}px)`;
+    if (boxEl) boxEl.classList.remove("hidden");
+    if (fbEl) fbEl.classList.add("hidden");
+  } catch (err) {
+    clearChatImageSelection();
+    if (fbEl) {
+      fbEl.textContent = err.message || "Gagal memproses gambar.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
   }
 }
 
@@ -1380,7 +1504,7 @@ function renderFilteredChatMessages() {
   if (visible.length === 0) {
     const empty = document.createElement("div");
     empty.className = "text-slate-500 text-center py-3";
-    empty.textContent = "Belum ada pesan pada percakapan ini. Kirim pesan kapan saja—penerima akan membaca & membalas saat aktif.";
+    empty.textContent = "Belum ada pesan pada percakapan ini. Kirim teks atau gambar kapan saja—penerima membaca & membalas saat aktif.";
     listEl.appendChild(empty);
     return;
   }
@@ -1389,8 +1513,8 @@ function renderFilteredChatMessages() {
     const isMine = msg.pengirim_key === myKey;
     const item = document.createElement("div");
     item.className = isMine
-      ? "bg-teal-50 border border-teal-200 rounded-lg p-2.5 space-y-1 ml-6"
-      : "bg-white border border-slate-200 rounded-lg p-2.5 space-y-1 mr-6";
+      ? "bg-teal-50 border border-teal-200 rounded-lg p-2.5 space-y-1.5 ml-6"
+      : "bg-white border border-slate-200 rounded-lg p-2.5 space-y-1.5 mr-6";
 
     const meta = document.createElement("div");
     meta.className = "flex flex-wrap items-center justify-between gap-2 text-[11px]";
@@ -1427,12 +1551,24 @@ function renderFilteredChatMessages() {
     }
 
     meta.append(direction, rightBox);
+    item.appendChild(meta);
 
-    const body = document.createElement("p");
-    body.className = "text-xs text-slate-700 break-words";
-    body.textContent = msg.pesan || "";
+    const safeImg = String(msg.gambar_data || "").trim();
+    if (/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(safeImg)) {
+      const imgEl = document.createElement("img");
+      imgEl.src = safeImg;
+      imgEl.alt = "Gambar lampiran pesan";
+      imgEl.className = "max-h-52 rounded-lg border border-slate-200 bg-white object-contain";
+      item.appendChild(imgEl);
+    }
 
-    item.append(meta, body);
+    if (msg.pesan) {
+      const body = document.createElement("p");
+      body.className = "text-xs text-slate-700 break-words";
+      body.textContent = msg.pesan;
+      item.appendChild(body);
+    }
+
     listEl.appendChild(item);
   });
 
@@ -1466,11 +1602,12 @@ async function loadChatMessages(refreshRecipients = false, markRead = false) {
     const res = await fetch(url);
     const json = await res.json();
     if (json && json.status === "sukses" && Array.isArray(json.chat)) {
+      const prevLen = cachedChatMessages.length;
       cachedChatMessages = json.chat;
       renderFilteredChatMessages();
       if (fbEl) fbEl.classList.add("hidden");
 
-      if (markRead) {
+      if (markRead && json.chat.length >= prevLen) {
         await markIncomingChatReadOnServer(myKey);
       }
     } else {
@@ -1478,6 +1615,119 @@ async function loadChatMessages(refreshRecipients = false, markRead = false) {
     }
   } catch (err) {
     listEl.innerHTML = `<div class="text-slate-500 text-center py-3">Tidak dapat memuat pesan saat ini. Periksa koneksi internet.</div>`;
+  }
+}
+
+async function sendChatMessage(event) {
+  if (event) event.preventDefault();
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Fitur pesan tidak dapat digunakan saat ujian berlangsung.");
+    return;
+  }
+
+  const recSelect = document.getElementById("chatRecipientSelect");
+  const inputEl = document.getElementById("chatMessageInput");
+  const fbEl = document.getElementById("chatFeedbackText");
+  const sendBtn = document.getElementById("sendChatBtn");
+
+  const myKey = getCurrentChatUserKey();
+  const recipientKey = (recSelect?.value || "").trim();
+  const recipientName = recSelect?.selectedOptions?.[0]?.dataset?.nama || recSelect?.selectedOptions?.[0]?.textContent || "";
+  const rawText = (inputEl?.value || "").trim();
+
+  if (!myKey) {
+    if (fbEl) {
+      fbEl.textContent = "Silakan Login terlebih dahulu sebelum mengirim pesan.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+  if (!recipientKey) {
+    if (fbEl) {
+      fbEl.textContent = "Pilih peserta tujuan terlebih dahulu.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+  if (!rawText && !pendingChatImageData) {
+    if (fbEl) {
+      fbEl.textContent = "Tuliskan pesan atau pilih gambar terlebih dahulu.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+  if (rawText && typeof findProfanityInName === "function" && findProfanityInName(rawText).length > 0) {
+    if (fbEl) {
+      fbEl.textContent = "Pesan mengandung kata yang tidak diperbolehkan.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const endpoint = getScriptEndpoint();
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    if (fbEl) {
+      fbEl.textContent = "Hubungkan GOOGLE_SCRIPT_URL agar pesan tersimpan ke Google Sheets.";
+      fbEl.className = "text-xs font-semibold text-amber-700";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const senderName = getCurrentChatSenderName();
+  const imagePayload = pendingChatImageData;
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Mengirim...";
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "send_chat",
+        nama_pengirim: senderName,
+        pengirim_key: myKey,
+        nama_penerima: recipientName,
+        penerima_key: recipientKey,
+        pesan: rawText || (imagePayload ? "[Mengirim gambar]" : ""),
+        gambar_data: imagePayload
+      })
+    });
+    const json = await res.json();
+    if (json && json.status === "sukses") {
+      if (inputEl) inputEl.value = "";
+      clearChatImageSelection();
+      if (fbEl) {
+        fbEl.textContent = (json && json.pesan) || "Pesan terkirim ke antrean penerima.";
+        fbEl.className = "text-xs font-semibold text-emerald-700";
+        fbEl.classList.remove("hidden");
+      }
+      await loadChatMessages(false, false);
+    } else {
+      if (fbEl) {
+        fbEl.textContent = (json && json.pesan) || "Gagal mengirim pesan.";
+        fbEl.className = "text-xs font-semibold text-rose-600";
+        fbEl.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    if (fbEl) {
+      fbEl.textContent = "Gagal mengirim pesan. Periksa koneksi internet.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Kirim Pesan";
+    }
   }
 }
 
