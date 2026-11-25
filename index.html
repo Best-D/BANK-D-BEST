@@ -65,6 +65,9 @@
         <button type="button" onclick="showScreen('setup')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 text-xs font-semibold px-3 py-2 rounded-lg transition">
           Beranda Ujian
         </button>
+        <button type="button" onclick="openProfileScreen()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+          Profil Peserta
+        </button>
         <button type="button" onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
           Dashboard Skor
         </button>
@@ -111,9 +114,14 @@
             <div class="text-xs font-extrabold text-emerald-900">Anda Sudah Login Sebagai Peserta</div>
             <div id="loggedInAccountDetail" class="text-xs text-emerald-800 mt-0.5"></div>
           </div>
-          <button type="button" onclick="logoutParticipant()" class="bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3.5 py-2 rounded-lg transition">
-            Ganti Akun / Keluar
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openProfileScreen()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition">
+              Edit Profil
+            </button>
+            <button type="button" onclick="logoutParticipant()" class="bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3.5 py-2 rounded-lg transition">
+              Ganti Akun / Keluar
+            </button>
+          </div>
         </div>
 
         <div id="authFormsContainer">
@@ -138,7 +146,6 @@
             </div>
           </div>
 
-          <!-- PANEL LOGIN -->
           <div id="loginModePanel" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
               <label for="loginUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
@@ -161,7 +168,6 @@
             </div>
           </div>
 
-          <!-- PANEL DAFTAR AKUN (NAMA, USERNAME, EMAIL, PENDIDIKAN TERAKHIR, PASSWORD) -->
           <div id="registerModePanel" class="hidden space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
@@ -220,7 +226,6 @@
             </div>
           </div>
 
-          <!-- PANEL RESET PASSWORD -->
           <div id="resetModePanel" class="hidden space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div class="sm:col-span-2">
@@ -652,7 +657,6 @@
         </div>
       </div>
 
-      <!-- KONTROL CAKUPAN & FILTER TERPISAH (PENDIDIKAN TERAKHIR, FORMASI, INSTANSI, MODE, PG) -->
       <div class="p-6 pb-3 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2">
@@ -723,6 +727,101 @@
           </thead>
           <tbody id="dashboardTableBody" class="divide-y divide-slate-100"></tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- HALAMAN 5: PROFIL PESERTA -->
+  <section id="profileScreen" class="hidden flex-1 max-w-4xl w-full mx-auto px-4 py-8 space-y-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 p-6 sm:p-7 text-white flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="inline-block bg-indigo-400/20 border border-indigo-300/30 text-indigo-200 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+            Identitas & Target Formasi Peserta
+          </span>
+          <h2 class="text-2xl font-extrabold">Profil Peserta Ujian</h2>
+          <p class="text-xs text-indigo-100 mt-1">
+            Lengkapi data peserta agar otomatis terisi saat memulai simulasi dan tercatat pada rekap skor serta Dashboard.
+          </p>
+        </div>
+        <button type="button" onclick="showScreen('setup')" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+          ← Kembali ke Beranda
+        </button>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-5">
+        <div id="profileAuthNotice" class="hidden bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3.5 text-xs font-semibold">
+          Anda belum login akun. Data profil tetap bisa disiapkan di sini, namun disarankan <button type="button" onclick="showScreen('setup'); switchAuthMode('login');" class="underline font-extrabold">Login / Daftar Akun</button> agar akun tersinkronisasi penuh.
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="profileFullNameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Nama Lengkap Peserta <span class="text-rose-600">*</span>
+            </label>
+            <input type="text" id="profileFullNameInput" placeholder="Contoh: Budiman Putra"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+          </div>
+
+          <div>
+            <label for="profileUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Username (User Unik)
+            </label>
+            <input type="text" id="profileUsernameInput" placeholder="Contoh: budiman_cpns26"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+          </div>
+
+          <div>
+            <label for="profileEmailInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Email Aktif
+            </label>
+            <input type="email" id="profileEmailInput" placeholder="nama@email.com"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+          </div>
+
+          <div>
+            <label for="profileEducationSelect" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Pendidikan Terakhir <span class="text-rose-600">*</span>
+            </label>
+            <select id="profileEducationSelect"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium">
+              <option value="">-- Pilih Pendidikan Terakhir --</option>
+              <option value="SMA/SMK/Sederajat">SMA / SMK / Sederajat</option>
+              <option value="D-I / D-II">D-I / D-II</option>
+              <option value="D-III">D-III (Diploma Tiga)</option>
+              <option value="D-IV / S-1">D-IV / S-1 (Sarjana)</option>
+              <option value="S-2 / Profesi">S-2 / Profesi (Magister)</option>
+              <option value="S-3">S-3 (Doktor)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="profileFormationInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Formasi yang Dilamar <span class="text-rose-600">*</span>
+            </label>
+            <input type="text" id="profileFormationInput" placeholder="Contoh: Terampil - Pranata Komputer"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+          </div>
+
+          <div>
+            <label for="profileInstitutionInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Instansi yang Dilamar <span class="text-rose-600">*</span>
+            </label>
+            <input type="text" id="profileInstitutionInput" placeholder="Contoh: Kementerian Pertahanan"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+          </div>
+        </div>
+
+        <p id="profileFeedbackText" class="hidden text-xs font-semibold rounded-xl p-3"></p>
+
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200">
+          <button type="button" onclick="saveParticipantProfile(false)" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow transition">
+            Simpan Profil Peserta
+          </button>
+          <button type="button" onclick="saveParticipantProfile(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow transition">
+            Simpan & Lanjut ke Beranda Ujian →
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -838,10 +937,10 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=11"></script>
-  <script src="js/questions.js?v=11"></script>
-  <script src="js/auth.js?v=11"></script>
-  <script src="js/dashboard.js?v=11"></script>
-  <script src="js/exam.js?v=11"></script>
+  <script src="js/config.js?v=12"></script>
+  <script src="js/questions.js?v=12"></script>
+  <script src="js/auth.js?v=12"></script>
+  <script src="js/dashboard.js?v=12"></script>
+  <script src="js/exam.js?v=12"></script>
 </body>
 </html>
