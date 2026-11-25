@@ -971,16 +971,17 @@
     </div>
   </section>
 
-  <!-- PANEL PESAN ANTAR PESERTA (KIRIM DULUAN & BALAS SAAT AKTIF) -->
+ <!-- PANEL PESAN ANTAR PESERTA (LIVE-LIKE ASINKRON + GAMBAR) -->
   <section id="chatPanel" class="hidden max-w-4xl w-full mx-auto px-4 pb-8 no-print">
     <div class="bg-white rounded-2xl shadow-sm border border-teal-200 overflow-hidden">
       <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 px-5 py-4 text-white flex items-center justify-between gap-3">
         <div>
           <div class="flex items-center gap-2">
-            <h3 class="text-base font-extrabold">Kotak Pesan Antar Peserta</h3>
+            <h3 class="text-base font-extrabold">Live Chat Antar Peserta</h3>
             <span id="unreadChatBadge" class="hidden text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">0 Baru</span>
+            <span id="liveChatSyncBadge" class="text-[10px] font-semibold bg-white/15 text-teal-100 px-2 py-0.5 rounded-full">Auto-cek 15 dtk</span>
           </div>
-          <p class="text-[11px] text-teal-100">Kirim pesan kapan saja ke antrean peserta lain; penerima membaca &amp; membalas saat aktif.</p>
+          <p class="text-[11px] text-teal-100">Kirim teks atau gambar kapan saja; penerima melihat &amp; membalas saat aktif.</p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" onclick="loadChatMessages(true, true)" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
@@ -1010,12 +1011,30 @@
           </div>
         </div>
 
-        <div id="chatMessagesList" class="space-y-2 max-h-72 overflow-y-auto custom-scroll bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+        <div id="chatMessagesList" class="space-y-2 max-h-80 overflow-y-auto custom-scroll bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
           <div class="text-slate-500 text-center py-3">Silakan login terlebih dahulu untuk melihat dan mengirim pesan.</div>
         </div>
 
+        <div id="chatImagePreviewBox" class="hidden flex items-center justify-between gap-3 bg-teal-50/70 border border-teal-200 rounded-xl p-2.5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img id="chatImagePreviewImg" src="" alt="Pratinjau gambar chat" class="w-12 h-12 rounded-lg object-cover border border-teal-200 bg-white shrink-0" />
+            <div class="text-xs text-teal-950 truncate">
+              <div class="font-bold">Gambar siap dikirim</div>
+              <div id="chatImagePreviewInfo" class="text-[10px] text-teal-800 truncate"></div>
+            </div>
+          </div>
+          <button type="button" onclick="clearChatImageSelection()" class="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold shrink-0">
+            Hapus Gambar
+          </button>
+        </div>
+
         <form onsubmit="sendChatMessage(event)" class="flex flex-col sm:flex-row gap-2">
-          <input type="text" id="chatMessageInput" maxlength="400" placeholder="Tulis pesan untuk dikirim dulu ke peserta tujuan..."
+          <input type="file" id="chatImageInput" accept="image/jpeg,image/png,image/webp" onchange="handleChatImageChange(event)" class="hidden" />
+          <button type="button" onclick="document.getElementById('chatImageInput')?.click()"
+            class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold shrink-0 transition">
+            📷 Gambar
+          </button>
+          <input type="text" id="chatMessageInput" maxlength="400" placeholder="Tulis pesan atau keterangan gambar..."
             class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-teal-600 outline-none" />
           <button type="submit" id="sendChatBtn" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shrink-0 transition">
             Kirim Pesan
