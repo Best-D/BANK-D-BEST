@@ -1243,4 +1243,99 @@ window.addEventListener("DOMContentLoaded", () => {
       badge.className = "font-semibold text-emerald-700";
     }
   }
+  const FAVORITE_QUESTIONS_KEY = "cat_skd_favorite_questions_v1";
+let reviewOnlyFavoriteMode = false;
+
+function getFavoriteQuestionIds() {
+  try {
+    const raw = localStorage.getItem(FAVORITE_QUESTIONS_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function getQuestionBookmarkKey(q) {
+  const sub = String(q?.subtest || "").trim().toUpperCase();
+  const cat = String(q?.category || "").trim().toLowerCase();
+  const text = String(q?.question || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 120);
+  return `${sub}|${cat}|${text}`;
+}
+
+function isQuestionFavorited(q) {
+  const key = getQuestionBookmarkKey(q);
+  return getFavoriteQuestionIds().includes(key);
+}
+
+function toggleFavoriteQuestion(q) {
+  const key = getQuestionBookmarkKey(q);
+  if (!key) return;
+  const current = getFavoriteQuestionIds();
+  const exists = current.includes(key);
+  const next = exists ? current.filter(k => k !== key) : [...current, key];
+  localStorage.setItem(FAVORITE_QUESTIONS_KEY, JSON.stringify(next));
+
+  const activeSub = document.querySelector(".review-subtest-btn.active-subtest")?.dataset.subtest || "ALL";
+  if (typeof renderReview === "function") {
+    renderReview(activeSub);
+  }
+}
+
+function toggleReviewFavoriteOnly() {
+  reviewOnlyFavoriteMode = !reviewOnlyFavoriteMode;
+  const btn = document.getElementById("reviewOnlyFavoriteBtn");
+  if (btn) {
+    btn.className = reviewOnlyFavoriteMode
+      ? "px-3 py-1 text-xs font-bold rounded-lg bg-amber-600 text-white"
+      : "px-3 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100";
+  }
+  const activeSub = document.querySelector(".review-subtest-btn.active-subtest")?.dataset.subtest || "ALL";
+  if (typeof renderReview === "function") {
+    renderReview(activeSub);
+  }
+}
+
+async function reportQuestionToSheet(q, questionNumber) {
+  const note = prompt(
+    `Laporkan kendala pada Soal No. ${questionNumber} (${q.subtest || "-"} • ${q.category || "-"}):\n` +
+    "Tuliskan catatan (misal: salah ketik opsi, kunci jawaban kurang tepat, atau ambigu):"
+  );
+  if (note === null) return;
+  const cleanNote = String(note || "").trim();
+  if (cleanNote.length < 5) {
+    alert("Tuliskan catatan laporan minimal 5 karakter agar mudah diperiksa.");
+    return;
+  }
+
+  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    alert("Laporan dicatat lokal. Hubungkan GOOGLE_SCRIPT_URL agar terkirim ke tab LaporanSoal di Google Sheets.");
+    return;
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "report_question",
+        nomor_soal: questionNumber,
+        subtest: q.subtest || "-",
+        category: q.category || "-",
+        question: String(q.question || "").slice(0, 500),
+        catatan: cleanNote,
+        pelapor: (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta"
+      })
+    });
+    const json = await res.json();
+    if (json && json.status === "sukses") {
+      alert("Terima kasih, laporan soal berhasil dikirim ke tab LaporanSoal di Google Sheets.");
+    } else {
+      alert("Laporan belum terkirim: " + ((json && json.pesan) || "periksa deployment Apps Script."));
+    }
+  } catch (err) {
+    alert("Gagal mengirim laporan soal. Periksa koneksi internet Anda.");
+  }
+}
 });
