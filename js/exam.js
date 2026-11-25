@@ -684,7 +684,8 @@ function renderResultComparisonWithPrevious(currentSession) {
     compEl.classList.remove("hidden");
     return;
   }
-
+renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
+  
   const diffTotal = Number(currentSession.total || 0) - Number(prev.total || 0);
   const diffTwk = Number(currentSession.twk || 0) - Number(prev.twk || 0);
   const diffTiu = Number(currentSession.tiu || 0) - Number(prev.tiu || 0);
