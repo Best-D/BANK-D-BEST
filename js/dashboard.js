@@ -1192,3 +1192,187 @@ async function loadVerifiedDonationsForDashboard() {
     listEl.innerHTML = `<div class="text-xs text-slate-500">Tidak dapat memuat daftar donasi terverifikasi saat ini.</div>`;
   }
 }
+
+function openChatPanel() {
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Selesaikan ujian terlebih dahulu sebelum membuka ruang diskusi chat.");
+    return;
+  }
+  const panel = document.getElementById("chatPanel");
+  if (!panel) return;
+  panel.classList.remove("hidden");
+  loadChatMessages();
+  panel.scrollIntoView({ behavior: "smooth" });
+}
+
+function closeChatPanel() {
+  const panel = document.getElementById("chatPanel");
+  if (panel) panel.classList.add("hidden");
+}
+
+function toggleChatPanel() {
+  const panel = document.getElementById("chatPanel");
+  if (!panel) return;
+  if (panel.classList.contains("hidden")) {
+    openChatPanel();
+  } else {
+    closeChatPanel();
+  }
+}
+
+function renderChatMessagesList(messages) {
+  const listEl = document.getElementById("chatMessagesList");
+  if (!listEl) return;
+  listEl.replaceChildren();
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "text-slate-500 text-center py-3";
+    empty.textContent = "Belum ada pesan diskusi. Mulai obrolan pertama.";
+    listEl.appendChild(empty);
+    return;
+  }
+
+  messages.forEach(msg => {
+    const item = document.createElement("div");
+    item.className = "bg-white border border-slate-200 rounded-lg p-2.5 space-y-1";
+    const meta = document.createElement("div");
+    meta.className = "flex items-center justify-between gap-2 text-[11px]";
+
+    const sender = document.createElement("span");
+    sender.className = "font-extrabold text-teal-800";
+    sender.textContent = `${msg.nama || "Peserta"}${msg.username ? ` (@${msg.username})` : ""}`;
+
+    const time = document.createElement("span");
+    time.className = "text-[10px] text-slate-400";
+    time.textContent = formatShortDate(msg.waktu);
+
+    const body = document.createElement("p");
+    body.className = "text-xs text-slate-700 break-words";
+    body.textContent = msg.pesan || "";
+
+    meta.append(sender, time);
+    item.append(meta, body);
+    listEl.appendChild(item);
+  });
+
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+async function loadChatMessages() {
+  const listEl = document.getElementById("chatMessagesList");
+  const fbEl = document.getElementById("chatFeedbackText");
+  const endpoint = getScriptEndpoint();
+  if (!listEl) return;
+
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    listEl.innerHTML = `<div class="text-slate-500 text-center py-3">Hubungkan GOOGLE_SCRIPT_URL untuk memuat pesan dari tab PesanChat.</div>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${endpoint}?mode=chat`);
+    const json = await res.json();
+    if (json && json.status === "sukses" && Array.isArray(json.chat)) {
+      renderChatMessagesList(json.chat);
+      if (fbEl) fbEl.classList.add("hidden");
+    } else {
+      listEl.innerHTML = `<div class="text-rose-600 text-center py-3">Gagal memuat pesan diskusi.</div>`;
+    }
+  } catch (err) {
+    listEl.innerHTML = `<div class="text-slate-500 text-center py-3">Tidak dapat memuat pesan saat ini. Periksa koneksi internet.</div>`;
+  }
+}
+
+async function sendChatMessage(event) {
+  if (event) event.preventDefault();
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Fitur chat tidak dapat digunakan saat ujian berlangsung.");
+    return;
+  }
+
+  const inputEl = document.getElementById("chatMessageInput");
+  const fbEl = document.getElementById("chatFeedbackText");
+  const sendBtn = document.getElementById("sendChatBtn");
+  const rawText = (inputEl?.value || "").trim();
+
+  if (!rawText) {
+    if (fbEl) {
+      fbEl.textContent = "Tuliskan pesan terlebih dahulu.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (typeof findProfanityInName === "function" && findProfanityInName(rawText).length > 0) {
+    if (fbEl) {
+      fbEl.textContent = "Pesan mengandung kata yang tidak diperbolehkan.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const endpoint = getScriptEndpoint();
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    if (fbEl) {
+      fbEl.textContent = "Hubungkan GOOGLE_SCRIPT_URL agar pesan tersimpan ke Google Sheets.";
+      fbEl.className = "text-xs font-semibold text-amber-700";
+      fbEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const senderName =
+    (typeof loggedUser !== "undefined" && loggedUser?.nama) ||
+    (document.getElementById("participantNameInput")?.value || "").trim() ||
+    "Peserta";
+  const senderUsername = (typeof loggedUser !== "undefined" && loggedUser?.username) || "";
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Mengirim...";
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "send_chat",
+        nama: senderName,
+        username: senderUsername,
+        peran: "Peserta",
+        pesan: rawText
+      })
+    });
+    const json = await res.json();
+    if (json && json.status === "sukses") {
+      if (inputEl) inputEl.value = "";
+      if (fbEl) {
+        fbEl.textContent = "Pesan terkirim.";
+        fbEl.className = "text-xs font-semibold text-emerald-700";
+        fbEl.classList.remove("hidden");
+      }
+      await loadChatMessages();
+    } else {
+      if (fbEl) {
+        fbEl.textContent = (json && json.pesan) || "Gagal mengirim pesan.";
+        fbEl.className = "text-xs font-semibold text-rose-600";
+        fbEl.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    if (fbEl) {
+      fbEl.textContent = "Gagal mengirim pesan. Periksa koneksi internet.";
+      fbEl.className = "text-xs font-semibold text-rose-600";
+      fbEl.classList.remove("hidden");
+    }
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Kirim Pesan";
+    }
+  }
+}
