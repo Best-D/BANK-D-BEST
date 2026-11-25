@@ -1382,12 +1382,9 @@ async function handleChatImageChange(event) {
 
 function populateChatRecipientDropdowns(accounts, myKey) {
   const recSelect = document.getElementById("chatRecipientSelect");
-  const filterSelect = document.getElementById("chatPartnerFilter");
-  if (!recSelect || !filterSelect) return;
+  if (!recSelect) return;
 
   const prevRec = recSelect.value;
-  const prevFilter = filterSelect.value || "ALL";
-
   const peers = (Array.isArray(accounts) ? accounts : [])
     .filter(acc => acc && acc.key && acc.key !== myKey);
 
@@ -1397,31 +1394,18 @@ function populateChatRecipientDropdowns(accounts, myKey) {
   defaultRec.textContent = peers.length > 0 ? "-- Pilih Peserta Tujuan --" : "Belum ada peserta lain terdaftar";
   recSelect.appendChild(defaultRec);
 
-  filterSelect.replaceChildren();
-  const allFilterOpt = document.createElement("option");
-  allFilterOpt.value = "ALL";
-  allFilterOpt.textContent = "Semua Lawan Bicara";
-  filterSelect.appendChild(allFilterOpt);
-
   peers.forEach(p => {
     const label = `${p.nama}${p.username ? ` (@${p.username})` : ""}`;
-
     const opt1 = document.createElement("option");
     opt1.value = p.key;
     opt1.dataset.nama = p.nama;
     opt1.textContent = label;
     recSelect.appendChild(opt1);
-
-    const opt2 = document.createElement("option");
-    opt2.value = p.key;
-    opt2.textContent = label;
-    filterSelect.appendChild(opt2);
   });
 
   if (prevRec && peers.some(p => p.key === prevRec)) {
     recSelect.value = prevRec;
   }
-  filterSelect.value = peers.some(p => p.key === prevFilter) ? prevFilter : "ALL";
 }
 
 async function loadChatRecipients(myKey) {
@@ -1470,7 +1454,6 @@ function prepareReplyToSender(senderKey) {
 
 function renderFilteredChatMessages() {
   const listEl = document.getElementById("chatMessagesList");
-  const filterVal = document.getElementById("chatPartnerFilter")?.value || "ALL";
   const badgeEl = document.getElementById("unreadChatBadge");
   const myKey = getCurrentChatUserKey();
   if (!listEl) return;
@@ -1489,23 +1472,17 @@ function renderFilteredChatMessages() {
     }
   }
 
-  const visible = allMsgs.filter(msg => {
-    if (filterVal === "ALL") return true;
-    const otherKey = msg.pengirim_key === myKey ? msg.penerima_key : msg.pengirim_key;
-    return otherKey === filterVal;
-  });
-
   listEl.replaceChildren();
 
-  if (visible.length === 0) {
+  if (allMsgs.length === 0) {
     const empty = document.createElement("div");
     empty.className = "text-slate-500 text-center py-3";
-    empty.textContent = "Belum ada pesan pada percakapan ini. Kirim teks atau gambar kapan saja—penerima membaca & membalas saat aktif.";
+    empty.textContent = "Belum ada pesan. Pilih peserta tujuan dan kirim teks atau gambar kapan saja.";
     listEl.appendChild(empty);
     return;
   }
 
-  visible.forEach(msg => {
+  allMsgs.forEach(msg => {
     const isMine = msg.pengirim_key === myKey;
     const item = document.createElement("div");
     item.className = isMine
