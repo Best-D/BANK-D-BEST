@@ -10,6 +10,7 @@ function saveExamSessionToStorage() {
   try {
     const snapshot = {
       participantName,
+      participantEducation,
       appliedFormation,
       appliedInstitution,
       examModeLabel,
@@ -46,7 +47,8 @@ function enterExamWorkspaceUI() {
   headerCtrl.classList.remove("hidden");
   headerCtrl.classList.add("flex");
 
-  document.getElementById("headerParticipantName").textContent = `${participantName} • ${appliedInstitution}`;
+  const eduTag = participantEducation ? ` (${participantEducation})` : "";
+  document.getElementById("headerParticipantName").textContent = `${participantName}${eduTag} • ${appliedInstitution}`;
   document.getElementById("headerExamMode").textContent = `${appliedFormation} (${examModeLabel})`;
 }
 
@@ -69,6 +71,7 @@ function tryRestoreExamSession() {
     const secsLeft = Math.floor((Number(snap.examEndTime) - Date.now()) / 1000);
 
     participantName = snap.participantName || "Peserta Umum";
+    participantEducation = snap.participantEducation || (loggedUser?.pendidikan || "-");
     appliedFormation = snap.appliedFormation || "-";
     appliedInstitution = snap.appliedInstitution || "Kementerian Pertahanan";
     examModeLabel = snap.examModeLabel || "Reguler (100 Menit)";
@@ -131,8 +134,8 @@ function resetAndRestartFromSetup() {
 
 function startExam(customWeakQuestions = null) {
   const nameVal = document.getElementById("participantNameInput").value.trim();
-  if (!loggedUser || !loggedUser.nama) 
-  {alert(
+  if (!loggedUser || !loggedUser.nama) {
+    alert(
       "Silakan Daftar Akun atau Login terlebih dahulu pada bagian Akun Peserta Unik sebelum memulai ujian."
     );
     switchAuthMode("login");
@@ -140,6 +143,7 @@ function startExam(customWeakQuestions = null) {
     return;
   }
 
+  const educationVal = (document.getElementById("participantEducationSelect")?.value || loggedUser.pendidikan || "").trim();
   const formationVal = document.getElementById("appliedFormationInput").value.trim();
   const institutionVal = document.getElementById("appliedInstitutionInput").value.trim();
 
@@ -158,6 +162,12 @@ function startExam(customWeakQuestions = null) {
       "Ujian tidak dapat dimulai sebelum nama diganti dengan nama yang wajar dan sopan."
     );
     document.getElementById("participantNameInput").focus();
+    return;
+  }
+
+  if (!educationVal) {
+    alert("Silakan pilih Pendidikan Terakhir Anda terlebih dahulu.");
+    document.getElementById("participantEducationSelect")?.focus();
     return;
   }
 
@@ -207,6 +217,7 @@ function startExam(customWeakQuestions = null) {
   }
 
   participantName = nameVal;
+  participantEducation = educationVal;
   appliedFormation = formationVal;
   appliedInstitution = institutionVal;
   examStartedAt = Date.now();
@@ -318,11 +329,13 @@ function startExam(customWeakQuestions = null) {
 function retryWrongAndDoubtQuestions() {
   const sourceQ = reviewQuestions.length ? reviewQuestions : questionBank;
   const sourceA = reviewAnswers.length ? reviewAnswers : userAnswers;
+  const sourceD = reviewDoubts.length ? reviewDoubts : doubtFlags;
   const history = getExamHistory();
   const latestWithQuestions = history.find(h => Array.isArray(h.questions) && h.questions.length > 0);
 
   const qList = sourceQ.length ? sourceQ : (latestWithQuestions ? latestWithQuestions.questions : []);
   const aList = sourceA.length ? sourceA : (latestWithQuestions ? latestWithQuestions.answers : []);
+  const dList = sourceD.length ? sourceD : (latestWithQuestions && Array.isArray(latestWithQuestions.doubts) ? latestWithQuestions.doubts : []);
 
   if (!qList.length) {
     alert("Belum ada sesi dengan rincian soal untuk diulangi.");
@@ -332,7 +345,7 @@ function retryWrongAndDoubtQuestions() {
   const weakQuestions = [];
   qList.forEach((q, idx) => {
     const ans = aList[idx] ?? null;
-    const isDoubt = Boolean(doubtFlags[idx]);
+    const isDoubt = Boolean(dList[idx]);
     if (q.subtest === "TKP") {
       const pts = ans === null ? 0 : Number(q.scores?.[ans] ?? 0);
       if (ans === null || pts < 5 || isDoubt) {
@@ -352,6 +365,10 @@ function retryWrongAndDoubtQuestions() {
 
   if (!document.getElementById("participantNameInput").value.trim() && participantName) {
     document.getElementById("participantNameInput").value = participantName;
+  }
+  const eduSelect = document.getElementById("participantEducationSelect");
+  if (eduSelect && !eduSelect.value && participantEducation) {
+    eduSelect.value = participantEducation;
   }
   if (!document.getElementById("appliedFormationInput").value.trim() && appliedFormation) {
     document.getElementById("appliedFormationInput").value = appliedFormation;
@@ -388,6 +405,19 @@ function updateTimerDisplay() {
   } else {
     el.classList.remove("text-rose-400");
     el.classList.add("text-emerald-400");
+  }
+}
+
+function updateDoubtButtonUI() {
+  const doubtBtn = document.getElementById("doubtBtn");
+  if (!doubtBtn) return;
+  const isDoubt = Boolean(doubtFlags[currentIndex]);
+  if (isDoubt) {
+    doubtBtn.textContent = "✓ Ditandai Ragu-Ragu";
+    doubtBtn.className = "px-4 py-2 rounded-xl bg-amber-400 border border-amber-500 text-slate-950 text-sm font-bold shadow-xs";
+  } else {
+    doubtBtn.textContent = "Ragu-Ragu";
+    doubtBtn.className = "px-4 py-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-sm font-semibold hover:bg-amber-200";
   }
 }
 
@@ -443,6 +473,18 @@ function renderQuestion() {
   });
 
   document.getElementById("prevBtn").disabled = currentIndex === 0;
+  updateDoubtButtonUI();
+
+  const nextBtn = document.getElementById("nextBtn");
+  if (nextBtn) {
+    if (currentIndex === questionBank.length - 1) {
+      nextBtn.textContent = "Selesai Ujian ✓";
+      nextBtn.className = "px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow";
+    } else {
+      nextBtn.textContent = "Simpan & Lanjutkan →";
+      nextBtn.className = "px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow";
+    }
+  }
 
   const answeredCount = userAnswers.filter(answer => answer !== null).length;
   document.getElementById("answeredCounter").textContent =
@@ -463,6 +505,7 @@ function toggleDoubt() {
   recordCurrentQuestionDuration();
   doubtFlags[currentIndex] = !doubtFlags[currentIndex];
   saveExamSessionToStorage();
+  updateDoubtButtonUI();
   renderGrid();
 }
 
@@ -690,8 +733,9 @@ async function finishExam() {
   document.getElementById("resultScreen").classList.remove("hidden");
 
   const finishTimeLabel = new Date().toLocaleString("id-ID");
+  const eduPrefix = participantEducation && participantEducation !== "-" ? `${participantEducation} • ` : "";
   document.getElementById("resultParticipantTitle").textContent = `Hasil Ujian: ${participantName}`;
-  document.getElementById("resultFormationInfo").textContent = `${appliedFormation} • ${appliedInstitution}`;
+  document.getElementById("resultFormationInfo").textContent = `${eduPrefix}${appliedFormation} • ${appliedInstitution}`;
   document.getElementById("resultMetaInfo").textContent = `${examModeLabel} • Selesai pada ${finishTimeLabel}`;
   document.getElementById("totalScoreDisplay").textContent = totalScore;
 
@@ -764,6 +808,8 @@ async function finishExam() {
   const newAttempt = {
     id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     nama: participantName,
+    username: loggedUser?.username || "",
+    pendidikan: participantEducation || "-",
     formasi: appliedFormation,
     instansi: appliedInstitution,
     mode: examModeLabel,
@@ -776,7 +822,8 @@ async function finishExam() {
     waktuLabel: finishTimeLabel,
     questions: questionBank.map(q => ({ ...q })),
     answers: [...userAnswers],
-    durations: [...questionDurations]
+    durations: [...questionDurations],
+    doubts: [...doubtFlags]
   };
 
   saveAttemptToHistory(newAttempt);
@@ -785,6 +832,7 @@ async function finishExam() {
   reviewQuestions = questionBank.map(q => ({ ...q }));
   reviewAnswers = [...userAnswers];
   reviewDurations = [...questionDurations];
+  reviewDoubts = [...doubtFlags];
   reviewOnlyWeakMode = false;
   reviewMetaLabel = `Sesi Terbaru — ${participantName} (${finishTimeLabel})`;
   updateRestoreHistoryButtons();
@@ -795,6 +843,9 @@ async function finishExam() {
   lastExamPayload = {
     action: "submit_score",
     nama: participantName,
+    username: loggedUser?.username || "",
+    email: loggedUser?.email || "",
+    pendidikan_terakhir: participantEducation || "-",
     formasi: appliedFormation,
     instansi: appliedInstitution,
     mode: examModeLabel,
@@ -856,7 +907,7 @@ async function sendResultsToGoogleSheet(payload) {
           `⚠️ Rekap nilai terkirim ke Google Sheets dengan catatan ${finalWarning}.`;
       } else {
         syncText.textContent =
-          "Rekap nilai, formasi, instansi, serta info perangkat & IP berhasil dikirim ke database Google Sheets!";
+          "Rekap nilai, pendidikan terakhir, formasi, instansi, serta info perangkat & IP berhasil dikirim ke database Google Sheets!";
       }
     } else {
       syncText.textContent = `Gagal menyimpan ke Google Sheets: ${(result && result.pesan) || "Respons tidak valid"}.`;
@@ -922,6 +973,7 @@ function toggleReviewSection() {
       reviewQuestions = questionBank;
       reviewAnswers = userAnswers;
       reviewDurations = questionDurations;
+      reviewDoubts = doubtFlags;
     }
     document.getElementById("reviewSectionTitle").textContent = "Pembahasan Lengkap Soal SKD";
     document.getElementById("reviewSessionSubtitle").textContent = reviewMetaLabel;
