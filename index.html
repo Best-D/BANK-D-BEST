@@ -92,7 +92,7 @@
     </div>
   </header>
 
-  <!-- HALAMAN 1: AKUN UNIK & KONFIGURASI PESERTA -->
+  <!-- HALAMAN 1: AKUN PESERTA & KONFIGURASI UJIAN -->
   <main id="setupScreen" class="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-slate-900 p-6 sm:p-8 text-white">
@@ -108,7 +108,7 @@
       <div id="authCard" class="p-6 sm:p-8 border-b border-slate-200 bg-slate-50/70">
         <div id="loggedInAccountBanner" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div class="text-xs font-extrabold text-emerald-900">Anda Sudah Login</div>
+            <div class="text-xs font-extrabold text-emerald-900">Anda Sudah Login Sebagai Peserta</div>
             <div id="loggedInAccountDetail" class="text-xs text-emerald-800 mt-0.5"></div>
           </div>
           <button type="button" onclick="logoutParticipant()" class="bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3.5 py-2 rounded-lg transition">
@@ -119,8 +119,8 @@
         <div id="authFormsContainer">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h3 class="text-base font-extrabold text-slate-800">Akun Peserta Unik (Reset via Email)</h3>
-              <p class="text-xs text-slate-500">Daftar dengan email aktif agar kode reset password dapat dikirim langsung ke email Anda.</p>
+              <h3 class="text-base font-extrabold text-slate-800">Akun Peserta Unik</h3>
+              <p class="text-xs text-slate-500">Daftar akun peserta dengan Nama Lengkap, Username, Email aktif, dan Pendidikan Terakhir.</p>
             </div>
             <div class="flex items-center gap-2">
               <span id="activeSessionBadge" class="hidden text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full"></span>
@@ -138,12 +138,13 @@
             </div>
           </div>
 
+          <!-- PANEL LOGIN -->
           <div id="loginModePanel" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
               <label for="loginUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Nama Akun atau Email <span class="text-rose-600">*</span>
+                Username atau Email <span class="text-rose-600">*</span>
               </label>
-              <input type="text" id="loginUsernameInput" placeholder="Nama akun atau email terdaftar..."
+              <input type="text" id="loginUsernameInput" placeholder="Username atau email terdaftar..."
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
             </div>
             <div>
@@ -160,35 +161,66 @@
             </div>
           </div>
 
-          <div id="registerModePanel" class="hidden grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <div>
-              <label for="regUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Nama Akun Unik <span class="text-rose-600">*</span>
-              </label>
-              <input type="text" id="regUsernameInput" placeholder="Contoh: Best D Pamungkas"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
-            </div>
-            <div>
-              <label for="regEmailInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Email Aktif <span class="text-rose-600">*</span>
-              </label>
-              <input type="email" id="regEmailInput" placeholder="nama@email.com"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
-            </div>
-            <div>
-              <label for="regPasswordInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-                Password (Min. 6) <span class="text-rose-600">*</span>
-              </label>
-              <input type="password" id="regPasswordInput" placeholder="Minimal 6 karakter"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
-            </div>
-            <div>
-              <button type="button" onclick="handleRegisterSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition">
-                Daftar Akun Baru
-              </button>
+          <!-- PANEL DAFTAR AKUN (NAMA, USERNAME, EMAIL, PENDIDIKAN TERAKHIR, PASSWORD) -->
+          <div id="registerModePanel" class="hidden space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label for="regFullNameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                  1. Nama Lengkap Peserta <span class="text-rose-600">*</span>
+                </label>
+                <input type="text" id="regFullNameInput" placeholder="Contoh: Budiman Putra"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+              </div>
+
+              <div>
+                <label for="regUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                  2. Username (User Unik) <span class="text-rose-600">*</span>
+                </label>
+                <input type="text" id="regUsernameInput" placeholder="Contoh: budiman_cpns26"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+              </div>
+
+              <div>
+                <label for="regEmailInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                  3. Email Aktif <span class="text-rose-600">*</span>
+                </label>
+                <input type="email" id="regEmailInput" placeholder="nama@email.com"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+              </div>
+
+              <div>
+                <label for="regEducationSelect" class="block text-xs font-bold text-slate-700 mb-1.5">
+                  4. Pendidikan Terakhir <span class="text-rose-600">*</span>
+                </label>
+                <select id="regEducationSelect"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium">
+                  <option value="">-- Pilih Pendidikan Terakhir --</option>
+                  <option value="SMA/SMK/Sederajat">SMA / SMK / Sederajat</option>
+                  <option value="D-I / D-II">D-I / D-II</option>
+                  <option value="D-III">D-III (Diploma Tiga)</option>
+                  <option value="D-IV / S-1">D-IV / S-1 (Sarjana)</option>
+                  <option value="S-2 / Profesi">S-2 / Profesi (Magister)</option>
+                  <option value="S-3">S-3 (Doktor)</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="regPasswordInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                  Password (Min. 6 Karakter) <span class="text-rose-600">*</span>
+                </label>
+                <input type="password" id="regPasswordInput" placeholder="Minimal 6 karakter"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
+              </div>
+
+              <div class="flex items-end">
+                <button type="button" onclick="handleRegisterSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition">
+                  Daftar Akun Peserta
+                </button>
+              </div>
             </div>
           </div>
 
+          <!-- PANEL RESET PASSWORD -->
           <div id="resetModePanel" class="hidden space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div class="sm:col-span-2">
@@ -234,14 +266,33 @@
 
       <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-5">
-          <div>
-            <label for="participantNameInput" class="block text-sm font-bold text-slate-700 mb-1.5">
-              Nama Lengkap Peserta <span class="text-rose-600">*</span>
-            </label>
-            <input type="text" id="participantNameInput" readonly placeholder="Masukkan nama lengkap Anda..."
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
-            <p id="nameProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1.5"></p>
-            <p class="text-xs text-slate-500 mt-1">Nama ini akan tercatat pada hasil ujian dan rekap database Google Sheets.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="participantNameInput" class="block text-sm font-bold text-slate-700 mb-1.5">
+                Nama Lengkap Peserta <span class="text-rose-600">*</span>
+              </label>
+              <input type="text" id="participantNameInput" readonly placeholder="Otomatis terisi setelah login..."
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
+              <p id="nameProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1.5"></p>
+              <p class="text-[11px] text-slate-500 mt-1">Tercatat otomatis dari akun peserta yang login.</p>
+            </div>
+
+            <div>
+              <label for="participantEducationSelect" class="block text-sm font-bold text-slate-700 mb-1.5">
+                Pendidikan Terakhir <span class="text-rose-600">*</span>
+              </label>
+              <select id="participantEducationSelect"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium">
+                <option value="">-- Pilih Pendidikan Terakhir --</option>
+                <option value="SMA/SMK/Sederajat">SMA / SMK / Sederajat</option>
+                <option value="D-I / D-II">D-I / D-II</option>
+                <option value="D-III">D-III (Diploma Tiga)</option>
+                <option value="D-IV / S-1">D-IV / S-1 (Sarjana)</option>
+                <option value="S-2 / Profesi">S-2 / Profesi (Magister)</option>
+                <option value="S-3">S-3 (Doktor)</option>
+              </select>
+              <p class="text-[11px] text-slate-500 mt-1">Digunakan untuk pengelompokan peringkat di Dashboard.</p>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,7 +304,7 @@
                 placeholder="Contoh: Terampil - Pranata Komputer"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-sm font-medium" />
               <p id="formationProfanityWarning" class="hidden text-xs font-semibold text-rose-600 mt-1"></p>
-              <p class="text-[11px] text-slate-500 mt-1">Ketik formasi yang dilamar (misal: Terampil - Pranata Komputer).</p>
+              <p class="text-[11px] text-slate-500 mt-1">Ketik jabatan formasi (misal: Terampil - Pranata Komputer).</p>
             </div>
 
             <div>
@@ -505,10 +556,6 @@
         </button>
       </div>
     </div>
-
-    <footer class="text-center text-xs text-slate-500 pb-4">
-      Simulasi CAT SKD CPNS BKN • Dibuat oleh <strong class="text-slate-700">Best D Pamungkas</strong>
-    </footer>
   </section>
 
   <!-- HALAMAN 4: DASHBOARD SEMUA SKOR PESERTA -->
@@ -591,7 +638,8 @@
           <div id="dashUserHistoryList" class="grid grid-cols-1 gap-2 max-h-52 overflow-y-auto custom-scroll pr-1"></div>
         </div>
       </div>
-<div class="px-6 pt-4">
+
+      <div class="px-6 pt-4">
         <div class="border border-emerald-200 bg-emerald-50/50 rounded-xl p-4 space-y-2.5">
           <div class="flex items-center justify-between gap-2">
             <div>
@@ -603,35 +651,52 @@
           <div id="dashboardVerifiedDonationsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"></div>
         </div>
       </div>
-      <div class="p-6 pb-3 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" id="scopeAllBtn" onclick="setDashboardScope('ALL')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white">
-            Semua Peserta
-          </button>
-          <button type="button" id="scopeMineBtn" onclick="setDashboardScope('MINE')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
-            Skor Saya Saja
-          </button>
-          <button type="button" id="scopeTop10Btn" onclick="setDashboardTop10Mode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">
-            10 Besar (Berurutan)
-          </button>
+
+      <!-- KONTROL CAKUPAN & FILTER TERPISAH (PENDIDIKAN TERAKHIR, FORMASI, INSTANSI, MODE, PG) -->
+      <div class="p-6 pb-3 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="scopeAllBtn" onclick="setDashboardScope('ALL')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white">
+              Semua Peserta
+            </button>
+            <button type="button" id="scopeMineBtn" onclick="setDashboardScope('MINE')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Skor Saya Saja
+            </button>
+            <button type="button" id="scopeTop10Btn" onclick="setDashboardTop10Mode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">
+              10 Besar (Berurutan)
+            </button>
+          </div>
+
+          <input type="text" id="dashboardSearchInput" oninput="renderDashboardTable()"
+            placeholder="Cari nama peserta, pendidikan, formasi, atau instansi..."
+            class="w-full sm:w-72 px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-blue-600 outline-none" />
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
-          <input type="text" id="dashboardSearchInput" oninput="renderDashboardTable()"
-            placeholder="Cari nama peserta, formasi, atau instansi..."
-            class="w-full sm:w-56 px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-blue-600 outline-none" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+          <select id="dashboardFilterEducation" onchange="renderDashboardTable()"
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
+            <option value="ALL">Semua Pendidikan Terakhir</option>
+          </select>
+
+          <select id="dashboardFilterFormation" onchange="renderDashboardTable()"
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
+            <option value="ALL">Semua Formasi Dilamar</option>
+          </select>
+
           <select id="dashboardFilterInstansi" onchange="renderDashboardTable()"
-            class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none">
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
             <option value="ALL">Semua Instansi</option>
           </select>
+
           <select id="dashboardFilterMode" onchange="renderDashboardTable()"
-            class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none">
-            <option value="ALL">Semua Mode</option>
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
+            <option value="ALL">Semua Mode Ujian</option>
             <option value="FULL">Paket Lengkap</option>
             <option value="FOCUS">Fokus Subtes</option>
           </select>
+
           <select id="dashboardFilterPg" onchange="renderDashboardTable()"
-            class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none">
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
             <option value="ALL">Semua Status PG</option>
             <option value="LULUS PG">LULUS PG</option>
             <option value="TIDAK LULUS PG">TIDAK LULUS PG</option>
@@ -645,7 +710,8 @@
             <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
               <th class="py-2.5 px-3 font-bold">#</th>
               <th class="py-2.5 px-3 font-bold">Nama Peserta</th>
-              <th class="py-2.5 px-3 font-bold">Formasi</th>
+              <th class="py-2.5 px-3 font-bold">Pendidikan Terakhir</th>
+              <th class="py-2.5 px-3 font-bold">Formasi yang Dilamar</th>
               <th class="py-2.5 px-3 font-bold">Instansi</th>
               <th class="py-2.5 px-3 font-bold text-center">TWK</th>
               <th class="py-2.5 px-3 font-bold text-center">TIU</th>
@@ -697,7 +763,7 @@
   </footer>
 
   <!-- MODAL DONASI SEIKHLASNYA -->
-  <div id="donationModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs items-center justify-center p-4 no-print">
+  <div id="donationModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4 no-print">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden">
       <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 p-5 text-white flex items-center justify-between gap-3">
         <div>
@@ -772,10 +838,10 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=10"></script>
-  <script src="js/questions.js?v=10"></script>
-  <script src="js/auth.js?v=10"></script>
-  <script src="js/dashboard.js?v=10"></script>
-  <script src="js/exam.js?v=10"></script>
+  <script src="js/config.js?v=11"></script>
+  <script src="js/questions.js?v=11"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/dashboard.js?v=11"></script>
+  <script src="js/exam.js?v=11"></script>
 </body>
 </html>
