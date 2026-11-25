@@ -463,10 +463,11 @@ async function muatBankSoalDariSheet() {
         };
 
         if (subtest === "TKP") {
-          if (Array.isArray(item.scores)) {
+          if (Array.isArray(item.scores) && item.scores.length >= 5) {
             normalized.scores = item.scores.map(Number);
           } else if (item.keyRaw) {
-            normalized.scores = String(item.keyRaw).split(",").map(s => Number(s.trim()) || 0);
+            const parsedScores = String(item.keyRaw).split(",").map(s => Number(s.trim()) || 0);
+            normalized.scores = parsedScores.length >= 5 ? parsedScores : [1, 2, 3, 4, 5];
           } else {
             normalized.scores = [1, 2, 3, 4, 5];
           }
