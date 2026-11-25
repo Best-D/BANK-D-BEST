@@ -935,8 +935,6 @@ function renderFormationCompetitionSummary(filteredRows, eduFilter, formationFil
   }
 }
 
-
-
 function renderDashboardTable() {
   const tbody = document.getElementById("dashboardTableBody");
   if (!tbody) return;
@@ -961,8 +959,7 @@ function renderDashboardTable() {
         return false;
       }
     }
-renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
-    
+
     const recEdu = getRecordEducation(rec);
     const matchEdu = eduFilter === "ALL" || recEdu === eduFilter;
     const matchFormation = formationFilter === "ALL" || String(rec.formasi || "").trim() === formationFilter;
@@ -984,6 +981,8 @@ renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
   const sortedRows = filtered
     .slice()
     .sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+
+  renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
 
   const rowsToDisplay = top10Only ? sortedRows.slice(0, 10) : sortedRows;
 
