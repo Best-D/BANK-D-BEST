@@ -1,5 +1,5 @@
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyTh05nV13odzMkqUZiT0XjDZSK9sk8aIXrFBJZaxCM6_9Pv4eysPtnZfk77Up6_hTY/exec";
+  "https://script.google.com/macros/s/AKfycbzPJkFPe7hsnLLhjI0hdpQJrDhCsgpecf3w0W9T2E8TZ8zhhN7yZOmj76-0A7sXJp4V/exec";
 const SESSION_STORAGE_KEY = "cat_skd_active_session_v1";
 const AUTH_STORAGE_KEY = "cat_skd_logged_user_v1";
 const USERS_STORAGE_KEY = "cat_skd_registered_users_v1";
@@ -76,8 +76,13 @@ function showScreen(screenName) {
   document.getElementById("resultScreen").classList.toggle("hidden", screenName !== "result");
   document.getElementById("dashboardScreen").classList.toggle("hidden", screenName !== "dashboard");
 
+  const profileSec = document.getElementById("profileScreen");
+  if (profileSec) {
+    profileSec.classList.toggle("hidden", screenName !== "profile");
+  }
+
   const reviewSec = document.getElementById("reviewSection");
-  if (reviewSec && screenName === "setup") {
+  if (reviewSec && screenName !== "result") {
     reviewSec.classList.add("hidden");
   }
 
