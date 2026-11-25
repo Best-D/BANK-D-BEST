@@ -1,6 +1,15 @@
 let fullTrendSeriesMode = "ALL";
 let focusTrendSeriesMode = "ALL";
 
+const STANDARD_EDUCATION_LEVELS = [
+  "SMA/SMK/Sederajat",
+  "D-I / D-II",
+  "D-III",
+  "D-IV / S-1",
+  "S-2 / Profesi",
+  "S-3"
+];
+
 function safeText(val) {
   if (typeof escapeHtml === "function") return escapeHtml(val ?? "");
   return String(val ?? "")
@@ -141,6 +150,8 @@ function mapRekapRowToSession(rec, idx) {
   return {
     id: `db_${keyPart}`,
     nama: rec.nama || "Peserta",
+    username: rec.username || "",
+    pendidikan: rec.pendidikan_terakhir || rec.pendidikan || "-",
     formasi: rec.formasi || "-",
     instansi: rec.instansi || "-",
     mode: rec.mode || "Reguler",
@@ -154,6 +165,7 @@ function mapRekapRowToSession(rec, idx) {
     questions: [],
     answers: [],
     durations: [],
+    doubts: [],
     fromDatabase: true
   };
 }
@@ -203,6 +215,7 @@ function loadAttemptIntoReview(attemptId) {
   reviewQuestions = found.questions;
   reviewAnswers = Array.isArray(found.answers) ? found.answers : [];
   reviewDurations = Array.isArray(found.durations) ? found.durations : [];
+  reviewDoubts = Array.isArray(found.doubts) ? found.doubts : [];
   reviewOnlyWeakMode = false;
   reviewMetaLabel = `Sesi ${found.nama} (${found.waktuLabel || ""}) — Total Skor: ${found.total}`;
 
@@ -232,7 +245,21 @@ function exportLocalHistoryToCsv() {
     return;
   }
 
-  const headers = ["Waktu", "Nama", "Formasi", "Instansi", "Mode", "TWK", "TIU", "TKP", "Total", "Status PG", "Warning"];
+  const headers = [
+    "Waktu",
+    "Nama",
+    "Username",
+    "Pendidikan Terakhir",
+    "Formasi",
+    "Instansi",
+    "Mode",
+    "TWK",
+    "TIU",
+    "TKP",
+    "Total",
+    "Status PG",
+    "Warning"
+  ];
   const escapeCsv = (val) => {
     const s = String(val ?? "").replace(/"/g, '""');
     return `"${s}"`;
@@ -243,6 +270,8 @@ function exportLocalHistoryToCsv() {
     ...history.map(h => [
       h.waktuLabel || "-",
       h.nama || "-",
+      h.username || "-",
+      h.pendidikan || "-",
       h.formasi || "-",
       h.instansi || "-",
       h.mode || "-",
@@ -296,11 +325,12 @@ function renderAttemptHistory() {
     const card = document.createElement("div");
     card.className = "bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3";
 
+    const eduLabel = item.pendidikan && item.pendidikan !== "-" ? ` • ${safeText(item.pendidikan)}` : "";
     const info = document.createElement("div");
     info.innerHTML = `
       <div class="text-xs font-extrabold text-slate-800">${urutanLabel} • Skor ${item.total}</div>
       <div class="text-[11px] text-slate-500">TWK ${item.twk} | TIU ${item.tiu} | TKP ${item.tkp} • ${safeText(item.status_pg)}</div>
-      <div class="text-[10px] text-slate-400">${safeText(item.mode || "")} • ${safeText(item.waktuLabel || "")}</div>
+      <div class="text-[10px] text-slate-400">${safeText(item.formasi || "-")}${eduLabel} • ${safeText(item.waktuLabel || "")}</div>
     `;
 
     const btn = document.createElement("button");
@@ -348,7 +378,7 @@ function renderDashboardUserPreviousExams() {
     info.innerHTML = `
       <div class="text-xs font-extrabold text-slate-800">${safeText(label)} • Skor ${item.total}</div>
       <div class="text-[11px] text-slate-500">TWK ${item.twk} | TIU ${item.tiu} | TKP ${item.tkp} • ${safeText(item.status_pg)}</div>
-      <div class="text-[10px] text-slate-400">${safeText(item.waktuLabel || "")}</div>
+      <div class="text-[10px] text-slate-400">${safeText(item.formasi || "-")} • ${safeText(item.waktuLabel || "")}</div>
     `;
 
     const btn = document.createElement("button");
@@ -538,6 +568,67 @@ function renderUserScoreTrendChart() {
   );
 }
 
+function getRecordEducation(rec) {
+  return String(rec?.pendidikan_terakhir || rec?.pendidikan || "").trim();
+}
+
+function populateDashboardEducationFilter() {
+  const selectEl = document.getElementById("dashboardFilterEducation");
+  if (!selectEl) return;
+
+  const previousValue = selectEl.value || "ALL";
+  const fromRecords = Array.isArray(dashboardRecords)
+    ? dashboardRecords.map(r => getRecordEducation(r)).filter(v => v && v !== "-")
+    : [];
+
+  const mergedSet = new Set([...STANDARD_EDUCATION_LEVELS, ...fromRecords]);
+  const educations = Array.from(mergedSet);
+
+  selectEl.replaceChildren();
+  const allOpt = document.createElement("option");
+  allOpt.value = "ALL";
+  allOpt.textContent = "Semua Pendidikan Terakhir";
+  selectEl.appendChild(allOpt);
+
+  educations.forEach(edu => {
+    const opt = document.createElement("option");
+    opt.value = edu;
+    opt.textContent = edu;
+    selectEl.appendChild(opt);
+  });
+
+  selectEl.value = educations.includes(previousValue) ? previousValue : "ALL";
+}
+
+function populateDashboardFormationFilter() {
+  const selectEl = document.getElementById("dashboardFilterFormation");
+  if (!selectEl || !Array.isArray(dashboardRecords)) return;
+
+  const previousValue = selectEl.value || "ALL";
+  const formations = Array.from(
+    new Set(
+      dashboardRecords
+        .map(r => String(r.formasi || "").trim())
+        .filter(v => v && v !== "-")
+    )
+  ).sort((a, b) => a.localeCompare(b, "id"));
+
+  selectEl.replaceChildren();
+  const allOpt = document.createElement("option");
+  allOpt.value = "ALL";
+  allOpt.textContent = "Semua Formasi Dilamar";
+  selectEl.appendChild(allOpt);
+
+  formations.forEach(formasi => {
+    const opt = document.createElement("option");
+    opt.value = formasi;
+    opt.textContent = formasi;
+    selectEl.appendChild(opt);
+  });
+
+  selectEl.value = formations.includes(previousValue) ? previousValue : "ALL";
+}
+
 function populateDashboardInstitutionFilter() {
   const selectEl = document.getElementById("dashboardFilterInstansi");
   if (!selectEl || typeof dashboardRecords === "undefined" || !Array.isArray(dashboardRecords)) return;
@@ -547,7 +638,7 @@ function populateDashboardInstitutionFilter() {
     new Set(
       dashboardRecords
         .map(r => String(r.instansi || "").trim())
-        .filter(Boolean)
+        .filter(v => v && v !== "-")
     )
   ).sort((a, b) => a.localeCompare(b, "id"));
 
@@ -607,6 +698,8 @@ async function refreshDashboardData() {
   const localRecords = getExamHistory().map(h => ({
     waktu: h.waktuLabel || "-",
     nama: h.nama || "Peserta",
+    username: h.username || "",
+    pendidikan_terakhir: h.pendidikan || "-",
     formasi: h.formasi || "-",
     instansi: h.instansi || "-",
     mode: h.mode || "-",
@@ -625,6 +718,8 @@ async function refreshDashboardData() {
     if (infoEl) infoEl.textContent = `Status Koneksi: Lokal Saja • ${localRecords.length} data di browser ini.`;
     renderDashboardUserPreviousExams();
     renderUserScoreTrendChart();
+    populateDashboardEducationFilter();
+    populateDashboardFormationFilter();
     populateDashboardInstitutionFilter();
     renderDashboardTable();
     loadVerifiedDonationsForDashboard();
@@ -663,6 +758,8 @@ async function refreshDashboardData() {
 
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  populateDashboardEducationFilter();
+  populateDashboardFormationFilter();
   populateDashboardInstitutionFilter();
   renderDashboardTable();
   loadVerifiedDonationsForDashboard();
@@ -677,9 +774,12 @@ function renderDashboardTable() {
   const top10Only = typeof dashboardTop10Only !== "undefined" ? dashboardTop10Only : false;
 
   const qText = (document.getElementById("dashboardSearchInput")?.value || "").trim().toLowerCase();
-  const pgFilter = document.getElementById("dashboardFilterPg")?.value || "ALL";
+  const eduFilter = document.getElementById("dashboardFilterEducation")?.value || "ALL";
+  const formationFilter = document.getElementById("dashboardFilterFormation")?.value || "ALL";
   const instFilter = document.getElementById("dashboardFilterInstansi")?.value || "ALL";
   const modeFilter = document.getElementById("dashboardFilterMode")?.value || "ALL";
+  const pgFilter = document.getElementById("dashboardFilterPg")?.value || "ALL";
+
   const activeName = getActiveUserFilterName();
   const activeKey = activeName ? safeAccountKey(activeName) : "";
 
@@ -689,16 +789,23 @@ function renderDashboardTable() {
         return false;
       }
     }
-    const matchPg = pgFilter === "ALL" || rec.status_pg === pgFilter;
+
+    const recEdu = getRecordEducation(rec);
+    const matchEdu = eduFilter === "ALL" || recEdu === eduFilter;
+    const matchFormation = formationFilter === "ALL" || String(rec.formasi || "").trim() === formationFilter;
     const matchInst = instFilter === "ALL" || String(rec.instansi || "").trim() === instFilter;
+    const matchPg = pgFilter === "ALL" || rec.status_pg === pgFilter;
+
     const isFocus = isFocusOrDrillMode(rec.mode);
     const matchMode =
       modeFilter === "ALL" ||
       (modeFilter === "FULL" && !isFocus) ||
       (modeFilter === "FOCUS" && isFocus);
-    const hay = `${rec.nama} ${rec.formasi} ${rec.instansi} ${rec.mode || ""}`.toLowerCase();
+
+    const hay = `${rec.nama} ${recEdu} ${rec.formasi} ${rec.instansi} ${rec.mode || ""}`.toLowerCase();
     const matchText = !qText || hay.includes(qText);
-    return matchPg && matchInst && matchMode && matchText;
+
+    return matchEdu && matchFormation && matchInst && matchPg && matchMode && matchText;
   });
 
   const sortedRows = filtered
@@ -727,7 +834,7 @@ function renderDashboardTable() {
 
   if (rowsToDisplay.length === 0) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="10" class="py-6 px-4 text-center text-slate-500">Belum ada data skor peserta yang sesuai filter.</td>`;
+    tr.innerHTML = `<td colspan="11" class="py-6 px-4 text-center text-slate-500">Belum ada data skor peserta yang sesuai filter.</td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -751,10 +858,16 @@ function renderDashboardTable() {
     const focusTag = isFocusOrDrillMode(rec.mode)
       ? `<span class="ml-1 inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">Fokus</span>`
       : "";
+    const eduDisplay = getRecordEducation(rec) || "-";
 
     tr.innerHTML = `
       <td class="py-2.5 px-3 font-semibold text-slate-500">${rankNum}</td>
       <td class="py-2.5 px-3 font-bold text-slate-800">${safeText(rec.nama)}${rankBadge}${youBadge}</td>
+      <td class="py-2.5 px-3">
+        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-100">
+          ${safeText(eduDisplay)}
+        </span>
+      </td>
       <td class="py-2.5 px-3 font-medium text-slate-800">${safeText(rec.formasi)}${focusTag}</td>
       <td class="py-2.5 px-3 text-slate-600">${safeText(rec.instansi)}</td>
       <td class="py-2.5 px-3 text-center font-semibold">${Number(rec.twk || 0)}</td>
