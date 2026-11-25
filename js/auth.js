@@ -138,7 +138,7 @@ function checkInputAnomalyPreview(nameVal, formationVal, institutionVal) {
   if (formationVal.length < 3 || institutionVal.length < 3) {
     issues.push("Formasi atau instansi terlalu singkat");
   }
-  if (/^[^a-zA-Z\s]+$/.test(formationVal) \vert{}\vert{} /^[^a-zA-Z\s]+$/.test(institutionVal)) {
+  if (/^[^a-zA-Z\s]+$/.test(formationVal) || /^[^a-zA-Z\s]+$/.test(institutionVal)) {
     issues.push("Formasi atau instansi tidak menggunakan huruf wajar");
   }
   return issues;
@@ -438,4 +438,289 @@ async function handleRequestResetOtp() {
 }
 
 async function handleConfirmResetOtp() {
-  const
+  const emailVal = document.getElementById("resetEmailInput").value.trim().toLowerCase();
+  const otpVal = document.getElementById("resetOtpInput").value.trim();
+  const newPassVal = document.getElementById("resetNewPasswordInput").value;
+
+  if (!isValidEmailAddress(emailVal) || !otpVal || !newPassVal) {
+    showAuthFeedback("Lengkapi email, kode 6 digit dari email, dan password baru.", true);
+    return;
+  }
+  if (newPassVal.length < 6) {
+    showAuthFeedback("Password baru minimal 6 karakter.", true);
+    return;
+  }
+
+  const newPasswordHash = await hashSecretValue(newPassVal);
+
+  try {
+    const remote = await postAuthToSheet({
+      action: "confirm_reset_otp",
+      email: emailVal,
+      otp_code: otpVal,
+      new_password_hash: newPasswordHash
+    });
+    if (remote && remote.status === "sukses") {
+      const users = getRegisteredUsers();
+      const idx = users.findIndex(u => String(u.email || "").toLowerCase() === emailVal);
+      if (idx !== -1) {
+        users[idx].passwordHash = newPasswordHash;
+        saveRegisteredUsers(users);
+      }
+
+      document.getElementById("resetOtpInput").value = "";
+      document.getElementById("resetNewPasswordInput").value = "";
+      document.getElementById("loginUsernameInput").value = remote.username || remote.nama || emailVal;
+      switchAuthMode("login");
+      showAuthFeedback(remote.pesan || "Password berhasil diubah. Silakan login.");
+      return;
+    }
+    showAuthFeedback((remote && remote.pesan) || "Kode reset tidak valid atau kedaluwarsa.", true);
+  } catch (err) {
+    showAuthFeedback("Gagal memverifikasi kode reset. Coba beberapa saat lagi.", true);
+  }
+}
+
+function loadLoggedUserFromStorage() {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.nama) {
+      loggedUser = {
+        nama: parsed.nama,
+        username: parsed.username || parsed.nama,
+        email: parsed.email || "",
+        pendidikan: parsed.pendidikan || ""
+      };
+      applyLoggedUserToUI();
+    }
+  } catch (err) {}
+}
+
+function applyLoggedUserToUI() {
+  const badge = document.getElementById("activeSessionBadge");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const formsBox = document.getElementById("authFormsContainer");
+  const bannerBox = document.getElementById("loggedInAccountBanner");
+  const detailEl = document.getElementById("loggedInAccountDetail");
+  const nameInput = document.getElementById("participantNameInput");
+  const eduSelect = document.getElementById("participantEducationSelect");
+  const loginName = document.getElementById("loginUsernameInput");
+
+  if (loggedUser && loggedUser.nama) {
+    const unameLabel = loggedUser.username ? `@${loggedUser.username}` : "";
+    if (badge) {
+      badge.textContent = `Peserta: ${loggedUser.nama}`;
+      badge.classList.remove("hidden");
+    }
+    if (logoutBtn) logoutBtn.classList.remove("hidden");
+    if (formsBox) formsBox.classList.add("hidden");
+    if (bannerBox) bannerBox.classList.remove("hidden");
+    if (detailEl) {
+      const metaParts = [
+        `Nama: ${loggedUser.nama}`,
+        unameLabel ? `User: ${unameLabel}` : "",
+        loggedUser.email ? `Email: ${loggedUser.email}` : "",
+        loggedUser.pendidikan ? `Pendidikan: ${loggedUser.pendidikan}` : ""
+      ].filter(Boolean);
+      detailEl.textContent = metaParts.join(" • ");
+    }
+    if (nameInput) {
+      nameInput.value = loggedUser.nama;
+    }
+    if (eduSelect && loggedUser.pendidikan && !eduSelect.value) {
+      eduSelect.value = loggedUser.pendidikan;
+    }
+    if (loginName) {
+      loginName.value = loggedUser.username || loggedUser.nama;
+    }
+  } else {
+    if (badge) badge.classList.add("hidden");
+    if (logoutBtn) logoutBtn.classList.add("hidden");
+    if (formsBox) formsBox.classList.remove("hidden");
+    if (bannerBox) bannerBox.classList.add("hidden");
+    if (detailEl) detailEl.textContent = "";
+    if (nameInput) nameInput.value = "";
+    if (eduSelect) eduSelect.value = "";
+  }
+}
+
+function logoutParticipant() {
+  if (!confirm("Keluar dari sesi login saat ini?")) return;
+  loggedUser = null;
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  applyLoggedUserToUI();
+  renderAttemptHistory();
+  renderDashboardUserPreviousExams();
+  renderUserScoreTrendChart();
+  showAuthFeedback("Anda telah keluar dari sesi login.");
+}
+
+function showProfileFeedback(msg, isError = false) {
+  const el = document.getElementById("profileFeedbackText");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `text-xs font-semibold rounded-xl p-3 ${
+    isError
+      ? "text-rose-800 bg-rose-50 border border-rose-200"
+      : "text-emerald-800 bg-emerald-50 border border-emerald-200"
+  }`;
+  el.classList.remove("hidden");
+}
+
+function populateProfileForm() {
+  const noticeEl = document.getElementById("profileAuthNotice");
+  if (noticeEl) {
+    noticeEl.classList.toggle("hidden", Boolean(loggedUser && loggedUser.nama));
+  }
+
+  const fbEl = document.getElementById("profileFeedbackText");
+  if (fbEl) fbEl.classList.add("hidden");
+
+  const currentName = (loggedUser?.nama || document.getElementById("participantNameInput")?.value || "").trim();
+  const currentUser = (loggedUser?.username || "").trim();
+  const currentEmail = (loggedUser?.email || "").trim();
+  const currentEdu = (
+    document.getElementById("participantEducationSelect")?.value ||
+    loggedUser?.pendidikan ||
+    participantEducation ||
+    ""
+  ).trim();
+  const currentFormation = (
+    document.getElementById("appliedFormationInput")?.value ||
+    appliedFormation ||
+    ""
+  ).trim();
+  const currentInstitution = (
+    document.getElementById("appliedInstitutionInput")?.value ||
+    appliedInstitution ||
+    ""
+  ).trim();
+
+  const nameEl = document.getElementById("profileFullNameInput");
+  const userEl = document.getElementById("profileUsernameInput");
+  const emailEl = document.getElementById("profileEmailInput");
+  const eduEl = document.getElementById("profileEducationSelect");
+  const formEl = document.getElementById("profileFormationInput");
+  const instEl = document.getElementById("profileInstitutionInput");
+
+  if (nameEl) nameEl.value = currentName;
+  if (userEl) {
+    userEl.value = currentUser;
+    userEl.readOnly = Boolean(loggedUser && loggedUser.username);
+    userEl.classList.toggle("bg-slate-100", Boolean(loggedUser && loggedUser.username));
+  }
+  if (emailEl) {
+    emailEl.value = currentEmail;
+    emailEl.readOnly = Boolean(loggedUser && loggedUser.email);
+    emailEl.classList.toggle("bg-slate-100", Boolean(loggedUser && loggedUser.email));
+  }
+  if (eduEl) eduEl.value = currentEdu;
+  if (formEl) formEl.value = currentFormation;
+  if (instEl) instEl.value = currentInstitution;
+}
+
+function openProfileScreen() {
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Selesaikan ujian terlebih dahulu sebelum membuka menu Profil Peserta.");
+    return;
+  }
+  populateProfileForm();
+  showScreen("profile");
+}
+
+async function saveParticipantProfile(goToSetupAfterSave = false) {
+  const fullName = (document.getElementById("profileFullNameInput")?.value || "").trim();
+  const rawUser = (document.getElementById("profileUsernameInput")?.value || "").trim();
+  const emailVal = (document.getElementById("profileEmailInput")?.value || "").trim().toLowerCase();
+  const educationVal = (document.getElementById("profileEducationSelect")?.value || "").trim();
+  const formationVal = (document.getElementById("profileFormationInput")?.value || "").trim();
+  const institutionVal = (document.getElementById("profileInstitutionInput")?.value || "").trim();
+
+  if (!fullName || fullName.length < 3) {
+    showProfileFeedback("Nama lengkap peserta minimal 3 karakter.", true);
+    return;
+  }
+  if (findProfanityInName(fullName).length > 0) {
+    showProfileFeedback("Nama lengkap mengandung kata tidak sopan.", true);
+    return;
+  }
+  if (!educationVal) {
+    showProfileFeedback("Pilih Pendidikan Terakhir terlebih dahulu.", true);
+    return;
+  }
+  if (!formationVal || findProfanityInName(formationVal).length > 0) {
+    showProfileFeedback("Isi Formasi yang Dilamar dengan kata yang wajar dan sopan.", true);
+    return;
+  }
+  if (!institutionVal || findProfanityInName(institutionVal).length > 0) {
+    showProfileFeedback("Isi Instansi yang Dilamar dengan kata yang wajar dan sopan.", true);
+    return;
+  }
+
+  participantName = fullName;
+  participantEducation = educationVal;
+  appliedFormation = formationVal;
+  appliedInstitution = institutionVal;
+
+  const setupNameEl = document.getElementById("participantNameInput");
+  const setupEduEl = document.getElementById("participantEducationSelect");
+  const setupFormEl = document.getElementById("appliedFormationInput");
+  const setupInstEl = document.getElementById("appliedInstitutionInput");
+
+  if (setupNameEl) setupNameEl.value = fullName;
+  if (setupEduEl) setupEduEl.value = educationVal;
+  if (setupFormEl) setupFormEl.value = formationVal;
+  if (setupInstEl) setupInstEl.value = institutionVal;
+
+  if (loggedUser && loggedUser.nama) {
+    const prevKey = normalizeUsernameKey(loggedUser.username || loggedUser.nama);
+    loggedUser = {
+      ...loggedUser,
+      nama: fullName,
+      username: rawUser || loggedUser.username || fullName,
+      email: emailVal || loggedUser.email || "",
+      pendidikan: educationVal
+    };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(loggedUser));
+
+    const users = getRegisteredUsers();
+    const idx = users.findIndex(u =>
+      normalizeUsernameKey(u.username || u.nama) === prevKey ||
+      String(u.email || "").toLowerCase() === String(loggedUser.email || "").toLowerCase()
+    );
+    if (idx !== -1) {
+      users[idx] = {
+        ...users[idx],
+        nama: fullName,
+        pendidikan: educationVal
+      };
+      saveRegisteredUsers(users);
+    }
+
+    applyLoggedUserToUI();
+
+    try {
+      await postAuthToSheet({
+        action: "update_profile",
+        username: loggedUser.username,
+        email: loggedUser.email,
+        nama: fullName,
+        nama_key: normalizeAccountKey(fullName),
+        pendidikan_terakhir: educationVal
+      });
+    } catch (err) {
+      console.warn("Sinkronisasi profil ke Sheet gagal:", err);
+    }
+  }
+
+  renderAttemptHistory();
+  renderDashboardUserPreviousExams();
+  renderUserScoreTrendChart();
+  showProfileFeedback(`Profil "${fullName}" (${educationVal} • ${formationVal}) berhasil disimpan.`);
+
+  if (goToSetupAfterSave) {
+    showScreen("setup");
+  }
+}
