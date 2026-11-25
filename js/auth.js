@@ -196,7 +196,6 @@ function switchAuthMode(mode) {
 
   loginPanel.classList.toggle("hidden", mode !== "login");
   regPanel.classList.toggle("hidden", mode !== "register");
-  regPanel.classList.toggle("grid", mode === "register");
   resetPanel.classList.toggle("hidden", mode !== "reset");
 
   const activeCls = "px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm";
@@ -222,20 +221,38 @@ async function postAuthToSheet(payload) {
 }
 
 async function handleRegisterSubmit() {
-  const rawName = document.getElementById("regUsernameInput").value.trim();
-  const emailVal = document.getElementById("regEmailInput").value.trim().toLowerCase();
-  const passVal = document.getElementById("regPasswordInput").value;
+  const fullName = document.getElementById("regFullNameInput")?.value.trim() || "";
+  const rawUsername = document.getElementById("regUsernameInput")?.value.trim() || "";
+  const emailVal = document.getElementById("regEmailInput")?.value.trim().toLowerCase() || "";
+  const educationVal = document.getElementById("regEducationSelect")?.value.trim() || "";
+  const passVal = document.getElementById("regPasswordInput")?.value || "";
 
-  if (!rawName || rawName.length < 3) {
-    showAuthFeedback("Nama akun minimal 3 karakter.", true);
+  if (!fullName || fullName.length < 3) {
+    showAuthFeedback("Nama lengkap peserta minimal 3 karakter.", true);
     return;
   }
-  if (findProfanityInName(rawName).length > 0) {
-    showAuthFeedback("Nama akun mengandung kata tidak sopan.", true);
+  if (findProfanityInName(fullName).length > 0) {
+    showAuthFeedback("Nama lengkap mengandung kata tidak sopan.", true);
+    return;
+  }
+  if (!rawUsername || rawUsername.length < 3) {
+    showAuthFeedback("Username minimal 3 karakter.", true);
+    return;
+  }
+  if (/\s/.test(rawUsername) || !/^[a-zA-Z0-9._-]+$/.test(rawUsername)) {
+    showAuthFeedback("Username hanya boleh huruf, angka, titik (.), garis bawah (_), atau tanda hubung (-) tanpa spasi.", true);
+    return;
+  }
+  if (findProfanityInName(rawUsername).length > 0) {
+    showAuthFeedback("Username mengandung kata tidak sopan.", true);
     return;
   }
   if (!isValidEmailAddress(emailVal)) {
     showAuthFeedback("Masukkan alamat email yang valid.", true);
+    return;
+  }
+  if (!educationVal) {
+    showAuthFeedback("Pilih Pendidikan Terakhir Anda terlebih dahulu.", true);
     return;
   }
   if (!passVal || passVal.length < 6) {
@@ -243,10 +260,17 @@ async function handleRegisterSubmit() {
     return;
   }
 
-  const key = normalizeAccountKey(rawName);
+  const nameKey = normalizeAccountKey(fullName);
+  const userKey = normalizeUsernameKey(rawUsername);
   const users = getRegisteredUsers();
-  if (users.some(u => normalizeAccountKey(u.nama) === key || String(u.email || "").toLowerCase() === emailVal)) {
-    showAuthFeedback("Nama akun atau email sudah terdaftar. Silakan login atau gunakan isian unik lain.", true);
+
+  if (
+    users.some(u =>
+      normalizeUsernameKey(u.username || u.nama) === userKey ||
+      String(u.email || "").toLowerCase() === emailVal
+    )
+  ) {
+    showAuthFeedback("Username atau email sudah terdaftar. Silakan login atau gunakan username/email lain.", true);
     return;
   }
 
@@ -255,9 +279,12 @@ async function handleRegisterSubmit() {
   try {
     const remote = await postAuthToSheet({
       action: "register",
-      nama: rawName,
-      nama_key: key,
+      nama: fullName,
+      nama_key: nameKey,
+      username: rawUsername,
+      username_key: userKey,
       email: emailVal,
+      pendidikan_terakhir: educationVal,
       password_hash: passwordHash
     });
     if (remote && remote.status === "error") {
@@ -265,40 +292,57 @@ async function handleRegisterSubmit() {
       return;
     }
   } catch (err) {
-    console.warn("Sinkronisasi daftar akun ke Sheet gagal.", err);
+    console.warn("Sinkronisasi daftar akun ke Sheet gagal, menyimpan secara lokal.", err);
   }
 
   users.push({
     id: `usr_${Date.now()}`,
-    nama: rawName,
+    nama: fullName,
+    username: rawUsername,
     email: emailVal,
+    pendidikan: educationVal,
     passwordHash,
     createdAt: new Date().toISOString()
   });
   saveRegisteredUsers(users);
 
-  loggedUser = { nama: rawName, email: emailVal };
+  loggedUser = {
+    nama: fullName,
+    username: rawUsername,
+    email: emailVal,
+    pendidikan: educationVal
+  };
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(loggedUser));
-  document.getElementById("participantNameInput").value = rawName;
+
+  document.getElementById("participantNameInput").value = fullName;
+  const eduSelect = document.getElementById("participantEducationSelect");
+  if (eduSelect) eduSelect.value = educationVal;
   document.getElementById("regPasswordInput").value = "";
 
   applyLoggedUserToUI();
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
-  showAuthFeedback(`Akun "${rawName}" (${emailVal}) berhasil didaftarkan.`);
+  showAuthFeedback(`Akun peserta "${fullName}" (@${rawUsername} • ${educationVal}) berhasil didaftarkan.`);
 }
 
 async function handleLoginSubmit() {
-  const identifier = document.getElementById("loginUsernameInput").value.trim().toLowerCase();
-  const passVal = document.getElementById("loginPasswordInput").value;
+  const identifierRaw = document.getElementById("loginUsernameInput")?.value.trim() || "";
+  const identifier = identifierRaw.toLowerCase();
+  const passVal = document.getElementById("loginPasswordInput")?.value || "";
 
   if (!identifier || !passVal) {
-    showAuthFeedback("Masukkan nama akun/email dan password.", true);
+    showAuthFeedback("Masukkan username/email dan password.", true);
     return;
   }
 
   const passwordHash = await hashSecretValue(passVal);
+  const localUsers = getRegisteredUsers();
+  const localMatch = localUsers.find(u =>
+    normalizeUsernameKey(u.username || u.nama) === normalizeUsernameKey(identifier) ||
+    normalizeAccountKey(u.nama) === normalizeAccountKey(identifier) ||
+    String(u.email || "").toLowerCase() === identifier
+  );
 
   try {
     const remote = await postAuthToSheet({
@@ -307,11 +351,23 @@ async function handleLoginSubmit() {
       password_hash: passwordHash
     });
     if (remote && remote.status === "sukses") {
-      const resolvedName = remote.nama || identifier;
-      loggedUser = { nama: resolvedName, email: remote.email || "" };
+      const resolvedName = remote.nama || (localMatch ? localMatch.nama : identifierRaw);
+      const resolvedUsername = remote.username || (localMatch ? localMatch.username : identifierRaw);
+      const resolvedEducation = remote.pendidikan_terakhir || remote.pendidikan || (localMatch ? localMatch.pendidikan : "");
+
+      loggedUser = {
+        nama: resolvedName,
+        username: resolvedUsername,
+        email: remote.email || (localMatch ? localMatch.email : ""),
+        pendidikan: resolvedEducation
+      };
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(loggedUser));
+
       document.getElementById("participantNameInput").value = resolvedName;
+      const eduSelect = document.getElementById("participantEducationSelect");
+      if (eduSelect && resolvedEducation) eduSelect.value = resolvedEducation;
       document.getElementById("loginPasswordInput").value = "";
+
       applyLoggedUserToUI();
       renderAttemptHistory();
       renderDashboardUserPreviousExams();
@@ -320,32 +376,36 @@ async function handleLoginSubmit() {
       return;
     }
     if (remote && remote.status === "error") {
-      showAuthFeedback(remote.pesan || "Nama akun/email atau password salah.", true);
+      showAuthFeedback(remote.pesan || "Username/email atau password salah.", true);
       return;
     }
   } catch (err) {
     console.warn("Login ke Sheet gagal, memeriksa cache lokal.", err);
   }
 
-  const users = getRegisteredUsers();
-  const found = users.find(u =>
-    normalizeAccountKey(u.nama) === identifier ||
-    String(u.email || "").toLowerCase() === identifier
-  );
-  if (!found || passwordHash !== found.passwordHash) {
-    showAuthFeedback("Nama akun/email atau password salah. Gunakan tab Reset Password jika lupa.", true);
+  if (!localMatch || passwordHash !== localMatch.passwordHash) {
+    showAuthFeedback("Username/email atau password salah. Gunakan tab Reset Password jika lupa.", true);
     return;
   }
 
-  loggedUser = { nama: found.nama, email: found.email || "" };
+  loggedUser = {
+    nama: localMatch.nama,
+    username: localMatch.username || localMatch.nama,
+    email: localMatch.email || "",
+    pendidikan: localMatch.pendidikan || ""
+  };
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(loggedUser));
-  document.getElementById("participantNameInput").value = found.nama;
+
+  document.getElementById("participantNameInput").value = localMatch.nama;
+  const eduSelect = document.getElementById("participantEducationSelect");
+  if (eduSelect && localMatch.pendidikan) eduSelect.value = localMatch.pendidikan;
   document.getElementById("loginPasswordInput").value = "";
+
   applyLoggedUserToUI();
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
-  showAuthFeedback(`Selamat datang kembali, ${found.nama} (Mode Lokal).`);
+  showAuthFeedback(`Selamat datang kembali, ${localMatch.nama} (Mode Lokal).`);
 }
 
 async function handleRequestResetOtp() {
@@ -410,7 +470,7 @@ async function handleConfirmResetOtp() {
 
       document.getElementById("resetOtpInput").value = "";
       document.getElementById("resetNewPasswordInput").value = "";
-      document.getElementById("loginUsernameInput").value = remote.nama || emailVal;
+      document.getElementById("loginUsernameInput").value = remote.username || remote.nama || emailVal;
       switchAuthMode("login");
       showAuthFeedback(remote.pesan || "Password berhasil diubah. Silakan login.");
       return;
@@ -427,7 +487,12 @@ function loadLoggedUserFromStorage() {
     if (!raw) return;
     const parsed = JSON.parse(raw);
     if (parsed && parsed.nama) {
-      loggedUser = { nama: parsed.nama, email: parsed.email || "" };
+      loggedUser = {
+        nama: parsed.nama,
+        username: parsed.username || parsed.nama,
+        email: parsed.email || "",
+        pendidikan: parsed.pendidikan || ""
+      };
       applyLoggedUserToUI();
     }
   } catch (err) {}
@@ -440,31 +505,44 @@ function applyLoggedUserToUI() {
   const bannerBox = document.getElementById("loggedInAccountBanner");
   const detailEl = document.getElementById("loggedInAccountDetail");
   const nameInput = document.getElementById("participantNameInput");
+  const eduSelect = document.getElementById("participantEducationSelect");
   const loginName = document.getElementById("loginUsernameInput");
 
   if (loggedUser && loggedUser.nama) {
+    const unameLabel = loggedUser.username ? `@${loggedUser.username}` : "";
     if (badge) {
-      badge.textContent = `Akun Aktif: ${loggedUser.nama}`;
+      badge.textContent = `Peserta: ${loggedUser.nama}`;
       badge.classList.remove("hidden");
     }
     if (logoutBtn) logoutBtn.classList.remove("hidden");
     if (formsBox) formsBox.classList.add("hidden");
     if (bannerBox) bannerBox.classList.remove("hidden");
     if (detailEl) {
-      detailEl.textContent = loggedUser.email
-        ? `Akun: ${loggedUser.nama} • Email: ${loggedUser.email}`
-        : `Akun: ${loggedUser.nama}`;
+      const metaParts = [
+        `Nama: ${loggedUser.nama}`,
+        unameLabel ? `User: ${unameLabel}` : "",
+        loggedUser.email ? `Email: ${loggedUser.email}` : "",
+        loggedUser.pendidikan ? `Pendidikan: ${loggedUser.pendidikan}` : ""
+      ].filter(Boolean);
+      detailEl.textContent = metaParts.join(" • ");
     }
-    if (nameInput && !nameInput.value.trim()) {
+    if (nameInput) {
       nameInput.value = loggedUser.nama;
     }
-    if (loginName) loginName.value = loggedUser.nama;
+    if (eduSelect && loggedUser.pendidikan && !eduSelect.value) {
+      eduSelect.value = loggedUser.pendidikan;
+    }
+    if (loginName) {
+      loginName.value = loggedUser.username || loggedUser.nama;
+    }
   } else {
     if (badge) badge.classList.add("hidden");
     if (logoutBtn) logoutBtn.classList.add("hidden");
     if (formsBox) formsBox.classList.remove("hidden");
     if (bannerBox) bannerBox.classList.add("hidden");
     if (detailEl) detailEl.textContent = "";
+    if (nameInput) nameInput.value = "";
+    if (eduSelect) eduSelect.value = "";
   }
 }
 
