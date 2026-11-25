@@ -1,5 +1,5 @@
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxbGsFd65w4NupULzcuamcLj_8jpu7tjE_wInjeN1Typ0EpiEtrdMLlNYc345H4XG_U/exec";
+  "https://script.google.com/macros/s/AKfycbzPJkFPe7hsnLLhjI0hdpQJrDhCsgpecf3w0W9T2E8TZ8zhhN7yZOmj76-0A7sXJp4V/exec";
 const SESSION_STORAGE_KEY = "cat_skd_active_session_v1";
 const AUTH_STORAGE_KEY = "cat_skd_logged_user_v1";
 const USERS_STORAGE_KEY = "cat_skd_registered_users_v1";
