@@ -323,6 +323,9 @@ async function handleRegisterSubmit() {
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  if (typeof loadChatMessages === "function") {
+    loadChatMessages(true, false);
+  }
   showAuthFeedback(`Akun peserta "${fullName}" (@${rawUsername} • ${educationVal}) berhasil didaftarkan.`);
 }
 
@@ -372,6 +375,9 @@ async function handleLoginSubmit() {
       renderAttemptHistory();
       renderDashboardUserPreviousExams();
       renderUserScoreTrendChart();
+      if (typeof loadChatMessages === "function") {
+        loadChatMessages(true, false);
+      }
       showAuthFeedback(`Selamat datang kembali, ${resolvedName}.`);
       return;
     }
@@ -405,6 +411,9 @@ async function handleLoginSubmit() {
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  if (typeof loadChatMessages === "function") {
+    loadChatMessages(true, false);
+  }
   showAuthFeedback(`Selamat datang kembali, ${localMatch.nama} (Mode Lokal).`);
 }
 
@@ -494,11 +503,29 @@ function loadLoggedUserFromStorage() {
         pendidikan: parsed.pendidikan || ""
       };
       applyLoggedUserToUI();
+      if (typeof loadChatMessages === "function") {
+        loadChatMessages(true, false);
+      }
     }
   } catch (err) {}
 }
 
 function applyLoggedUserToUI() {
+  if ((!loggedUser || !loggedUser.nama) && typeof AUTH_STORAGE_KEY !== "undefined") {
+    try {
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && parsed.nama) {
+        loggedUser = {
+          nama: parsed.nama,
+          username: parsed.username || parsed.nama,
+          email: parsed.email || "",
+          pendidikan: parsed.pendidikan || ""
+        };
+      }
+    } catch (err) {}
+  }
+
   const badge = document.getElementById("activeSessionBadge");
   const logoutBtn = document.getElementById("logoutBtn");
   const formsBox = document.getElementById("authFormsContainer");
@@ -554,6 +581,9 @@ function logoutParticipant() {
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  if (typeof loadChatMessages === "function") {
+    loadChatMessages(false, false);
+  }
   showAuthFeedback("Anda telah keluar dari sesi login.");
 }
 
