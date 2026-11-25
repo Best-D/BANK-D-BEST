@@ -1,11 +1,12 @@
 let fullTrendSeriesMode = "ALL";
 let focusTrendSeriesMode = "ALL";
 
-const STANDARD_EDUCATION_LEVELS = [
+  const STANDARD_EDUCATION_LEVELS = [
   "SMA/SMK/Sederajat",
   "D-I / D-II",
   "D-III",
-  "D-IV / S-1",
+  "D-IV",
+  "S-1",
   "S-2 / Profesi",
   "S-3"
 ];
