@@ -71,6 +71,9 @@
         <button type="button" onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
           Dashboard Skor
         </button>
+        <button type="button" id="openChatBtn" onclick="toggleChatPanel()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+          Diskusi Chat
+        </button>
         <button type="button" onclick="openDonationModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-lg transition">
           Donasi Seikhlasnya
         </button>
@@ -172,7 +175,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label for="regFullNameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-1. Nama Lengkap Peserta <span class="text-rose-600">*</span>
+                  1. Nama Lengkap Peserta <span class="text-rose-600">*</span>
                 </label>
                 <input type="text" id="regFullNameInput" placeholder="Contoh: Best D Pamungkas"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
@@ -180,7 +183,7 @@
 
               <div>
                 <label for="regUsernameInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-2. Username (User Unik) <span class="text-rose-600">*</span>
+                  2. Username (User Unik) <span class="text-rose-600">*</span>
                 </label>
                 <input type="text" id="regUsernameInput" placeholder="Contoh: best_d"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
@@ -188,7 +191,7 @@
 
               <div>
                 <label for="regEmailInput" class="block text-xs font-bold text-slate-700 mb-1.5">
-3. Email Aktif <span class="text-rose-600">*</span>
+                  3. Email Aktif <span class="text-rose-600">*</span>
                 </label>
                 <input type="email" id="regEmailInput" placeholder="nama@email.com"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium" />
@@ -196,7 +199,7 @@
 
               <div>
                 <label for="regEducationSelect" class="block text-xs font-bold text-slate-700 mb-1.5">
-4. Pendidikan Terakhir <span class="text-rose-600">*</span>
+                  4. Pendidikan Terakhir <span class="text-rose-600">*</span>
                 </label>
                 <select id="regEducationSelect"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-blue-600 outline-none text-sm font-medium">
@@ -968,6 +971,41 @@
     </div>
   </section>
 
+  <!-- PANEL DISKUSI CHAT PESERTA -->
+  <section id="chatPanel" class="hidden max-w-4xl w-full mx-auto px-4 pb-8 no-print">
+    <div class="bg-white rounded-2xl shadow-sm border border-teal-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 px-5 py-4 text-white flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-extrabold">Ruang Diskusi &amp; Tanya Jawab Peserta</h3>
+          <p class="text-[11px] text-teal-100">Tersimpan di tab PesanChat Google Sheets • Nonaktif otomatis saat ujian berjalan.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="loadChatMessages()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+            Muat Ulang
+          </button>
+          <button type="button" onclick="closeChatPanel()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+            Tutup
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5 space-y-3">
+        <div id="chatMessagesList" class="space-y-2 max-h-72 overflow-y-auto custom-scroll bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+          <div class="text-slate-500 text-center py-3">Belum ada pesan dimuat.</div>
+        </div>
+
+        <form onsubmit="sendChatMessage(event)" class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="chatMessageInput" maxlength="400" placeholder="Tulis pesan diskusi atau pertanyaan soal SKD..."
+            class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-teal-600 outline-none" />
+          <button type="submit" id="sendChatBtn" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shrink-0 transition">
+            Kirim Pesan
+          </button>
+        </form>
+        <p id="chatFeedbackText" class="hidden text-xs font-semibold"></p>
+      </div>
+    </div>
+  </section>
+
   <footer class="text-center text-xs text-slate-500 pb-4">
     Simulasi CAT SKD CPNS BKN • Dibuat oleh <strong class="text-slate-700">Best D Pamungkas</strong>
   </footer>
@@ -1017,7 +1055,7 @@
           <div class="text-xs font-extrabold text-amber-950">Scan QRIS ShopeePay</div>
           <img
             src="Qris-Shoope.jpeg"
-            alt="QRIS ShopeePay a.n. Best D Pamungkas"
+            alt="QRIS ShopeePay a.n. Budiman Putra"
             class="w-48 h-48 mx-auto object-contain rounded-lg bg-white p-2 border border-amber-200"
           />
           <p class="text-[11px] text-slate-600">
@@ -1061,10 +1099,10 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=12"></script>
-  <script src="js/questions.js?v=12"></script>
-  <script src="js/auth.js?v=12"></script>
-  <script src="js/dashboard.js?v=12"></script>
-  <script src="js/exam.js?v=12"></script>
+  <script src="js/config.js?v=13"></script>
+  <script src="js/questions.js?v=13"></script>
+  <script src="js/auth.js?v=13"></script>
+  <script src="js/dashboard.js?v=13"></script>
+  <script src="js/exam.js?v=13"></script>
 </body>
 </html>
