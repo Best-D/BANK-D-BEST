@@ -833,9 +833,15 @@
   <section id="reviewSection" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 pb-8 no-print">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <h3 id="reviewSectionTitle" class="font-extrabold text-lg text-slate-800">Pembahasan Lengkap Soal SKD</h3>
-          <p id="reviewSessionSubtitle" class="text-xs text-slate-500"></p>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" id="backToDashboardFromReviewBtn" onclick="returnToDashboardFromReview()"
+            class="hidden px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition">
+            ← Kembali ke Dashboard
+          </button>
+          <div>
+            <h3 id="reviewSectionTitle" class="font-extrabold text-lg text-slate-800">Pembahasan Lengkap Soal SKD</h3>
+            <p id="reviewSessionSubtitle" class="text-xs text-slate-500"></p>
+          </div>
         </div>
         <div class="flex flex-wrap items-center gap-1.5">
           <button type="button" onclick="renderReview('ALL')" data-subtest="ALL" class="review-subtest-btn active-subtest px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Semua</button>
@@ -852,7 +858,6 @@
           </button>
         </div>
       </div>
-
       <div id="reviewSubtestStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"></div>
       <div id="reviewCategoryStats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
 
