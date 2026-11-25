@@ -792,6 +792,151 @@ async function refreshDashboardData() {
   loadVerifiedDonationsForDashboard();
 }
 
+function renderTimeAnalysisOnResult() {
+  const boxEl = document.getElementById("timeAnalysisBox");
+  const cardsEl = document.getElementById("subtestAvgTimeCards");
+  const alertEl = document.getElementById("slowQuestionAlert");
+  const topListEl = document.getElementById("topSlowQuestionsList");
+  const badgeEl = document.getElementById("slowestSubtestBadge");
+  if (!boxEl || !cardsEl || !topListEl) return;
+
+  const qs = Array.isArray(reviewQuestions) && reviewQuestions.length
+    ? reviewQuestions
+    : (typeof examQuestions !== "undefined" && Array.isArray(examQuestions) ? examQuestions : []);
+  const durs = Array.isArray(reviewDurations) && reviewDurations.length
+    ? reviewDurations
+    : (typeof questionDurations !== "undefined" && Array.isArray(questionDurations) ? questionDurations : []);
+
+  if (!qs.length || !durs.length) {
+    boxEl.classList.add("hidden");
+    return;
+  }
+  boxEl.classList.remove("hidden");
+
+  const stats = {
+    TWK: { totalSec: 0, count: 0, benchmark: 55 },
+    TIU: { totalSec: 0, count: 0, benchmark: 55 },
+    TKP: { totalSec: 0, count: 0, benchmark: 54 }
+  };
+
+  const perQuestionItems = [];
+
+  qs.forEach((q, idx) => {
+    const sub = String(q.subtest || "TWK").toUpperCase();
+    const sec = Math.max(0, Math.round(Number(durs[idx] || 0)));
+    if (stats[sub]) {
+      stats[sub].totalSec += sec;
+      stats[sub].count += 1;
+    }
+    perQuestionItems.push({
+      no: idx + 1,
+      subtest: sub,
+      category: q.category || "Umum",
+      prompt: String(q.question || "").replace(/\s+/g, " ").trim(),
+      sec
+    });
+  });
+
+  let slowestSub = null;
+  let highestAvg = 0;
+
+  cardsEl.replaceChildren();
+  ["TWK", "TIU", "TKP"].forEach(sub => {
+    const st = stats[sub];
+    const avgSec = st.count > 0 ? Math.round(st.totalSec / st.count) : 0;
+    if (st.count > 0 && avgSec > highestAvg) {
+      highestAvg = avgSec;
+      slowestSub = sub;
+    }
+    const isSlow = avgSec > st.benchmark + 20;
+    const card = document.createElement("div");
+    card.className = `bg-white border rounded-lg p-3 ${isSlow ? "border-amber-300" : "border-slate-200"}`;
+    card.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="font-extrabold text-slate-800">${sub} (${st.count} soal)</span>
+        <span class="text-[11px] font-bold ${isSlow ? "text-amber-700" : "text-emerald-700"}">${avgSec} dtk/soal</span>
+      </div>
+      <div class="text-[11px] text-slate-500 mt-1">Total waktu: ${st.totalSec} detik</div>
+    `;
+    cardsEl.appendChild(card);
+  });
+
+  if (badgeEl) {
+    if (slowestSub && highestAvg > 75) {
+      badgeEl.textContent = `⚠️ Paling Lambat: ${slowestSub} (${highestAvg} dtk/soal)`;
+      badgeEl.className = "text-[11px] font-extrabold bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full";
+    } else if (slowestSub) {
+      badgeEl.textContent = `Terlama: ${slowestSub} (${highestAvg} dtk/soal)`;
+      badgeEl.className = "text-[11px] font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full";
+    }
+  }
+
+  const slowQuestions = perQuestionItems.filter(item => item.sec >= 90);
+  if (alertEl) {
+    if (slowQuestions.length > 0) {
+      alertEl.classList.remove("hidden");
+      alertEl.textContent =
+        `Terdeteksi ${slowQuestions.length} soal dengan waktu pengerjaan ≥ 90 detik. ` +
+        "Jika soal hitungan/analisis memakan waktu lebih dari 1,5 menit, tandai Ragu-Ragu dan lanjutkan agar soal lain tetap terjawab.";
+    } else {
+      alertEl.classList.add("hidden");
+      alertEl.textContent = "";
+    }
+  }
+
+  const top5 = perQuestionItems
+    .slice()
+    .sort((a, b) => b.sec - a.sec)
+    .slice(0, 5);
+
+  topListEl.replaceChildren();
+  top5.forEach((item, rank) => {
+    const row = document.createElement("div");
+    const overTime = item.sec >= 90;
+    row.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded border ${
+      overTime ? "bg-rose-50/70 border-rose-200" : "bg-slate-50 border-slate-200"
+    }`;
+    const snippet = item.prompt.length > 85 ? `${item.prompt.slice(0, 85)}...` : item.prompt;
+    row.innerHTML = `
+      <div class="truncate">
+        <span class="font-extrabold text-slate-800">#${rank + 1} • Soal No. ${item.no}</span>
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 ml-1">${safeText(item.subtest)}</span>
+        <span class="text-slate-600 ml-1">${safeText(snippet)}</span>
+      </div>
+      <span class="font-mono font-extrabold shrink-0 ${overTime ? "text-rose-700" : "text-slate-700"}">${item.sec} dtk</span>
+    `;
+    topListEl.appendChild(row);
+  });
+}
+
+function renderFormationCompetitionSummary(filteredRows, eduFilter, formationFilter) {
+  const countEl = document.getElementById("compApplicantCount");
+  const topEl = document.getElementById("compTopScore");
+  const pctEl = document.getElementById("compPassPercentage");
+  const badgeEl = document.getElementById("competitionPassRateBadge");
+  const capEl = document.getElementById("competitionFilterCaption");
+  if (!countEl || !topEl || !pctEl) return;
+
+  const total = filteredRows.length;
+  const highest = total > 0 ? Math.max(...filteredRows.map(r => Number(r.total || 0))) : 0;
+  const passed = filteredRows.filter(r => r.status_pg === "LULUS PG").length;
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+  countEl.textContent = String(total);
+  topEl.textContent = String(highest);
+  pctEl.textContent = `${passRate}%`;
+  if (badgeEl) badgeEl.textContent = `Kelulusan PG: ${passRate}% (${passed}/${total})`;
+
+  if (capEl) {
+    const parts = [];
+    parts.push(eduFilter && eduFilter !== "ALL" ? `Pendidikan: ${eduFilter}` : "Semua Pendidikan");
+    parts.push(formationFilter && formationFilter !== "ALL" ? `Formasi: ${formationFilter}` : "Semua Formasi");
+    capEl.textContent = `Statistik kelompok aktif — ${parts.join(" • ")}`;
+  }
+}
+
+
+
 function renderDashboardTable() {
   const tbody = document.getElementById("dashboardTableBody");
   if (!tbody) return;
