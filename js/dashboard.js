@@ -961,7 +961,8 @@ function renderDashboardTable() {
         return false;
       }
     }
-
+renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
+    
     const recEdu = getRecordEducation(rec);
     const matchEdu = eduFilter === "ALL" || recEdu === eduFilter;
     const matchFormation = formationFilter === "ALL" || String(rec.formasi || "").trim() === formationFilter;
