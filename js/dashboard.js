@@ -1773,3 +1773,43 @@ async function sendChatMessage(event) {
     }
   }
 }
+let bestScorePerAccountOnly = true;
+
+function getAccountGroupKey_(rec) {
+  const uname = String(rec?.username || "").trim().toLowerCase().replace(/\s+/g, "");
+  if (uname) return `u:${uname}`;
+
+  const email = String(rec?.email || "").trim().toLowerCase();
+  if (email) return `e:${email}`;
+
+  const nameKey = safeAccountKey(rec?.nama || "");
+  return nameKey ? `n:${nameKey}` : "";
+}
+
+function collapseToBestPerAccount_(rows) {
+  const bestMap = new Map();
+
+  (Array.isArray(rows) ? rows : []).forEach((rec, idx) => {
+    const key = getAccountGroupKey_(rec) || `row_${idx}`;
+    const currentScore = Number(rec?.total || 0);
+    const existing = bestMap.get(key);
+
+    if (!existing || currentScore > Number(existing.total || 0)) {
+      bestMap.set(key, rec);
+    }
+  });
+
+  return Array.from(bestMap.values());
+}
+
+function toggleBestScorePerAccountMode() {
+  bestScorePerAccountOnly = !bestScorePerAccountOnly;
+  const btn = document.getElementById("bestPerAccountBtn");
+  if (btn) {
+    btn.className = bestScorePerAccountOnly
+      ? "px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700"
+      : "px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+    btn.textContent = bestScorePerAccountOnly ? "Terbaik per Akun" : "Semua Percobaan";
+  }
+  renderDashboardTable();
+}
