@@ -242,7 +242,9 @@ function startExam(customWeakQuestions = null) {
   const educationVal = (document.getElementById("participantEducationSelect")?.value || loggedUser.pendidikan || "").trim();
   const formationVal = document.getElementById("appliedFormationInput").value.trim();
   const institutionVal = document.getElementById("appliedInstitutionInput").value.trim();
-
+const instEl = document.getElementById("appliedInstitutionInput");
+if (instEl) applyAutoCapitalizeToInput(instEl, true);
+  
   if (!nameVal) {
     alert("Silakan isi Nama Lengkap Peserta terlebih dahulu sebelum memulai ujian.");
     document.getElementById("participantNameInput").focus();
