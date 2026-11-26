@@ -704,11 +704,31 @@ function setDashboardScope(scope) {
   renderDashboardTable();
 }
 
-function setDashboardTop10Mode() {
-  if (typeof dashboardTop10Only !== "undefined") dashboardTop10Only = !dashboardTop10Only;
+function handleDashboardLimitChange() {
+  const sel = document.getElementById("dashboardLimitSelect");
+  const val = sel ? sel.value : "ALL";
+  if (typeof dashboardTop10Only !== "undefined") {
+    dashboardTop10Only = val === "10";
+  }
   const btn = document.getElementById("scopeTop10Btn");
-  if (btn && typeof dashboardTop10Only !== "undefined") {
-    btn.className = dashboardTop10Only
+  if (btn) {
+    btn.className = val === "10"
+      ? "px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white"
+      : "px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200";
+  }
+  renderDashboardTable();
+}
+
+function setDashboardTop10Mode() {
+  const nextTop10 = !(typeof dashboardTop10Only !== "undefined" && dashboardTop10Only);
+  if (typeof dashboardTop10Only !== "undefined") dashboardTop10Only = nextTop10;
+
+  const sel = document.getElementById("dashboardLimitSelect");
+  if (sel) sel.value = nextTop10 ? "10" : "ALL";
+
+  const btn = document.getElementById("scopeTop10Btn");
+  if (btn) {
+    btn.className = nextTop10
       ? "px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white"
       : "px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200";
   }
