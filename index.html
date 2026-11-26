@@ -826,7 +826,8 @@
           <div id="dashboardVerifiedDonationsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"></div>
         </div>
       </div>
-
+      
+######dashboardScreen####
       <div class="p-6 pb-3 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2">
@@ -838,6 +839,9 @@
             </button>
             <button type="button" id="scopeTop10Btn" onclick="setDashboardTop10Mode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">
               10 Besar (Berurutan)
+              <button type="button" id="bestPerAccountBtn" onclick="toggleBestScorePerAccountMode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700">
+              Terbaik per Akun
+            </button>
             </button>
             <select id="dashboardLimitSelect" onchange="handleDashboardLimitChange()"
               class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
