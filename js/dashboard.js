@@ -1926,16 +1926,22 @@ function closeDashboardSurveyModal() {
     modal.classList.remove("flex");
   }
 }
-
 async function submitDashboardSurvey(event) {
   if (event) event.preventDefault();
 
-  const pVal = Number(document.getElementById("dashSurveyProsedurSelect")?.value || 3);
-  const wVal = Number(document.getElementById("dashSurveyWaktuSelect")?.value || 3);
-  const sVal = Number(document.getElementById("dashSurveySaranaSelect")?.value || 3);
-  const aVal = Number(document.getElementById("dashSurveyPengaduanSelect")?.value || 3);
+  const uVals = [
+    Number(document.getElementById("skmU1")?.value || 3),
+    Number(document.getElementById("skmU2")?.value || 3),
+    Number(document.getElementById("skmU3")?.value || 3),
+    Number(document.getElementById("skmU4")?.value || 3),
+    Number(document.getElementById("skmU5")?.value || 3),
+    Number(document.getElementById("skmU6")?.value || 3),
+    Number(document.getElementById("skmU7")?.value || 3),
+    Number(document.getElementById("skmU8")?.value || 3),
+    Number(document.getElementById("skmU9")?.value || 3)
+  ];
 
-  const avgUnsur = Number(((pVal + wVal + sVal + aVal) / 4).toFixed(2));
+  const avgUnsur = Number((uVals.reduce((a, b) => a + b, 0) / 9).toFixed(2));
   const ikmKonversi = Number((avgUnsur * 25).toFixed(2));
 
   const nameInput = (document.getElementById("dashSurveyNameInput")?.value || "").trim();
@@ -1956,14 +1962,15 @@ async function submitDashboardSurvey(event) {
 
   const reporterName = nameInput || getActiveUserFilterName() || "Peserta Dashboard";
   const summaryMeta =
-    `Prosedur:${pVal} | Waktu:${wVal} | Sarana:${sVal} | Pengaduan:${aVal} ` +
+    `U1:${uVals[0]} | U2:${uVals[1]} | U3:${uVals[2]} | U4:${uVals[3]} | U5:${uVals[4]} | ` +
+    `U6:${uVals[5]} | U7:${uVals[6]} | U8:${uVals[7]} | U9:${uVals[8]} ` +
     `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}) • Kontak:${contactInput || "-"}`;
 
   const endpoint = getScriptEndpoint();
   if (!endpoint || endpoint.includes("TEMPEL_URL")) {
     if (feedbackEl) feedbackEl.value = "";
     if (statusEl) {
-      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei tercatat secara lokal.`;
+      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei 9 unsur tercatat secara lokal.`;
       statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
       statusEl.classList.remove("hidden");
     }
@@ -1982,9 +1989,9 @@ async function submitDashboardSurvey(event) {
       body: JSON.stringify({
         action: "report_question",
         nomor_soal: 0,
-        subtest: "SURVEI_SKM",
-        category: "Pelayanan Publik KemenPANRB (Dashboard)",
-        question: summaryMeta.slice(0, 400),
+        subtest: "SURVEI_SKM_9",
+        category: "Survei SKM 9 Unsur (Dashboard)",
+        question: summaryMeta.slice(0, 450),
         catatan: feedbackText,
         pelapor: reporterName
       })
@@ -1993,7 +2000,7 @@ async function submitDashboardSurvey(event) {
     if (statusEl) {
       if (json && json.status === "sukses") {
         if (feedbackEl) feedbackEl.value = "";
-        statusEl.textContent = `Terima kasih! Survei pelayanan publik Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) telah terkirim ke Google Sheets.`;
+        statusEl.textContent = `Terima kasih! Survei 9 unsur SKM Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) berhasil dikirim ke Google Sheets.`;
         statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
       } else {
         statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
@@ -2010,7 +2017,7 @@ async function submitDashboardSurvey(event) {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Kirim Survei";
+      submitBtn.textContent = "Kirim Survei SKM";
     }
   }
 }
