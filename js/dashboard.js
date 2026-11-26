@@ -1531,8 +1531,10 @@ function stopChatPolling_() {
 }
 
 function openChatPanel() {
-  if (typeof isExamActive !== "undefined" && isExamActive) {
-    alert("Selesaikan ujian terlebih dahulu sebelum membuka kotak pesan.");
+  const examSec = document.getElementById("examScreen");
+  const examVisible = examSec && !examSec.classList.contains("hidden");
+  if ((typeof isExamActive !== "undefined" && isExamActive) || examVisible || document.body.classList.contains("exam-mode-active")) {
+    closeChatPanel();
     return;
   }
   const panel = document.getElementById("chatPanel");
