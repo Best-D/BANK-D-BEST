@@ -318,12 +318,9 @@ function confirmFinishExam() {
   const unansweredTotal = examQuestions.length - answeredTotal;
 
   const msg =
-    `Selesaikan ujian sekarang?
-` +
-    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal
-` +
-    `• Belum terjawab: ${unansweredTotal} soal
-` +
+    `Selesaikan ujian sekarang?\n` +
+    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal\n` +
+    `• Belum terjawab: ${unansweredTotal} soal\n` +
     `• Ditandai Ragu-Ragu: ${doubtTotal} soal`;
 
   if (confirm(msg)) {
@@ -1043,7 +1040,7 @@ async function submitPostExamSurvey(event) {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        action: "report_question",
+        action: "submit_survey_skm",
         nomor_soal: 0,
         subtest: "SURVEI_SKM_9",
         category: "Survei SKM 9 Unsur (Pasca Ujian)",
