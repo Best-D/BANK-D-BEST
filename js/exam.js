@@ -1024,18 +1024,86 @@ async function submitPostExamSurvey(event) {
   const statusEl = document.getElementById("postExamSurveyStatus");
   const submitBtn = document.getElementById("submitSurveyBtn");
 
+  const pVal = Number(document.getElementById("surveyProsedurSelect")?.value || 3);
+  const wVal = Number(document.getElementById("surveyWaktuSelect")?.value || 3);
+  const sVal = Number(document.getElementById("surveySaranaSelect")?.value || 3);
+  const aVal = Number(document.getElementById("surveyPengaduanSelect")?.value || 3);
+
+  const avgUnsur = Number(((pVal + wVal + sVal + aVal) / 4).toFixed(2));
+  const ikmKonversi = Number((avgUnsur * 25).toFixed(2));
+
   const feedbackText = (feedbackEl?.value || "").trim();
   const contactText = (contactEl?.value || "").trim();
 
   if (feedbackText.length < 4) {
     if (statusEl) {
-      statusEl.textContent = "Tuliskan saran atau kesan minimal 4 karakter.";
+      statusEl.textContent = "Tuliskan saran atau masukan minimal 4 karakter.";
       statusEl.className = "text-xs font-semibold text-rose-600";
       statusEl.classList.remove("hidden");
     }
     return;
   }
 
+  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  const reporterName = (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta";
+  const summaryMeta =
+    `Prosedur:${pVal} | Waktu:${wVal} | Sarana:${sVal} | Pengaduan:${aVal} ` +
+    `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}) • Kontak:${contactText || "-"}`;
+
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    if (feedbackEl) feedbackEl.value = "";
+    if (statusEl) {
+      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei tercatat di sesi ini.`;
+      statusEl.className = "text-xs font-semibold text-emerald-700";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Mengirim...";
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "report_question",
+        nomor_soal: 0,
+        subtest: "SURVEI_SKM",
+        category: "Pelayanan Publik KemenPANRB",
+        question: summaryMeta.slice(0, 400),
+        catatan: feedbackText,
+        pelapor: reporterName
+      })
+    });
+    const json = await res.json();
+    if (statusEl) {
+      if (json && json.status === "sukses") {
+        if (feedbackEl) feedbackEl.value = "";
+        statusEl.textContent = `Terima kasih! Survei pelayanan publik Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) telah terkirim.`;
+        statusEl.className = "text-xs font-semibold text-emerald-700";
+      } else {
+        statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
+        statusEl.className = "text-xs font-semibold text-rose-600";
+      }
+      statusEl.classList.remove("hidden");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "Gagal mengirim survei. Periksa koneksi internet Anda.";
+      statusEl.className = "text-xs font-semibold text-rose-600";
+      statusEl.classList.remove("hidden");
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Kirim Survei";
+    }
+  }
+}
   const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
   const reporterName = (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta";
 
