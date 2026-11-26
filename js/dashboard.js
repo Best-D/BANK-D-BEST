@@ -1978,15 +1978,169 @@ function getSurveyQualityCategory_(ikmVal) {
   };
 }
 
-function renderDashboardSurveySummary() {
+function isCurrentUserAdmin_() {
+  const uname = String(
+    (typeof loggedUser !== "undefined" && loggedUser && loggedUser.username) || ""
+  ).trim().toLowerCase();
+  const activeName = safeAccountKey(getActiveUserFilterName());
+  return uname === "best_d" || uname === "admin" || activeName === "best d pamungkas" || activeName === "admin";
+}
+
+function updateAdminSurveyResetVisibility_() {
+  const box = document.getElementById("adminSurveyResetBox");
+  if (!box) return;
+  box.classList.toggle("hidden", !isCurrentUserAdmin_());
+}
+
+async function fetchSharedSurveyListFromServer_() {
+  const endpoint = getScriptEndpoint();
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    return null;
+  }
+  try {
+    const res = await fetch(`${endpoint}?mode=survei`);
+    const json = await res.json();
+    if (json && json.status === "sukses" && Array.isArray(json.survei)) {
+      return json.survei;
+    }
+  } catch (err) {
+    console.warn("Gagal memuat daftar survei bersama dari sheet:", err);
+  }
+  return null;
+}
+
+async function resetSurveyDataAsAdmin() {
+  const keyInput = document.getElementById("adminSurveyResetKeyInput");
+  const statusEl = document.getElementById("adminSurveyResetStatus");
+  const btn = document.getElementById("adminResetSurveyBtn");
+
+  if (!isCurrentUserAdmin_()) {
+    alert("Hanya admin yang memiliki akses untuk mereset data survei.");
+    return;
+  }
+
+  const adminKey = (keyInput?.value || "").trim();
+  if (!adminKey) {
+    if (statusEl) {
+      statusEl.textContent = "Masukkan kunci reset admin terlebih dahulu.";
+      statusEl.className = "text-xs font-semibold text-rose-600";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (!confirm("Yakin ingin mereset seluruh isi survei SKM di spreadsheet dan browser?")) {
+    return;
+  }
+
+  const endpoint = getScriptEndpoint();
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    localStorage.removeItem(SURVEY_HISTORY_STORAGE_KEY);
+    localStorage.removeItem(SURVEY_COMPLETED_ACCOUNTS_KEY);
+    if (keyInput) keyInput.value = "";
+    if (statusEl) {
+      statusEl.textContent = "Data survei lokal berhasil direset.";
+      statusEl.className = "text-xs font-semibold text-emerald-700";
+      statusEl.classList.remove("hidden");
+    }
+    await renderDashboardSurveySummary();
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Mereset...";
+  }
+
+  try {
+    const actorUsername = String(
+      (typeof loggedUser !== "undefined" && loggedUser && loggedUser.username) || "best_d"
+    ).trim();
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "reset_survey_skm",
+        username: actorUsername,
+        admin_key: adminKey
+      })
+    });
+    const json = await res.json();
+    if (json && json.status === "sukses") {
+      localStorage.removeItem(SURVEY_HISTORY_STORAGE_KEY);
+      localStorage.removeItem(SURVEY_COMPLETED_ACCOUNTS_KEY);
+      if (keyInput) keyInput.value = "";
+      if (statusEl) {
+        statusEl.textContent = json.pesan || "Seluruh data survei SKM berhasil direset oleh admin.";
+        statusEl.className = "text-xs font-semibold text-emerald-700";
+        statusEl.classList.remove("hidden");
+      }
+      await renderDashboardSurveySummary();
+    } else {
+      if (statusEl) {
+        statusEl.textContent = (json && json.pesan) || "Reset survei ditolak.";
+        statusEl.className = "text-xs font-semibold text-rose-600";
+        statusEl.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "Gagal menghubungi server saat mereset survei.";
+      statusEl.className = "text-xs font-semibold text-rose-600";
+      statusEl.classList.remove("hidden");
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Reset Survei (Admin)";
+    }
+  }
+}
+
+async function sanitizePublicSurveyItem_(item, index = 0) {
+  const unsurArr = Array.isArray(item?.unsur) && item.unsur.length === 9
+    ? item.unsur.map(v => Number(v || 0))
+    : [];
+  const nrrVal = Number(item?.nrr || 0);
+  const ikmVal = Number(item?.ikm || 0);
+  return {
+    id: `anon_srv_${index}`,
+    waktu: item?.waktu || "",
+    unsur: unsurArr,
+    nrr: nrrVal,
+    ikm: ikmVal,
+    kategori: item?.kategori || "",
+    catatan: item?.catatan || ""
+  };
+}
+
+async function renderDashboardSurveySummary() {
   const nrrEl = document.getElementById("dashSurveyAvgNrr");
   const ikmEl = document.getElementById("dashSurveyAvgIkm");
   const catEl = document.getElementById("dashSurveyAvgCategory");
   const countEl = document.getElementById("dashSurveyCountBadge");
   const listEl = document.getElementById("dashSurveyRecentList");
+  updateAdminSurveyResetVisibility_();
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
-  const list = getLocalSurveyHistory();
+  const localList = getLocalSurveyHistory().map((item, idx) => sanitizePublicSurveyItem_(item, idx));
+  const remoteList = await fetchSharedSurveyListFromServer_();
+  let list = localList;
+
+  if (Array.isArray(remoteList)) {
+    const cleanRemote = remoteList.map((item, idx) => sanitizePublicSurveyItem_(item, idx));
+    const mergedMap = new Map();
+    cleanRemote.forEach(item => {
+      const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
+      mergedMap.set(k, item);
+    });
+    localList.forEach(item => {
+      const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
+      if (!mergedMap.has(k)) mergedMap.set(k, item);
+    });
+    list = Array.from(mergedMap.values());
+  }
+
   const totalCount = list.length;
   const avgNrr = totalCount > 0
     ? Number((list.reduce((sum, item) => sum + Number(item.nrr || 0), 0) / totalCount).toFixed(2))
@@ -2015,23 +2169,26 @@ function renderDashboardSurveySummary() {
   if (totalCount === 0) {
     const empty = document.createElement("div");
     empty.className = "text-xs text-slate-500";
-    empty.textContent = "Belum ada data survei tersimpan di browser ini. Klik 'Isi Survei SKM' untuk mengirim penilaian.";
+    empty.textContent = "Belum ada data survei tersimpan. Klik 'Isi Survei SKM' untuk mengirim penilaian.";
     listEl.appendChild(empty);
     return;
   }
 
-  list.slice(0, 5).forEach(item => {
+  list.slice(0, 10).forEach((item, idx) => {
     const qItem = getSurveyQualityCategory_(item.ikm);
+    const unsurText = Array.isArray(item.unsur) && item.unsur.length === 9
+      ? ` • Unsur [${item.unsur.join(",")}]`
+      : "";
     const row = document.createElement("div");
     row.className = "bg-white border border-slate-200 rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-2";
     row.innerHTML = `
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-1.5 text-xs font-extrabold text-slate-800">
-          <span>${safeText(item.nama)}</span>
-          <span class="text-blue-700">• NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})</span>
+          <span>Responden #${idx + 1}</span>
+          <span class="text-blue-700">• NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})${safeText(unsurText)}</span>
           <span class="text-[10px] px-2 py-0.5 rounded-full ${qItem.badgeCls}">${safeText(qItem.label)}</span>
         </div>
-        <div class="text-[11px] text-slate-600 truncate">${safeText(item.catatan)}</div>
+        <div class="text-[11px] text-slate-600 break-words">${safeText(item.catatan)}</div>
         <div class="text-[10px] text-slate-400">${safeText(formatShortDate(item.waktu))}</div>
       </div>
     `;
@@ -2155,7 +2312,7 @@ async function submitDashboardSurvey(event) {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        action: "report_question",
+        action: "submit_survey_skm",
         nomor_soal: 0,
         subtest: "SURVEI_SKM_9",
         category: "Survei SKM 9 Unsur (Dashboard)",
