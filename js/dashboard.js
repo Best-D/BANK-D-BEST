@@ -2098,19 +2098,41 @@ async function resetSurveyDataAsAdmin() {
 }
 
 function sanitizePublicSurveyItem_(item, index = 0) {
-  const unsurArr = Array.isArray(item?.unsur) && item.unsur.length === 9
-    ? item.unsur.map(v => Number(v || 0))
+  const rawUnsur = Array.isArray(item?.unsur) ? item.unsur : [];
+  const unsurArr = rawUnsur.length === 9
+    ? rawUnsur.map(v => {
+        const num = Number(v);
+        return Number.isFinite(num) && num >= 1 && num <= 4 ? num : 3;
+      })
     : [];
-  const nrrVal = Number(item?.nrr || 0);
-  const ikmVal = Number(item?.ikm || 0);
+
+  let nrrVal = Number(item?.nrr);
+  let ikmVal = Number(item?.ikm);
+
+  if ((!Number.isFinite(nrrVal) || nrrVal <= 0) && unsurArr.length === 9) {
+    nrrVal = Number((unsurArr.reduce((a, b) => a + b, 0) / 9).toFixed(2));
+  } else if (!Number.isFinite(nrrVal)) {
+    nrrVal = 0;
+  }
+
+  if ((!Number.isFinite(ikmVal) || ikmVal <= 0) && nrrVal > 0) {
+    ikmVal = Number((nrrVal * 25).toFixed(2));
+  } else if (!Number.isFinite(ikmVal)) {
+    ikmVal = 0;
+  }
+
+  const catatanStr = String(item?.catatan || "").trim();
+  const hasMeaningfulData = unsurArr.length === 9 || nrrVal > 0 || ikmVal > 0 || catatanStr.length > 0;
+  if (!hasMeaningfulData) return null;
+
   return {
     id: `anon_srv_${index}`,
     waktu: item?.waktu || "",
     unsur: unsurArr,
     nrr: nrrVal,
     ikm: ikmVal,
-    kategori: item?.kategori || "",
-    catatan: item?.catatan || ""
+    kategori: String(item?.kategori || "").trim(),
+    catatan: catatanStr || "-"
   };
 }
 
@@ -2123,23 +2145,28 @@ async function renderDashboardSurveySummary() {
   updateAdminSurveyResetVisibility_();
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
-  const localList = getLocalSurveyHistory().map((item, idx) => sanitizePublicSurveyItem_(item, idx));
-  const remoteList = await fetchSharedSurveyListFromServer_();
-  let list = localList;
-
-  if (Array.isArray(remoteList)) {
-    const cleanRemote = remoteList.map((item, idx) => sanitizePublicSurveyItem_(item, idx));
-    const mergedMap = new Map();
-    cleanRemote.forEach(item => {
-      const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
-      mergedMap.set(k, item);
-    });
-    localList.forEach(item => {
-      const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
-      if (!mergedMap.has(k)) mergedMap.set(k, item);
-    });
-    list = Array.from(mergedMap.values());
+  if (listEl) {
+    listEl.innerHTML = `<div class="text-xs text-slate-500">Memuat data survei dari spreadsheet...</div>`;
   }
+
+  const remoteList = await fetchSharedSurveyListFromServer_();
+  if (!Array.isArray(remoteList)) {
+    if (nrrEl) nrrEl.textContent = "-";
+    if (ikmEl) ikmEl.textContent = "-";
+    if (catEl) {
+      catEl.textContent = "-";
+      catEl.className = "text-xl font-extrabold text-slate-900 mt-0.5";
+    }
+    if (countEl) countEl.textContent = "0 Responden";
+    if (listEl) {
+      listEl.innerHTML = `<div class="text-xs text-rose-600 font-semibold">Gagal mengambil data survei dari spreadsheet. Periksa URL &amp; deployment Apps Script (?mode=survei).</div>`;
+    }
+    return;
+  }
+
+  const list = remoteList
+    .map((item, idx) => sanitizePublicSurveyItem_(item, idx))
+    .filter(Boolean);
 
   const totalCount = list.length;
   const avgNrr = totalCount > 0
@@ -2169,7 +2196,7 @@ async function renderDashboardSurveySummary() {
   if (totalCount === 0) {
     const empty = document.createElement("div");
     empty.className = "text-xs text-slate-500";
-    empty.textContent = "Belum ada data survei tersimpan. Klik 'Isi Survei SKM' untuk mengirim penilaian.";
+    empty.textContent = "Belum ada data survei di spreadsheet.";
     listEl.appendChild(empty);
     return;
   }
@@ -2288,7 +2315,7 @@ async function submitDashboardSurvey(event) {
     catatan: feedbackText
   });
   markAccountSurveyCompleted_(accKey);
-  renderDashboardSurveySummary();
+  await renderDashboardSurveySummary();
 
   const endpoint = getScriptEndpoint();
   if (!endpoint || endpoint.includes("TEMPEL_URL")) {
@@ -2331,6 +2358,7 @@ async function submitDashboardSurvey(event) {
     if (statusEl) {
       if (json && json.status === "sukses") {
         if (feedbackEl) feedbackEl.value = "";
+        await renderDashboardSurveySummary();
         statusEl.textContent = `Terima kasih! Survei 9 unsur SKM Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi} • ${qCat.label}) berhasil dikirim ke Google Sheets.`;
         statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
       } else {
