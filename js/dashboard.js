@@ -626,22 +626,6 @@ function renderSingleTrendGroup(containerEl, sessionsChronological, seriesMode, 
     </div>
   `;
 }
-      <svg viewBox="0 0 ${width} ${height}" class="w-full h-32">
-        <line x1="${padX}" y1="${padTop + plotHeight}" x2="${width - padX}" y2="${padTop + plotHeight}" stroke="#cbd5e1" stroke-width="1" />
-        ${pgLineHtml}
-        ${seriesSvgHtml}
-        ${xLabelsHtml}
-      </svg>
-
-      <div class="flex flex-wrap items-center justify-center gap-2.5 text-[10px] font-semibold text-slate-600">
-        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-blue-600 inline-block"></span> Total</span>
-        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-violet-600 inline-block"></span> TWK</span>
-        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-teal-600 inline-block"></span> TIU</span>
-        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-orange-600 inline-block"></span> TKP</span>
-      </div>
-    </div>
-  `;
-}
 
 function renderUserScoreTrendChart() {
   const fullBox = document.getElementById("userFullTrendChart");
