@@ -221,7 +221,9 @@ async function postAuthToSheet(payload) {
 }
 
 async function handleRegisterSubmit() {
-  const fullName = document.getElementById("regFullNameInput")?.value.trim() || "";
+  const regNameEl = document.getElementById("regFullNameInput");
+  if (regNameEl) applyAutoCapitalizeToInput(regNameEl, true);
+  const fullName = (regNameEl?.value || "").trim();
   const rawUsername = document.getElementById("regUsernameInput")?.value.trim() || "";
   const emailVal = document.getElementById("regEmailInput")?.value.trim().toLowerCase() || "";
   const educationVal = document.getElementById("regEducationSelect")?.value.trim() || "";
@@ -673,13 +675,19 @@ function openProfileScreen() {
 }
 
 async function saveParticipantProfile(goToSetupAfterSave = false) {
-  const fullName = (document.getElementById("profileFullNameInput")?.value || "").trim();
+  const profNameEl = document.getElementById("profileFullNameInput");
+  const profFormEl = document.getElementById("profileFormationInput");
+  const profInstEl = document.getElementById("profileInstitutionInput");
+
+  if (profNameEl) applyAutoCapitalizeToInput(profNameEl, true);
+  if (profFormEl) applyAutoCapitalizeToInput(profFormEl, true);
+  if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
+
+  const fullName = (profNameEl?.value || "").trim();
   const rawUser = (document.getElementById("profileUsernameInput")?.value || "").trim();
   const emailVal = (document.getElementById("profileEmailInput")?.value || "").trim().toLowerCase();
   const educationVal = (document.getElementById("profileEducationSelect")?.value || "").trim();
-  const formationVal = (document.getElementById("profileFormationInput")?.value || "").trim();
-  const profInstEl = document.getElementById("profileInstitutionInput");
-  if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
+  const formationVal = (profFormEl?.value || "").trim();
   const institutionVal = (profInstEl?.value || "").trim();
 
   if (!fullName || fullName.length < 3) {
@@ -774,13 +782,11 @@ function formatInstitutionInputValue(rawText, finalizeCase = false) {
   if (!src) return "";
 
   const minorWords = new Set(["dan", "atau", "serta", "di", "ke", "dari", "yang", "untuk", "pada", "dalam"]);
-  const hasTrailingSpace = /\s$/.test(src);
-
   const tokens = src.split(/(\s+)/);
   const wordTokens = tokens.filter(t => t && !/^\s+$/.test(t));
   let wordIdx = 0;
 
-  const formatted = tokens.map(part => {
+  return tokens.map(part => {
     if (!part || /^\s+$/.test(part)) return part;
 
     const currentWordIndex = wordIdx++;
@@ -804,11 +810,6 @@ function formatInstitutionInputValue(rawText, finalizeCase = false) {
     const after = finalizeCase ? part.slice(pos + 1).toLowerCase() : part.slice(pos + 1);
     return `${before}${ch}${after}`;
   }).join("");
-
-  if (!finalizeCase && !hasTrailingSpace) {
-    return formatted;
-  }
-  return formatted;
 }
 
 function applyAutoCapitalizeToInput(inputEl, finalizeCase = false) {
@@ -833,28 +834,39 @@ function applyAutoCapitalizeToInput(inputEl, finalizeCase = false) {
   }
 }
 
+function attachAutoCapitalizeListeners_(inputEl, onAfterFormat) {
+  if (!inputEl || inputEl.dataset.autoCapBound) return;
+  inputEl.dataset.autoCapBound = "1";
+  inputEl.addEventListener("input", () => {
+    applyAutoCapitalizeToInput(inputEl, false);
+    if (typeof onAfterFormat === "function") onAfterFormat(false);
+  });
+  inputEl.addEventListener("blur", () => {
+    applyAutoCapitalizeToInput(inputEl, true);
+    if (typeof onAfterFormat === "function") onAfterFormat(true);
+  });
+}
+
 function bindInstitutionAutoCapitalize() {
+  const regNameInput = document.getElementById("regFullNameInput");
+  attachAutoCapitalizeListeners_(regNameInput, null);
+
+  const formInput = document.getElementById("appliedFormationInput");
+  attachAutoCapitalizeListeners_(formInput, () => {
+    validateFormationInputRealtime();
+  });
+
   const instInput = document.getElementById("appliedInstitutionInput");
-  if (instInput && !instInput.dataset.autoCapBound) {
-    instInput.dataset.autoCapBound = "1";
-    instInput.addEventListener("input", () => {
-      applyAutoCapitalizeToInput(instInput, false);
-      validateInstitutionInputRealtime();
-    });
-    instInput.addEventListener("blur", () => {
-      applyAutoCapitalizeToInput(instInput, true);
-      validateInstitutionInputRealtime();
-    });
-  }
+  attachAutoCapitalizeListeners_(instInput, () => {
+    validateInstitutionInputRealtime();
+  });
+
+  const profileNameInput = document.getElementById("profileFullNameInput");
+  attachAutoCapitalizeListeners_(profileNameInput, null);
+
+  const profileFormInput = document.getElementById("profileFormationInput");
+  attachAutoCapitalizeListeners_(profileFormInput, null);
 
   const profileInstInput = document.getElementById("profileInstitutionInput");
-  if (profileInstInput && !profileInstInput.dataset.autoCapBound) {
-    profileInstInput.dataset.autoCapBound = "1";
-    profileInstInput.addEventListener("input", () => {
-      applyAutoCapitalizeToInput(profileInstInput, false);
-    });
-    profileInstInput.addEventListener("blur", () => {
-      applyAutoCapitalizeToInput(profileInstInput, true);
-    });
-  }
+  attachAutoCapitalizeListeners_(profileInstInput, null);
 }
