@@ -2021,3 +2021,65 @@ async function submitDashboardSurvey(event) {
     }
   }
 }
+const SURVEY_HISTORY_STORAGE_KEY = "cat_skd_skm_survey_v1";
+
+function getLocalSurveyHistory() {
+  try {
+    const raw = localStorage.getItem(SURVEY_HISTORY_STORAGE_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveSurveyToLocalHistory(entry) {
+  const list = getLocalSurveyHistory();
+  list.unshift(entry);
+  localStorage.setItem(SURVEY_HISTORY_STORAGE_KEY, JSON.stringify(list.slice(0, 100)));
+}
+
+function renderDashboardSurveySummary() {
+  const nrrEl = document.getElementById("dashSurveyAvgNrr");
+  const ikmEl = document.getElementById("dashSurveyAvgIkm");
+  const countEl = document.getElementById("dashSurveyCountBadge");
+  const listEl = document.getElementById("dashSurveyRecentList");
+  if (!nrrEl && !ikmEl && !countEl && !listEl) return;
+
+  const list = getLocalSurveyHistory();
+  const totalCount = list.length;
+  const avgNrr = totalCount > 0
+    ? Number((list.reduce((sum, item) => sum + Number(item.nrr || 0), 0) / totalCount).toFixed(2))
+    : 0;
+  const avgIkm = totalCount > 0
+    ? Number((list.reduce((sum, item) => sum + Number(item.ikm || 0), 0) / totalCount).toFixed(2))
+    : 0;
+
+  if (nrrEl) nrrEl.textContent = totalCount > 0 ? `${avgNrr} / 4,00` : "-";
+  if (ikmEl) ikmEl.textContent = totalCount > 0 ? `${avgIkm}` : "-";
+  if (countEl) countEl.textContent = `${totalCount} Responden`;
+
+  if (!listEl) return;
+  listEl.replaceChildren();
+
+  if (totalCount === 0) {
+    const empty = document.createElement("div");
+    empty.className = "text-xs text-slate-500";
+    empty.textContent = "Belum ada data survei tersimpan di browser ini. Klik 'Isi Survei SKM' untuk mengirim penilaian.";
+    listEl.appendChild(empty);
+    return;
+  }
+
+  list.slice(0, 5).forEach(item => {
+    const row = document.createElement("div");
+    row.className = "bg-white border border-slate-200 rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-2";
+    row.innerHTML = `
+      <div class="min-w-0">
+        <div class="text-xs font-extrabold text-slate-800">${safeText(item.nama)} • <span class="text-blue-700">NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})</span></div>
+        <div class="text-[11px] text-slate-600 truncate">${safeText(item.catatan)}</div>
+        <div class="text-[10px] text-slate-400">${safeText(formatShortDate(item.waktu))}</div>
+      </div>
+    `;
+    listEl.appendChild(row);
+  });
+}
