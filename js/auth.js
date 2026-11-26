@@ -323,6 +323,9 @@ async function handleRegisterSubmit() {
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  if (typeof pingOnlinePresence_ === "function") {
+    pingOnlinePresence_();
+  }
   if (typeof loadChatMessages === "function") {
     loadChatMessages(true, false);
   }
@@ -375,6 +378,9 @@ async function handleLoginSubmit() {
       renderAttemptHistory();
       renderDashboardUserPreviousExams();
       renderUserScoreTrendChart();
+      if (typeof pingOnlinePresence_ === "function") {
+        pingOnlinePresence_();
+      }
       if (typeof loadChatMessages === "function") {
         loadChatMessages(true, false);
       }
@@ -411,6 +417,9 @@ async function handleLoginSubmit() {
   renderAttemptHistory();
   renderDashboardUserPreviousExams();
   renderUserScoreTrendChart();
+  if (typeof pingOnlinePresence_ === "function") {
+    pingOnlinePresence_();
+  }
   if (typeof loadChatMessages === "function") {
     loadChatMessages(true, false);
   }
@@ -503,6 +512,9 @@ function loadLoggedUserFromStorage() {
         pendidikan: parsed.pendidikan || ""
       };
       applyLoggedUserToUI();
+      if (typeof pingOnlinePresence_ === "function") {
+        pingOnlinePresence_();
+      }
       if (typeof loadChatMessages === "function") {
         loadChatMessages(true, false);
       }
