@@ -971,7 +971,9 @@ async function finishExam() {
   };
 
   sendResultsToGoogleSheet(lastExamPayload);
+  showPostExamSurveyDonationPrompt();
 }
+
 function showPostExamSurveyDonationPrompt() {
   const card = document.getElementById("postExamSurveyDonationCard");
   const reopenBar = document.getElementById("reopenSurveyDonationBar");
