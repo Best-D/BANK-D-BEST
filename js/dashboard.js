@@ -76,8 +76,51 @@ function getSurveyAccountKey_() {
     const norm = safeAccountKey(raw);
     if (norm) return norm;
   }
+  if (typeof AUTH_STORAGE_KEY !== "undefined") {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+      if (saved) {
+        const savedRaw = saved.username || saved.email || saved.nama || "";
+        const savedNorm = safeAccountKey(savedRaw);
+        if (savedNorm) return savedNorm;
+      }
+    } catch (err) {}
+  }
   const activeName = getActiveUserFilterName();
   return activeName ? safeAccountKey(activeName) : "guest_default";
+}
+
+function getAllSurveyAccountKeysForCurrentUser_() {
+  const keys = new Set();
+  const primary = getSurveyAccountKey_();
+  if (primary) keys.add(primary);
+
+  if (typeof loggedUser !== "undefined" && loggedUser) {
+    [loggedUser.username, loggedUser.email, loggedUser.nama].forEach(val => {
+      const k = safeAccountKey(val);
+      if (k) keys.add(k);
+    });
+  }
+
+  if (typeof AUTH_STORAGE_KEY !== "undefined") {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || "null");
+      if (saved) {
+        [saved.username, saved.email, saved.nama].forEach(val => {
+          const k = safeAccountKey(val);
+          if (k) keys.add(k);
+        });
+      }
+    } catch (err) {}
+  }
+
+  const activeName = getActiveUserFilterName();
+  if (activeName) {
+    const k = safeAccountKey(activeName);
+    if (k) keys.add(k);
+  }
+
+  return Array.from(keys);
 }
 
 function getCompletedSurveyAccountsMap_() {
@@ -91,18 +134,33 @@ function getCompletedSurveyAccountsMap_() {
 }
 
 function hasAccountCompletedSurvey_(accountKey = "") {
-  const key = accountKey || getSurveyAccountKey_();
+  const targetKeys = accountKey
+    ? [safeAccountKey(accountKey)].filter(Boolean)
+    : getAllSurveyAccountKeysForCurrentUser_();
+  if (!targetKeys.length) return false;
+
   const map = getCompletedSurveyAccountsMap_();
-  if (Boolean(map[key])) return true;
+  if (targetKeys.some(k => Boolean(map[k]))) return true;
 
   const localSurveys = getLocalSurveyHistory();
-  return localSurveys.some(item => safeAccountKey(item.accountKey || item.username || item.nama || "") === key);
+  return localSurveys.some(item => {
+    const itemKeys = [
+      safeAccountKey(item.accountKey || ""),
+      safeAccountKey(item.username || ""),
+      safeAccountKey(item.nama || "")
+    ].filter(Boolean);
+    return itemKeys.some(ik => targetKeys.includes(ik));
+  });
 }
 
 function markAccountSurveyCompleted_(accountKey = "") {
-  const key = accountKey || getSurveyAccountKey_();
+  const targetKeys = accountKey
+    ? [safeAccountKey(accountKey)].filter(Boolean)
+    : getAllSurveyAccountKeysForCurrentUser_();
   const map = getCompletedSurveyAccountsMap_();
-  map[key] = true;
+  targetKeys.forEach(k => {
+    if (k) map[k] = true;
+  });
   localStorage.setItem(SURVEY_COMPLETED_ACCOUNTS_KEY, JSON.stringify(map));
   markPostExamSurveyCompleted_();
 }
@@ -2199,6 +2257,10 @@ function openDashboardSurveyModal() {
     alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum mengisi survei.");
     return;
   }
+  if (hasAccountCompletedSurvey_()) {
+    alert("Akun ini sudah mengisi Survei SKM (1 akun hanya boleh mengisi 1 kali).");
+    return;
+  }
 
   const modal = document.getElementById("dashboardSurveyModal");
   const nameEl = document.getElementById("dashSurveyNameInput");
@@ -2234,6 +2296,16 @@ function closeDashboardSurveyModal() {
 
 async function submitDashboardSurvey(event) {
   if (event) event.preventDefault();
+
+  const statusElEarly = document.getElementById("dashSurveyStatusText");
+  if (hasAccountCompletedSurvey_()) {
+    if (statusElEarly) {
+      statusElEarly.textContent = "Akun ini sudah mengisi Survei SKM (1 akun = 1 survei).";
+      statusElEarly.className = "text-xs font-semibold rounded-xl p-3 bg-amber-50 text-amber-900 border border-amber-200";
+      statusElEarly.classList.remove("hidden");
+    }
+    return;
+  }
 
   const uVals = [
     Number(document.getElementById("skmU1")?.value || 3),
@@ -2370,14 +2442,22 @@ function resetPostExamSurveySessionState_() {
     : false;
   postExamSurveyCompletedForSession = alreadyDoneForAccount;
   const openBtn = document.getElementById("openPostExamSurveyBtn");
+  const submitBtn = document.getElementById("submitSurveyBtn");
   if (openBtn) {
     if (alreadyDoneForAccount) {
       openBtn.textContent = "Survei SKM Sudah Terisi ✓";
-      openBtn.className = "px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold transition";
+      openBtn.disabled = true;
+      openBtn.className = "px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold opacity-90 cursor-not-allowed transition";
     } else {
       openBtn.textContent = "Isi Survei SKM Dulu";
+      openBtn.disabled = false;
       openBtn.className = "px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition";
     }
+  }
+  if (submitBtn && alreadyDoneForAccount) {
+    submitBtn.disabled = true;
+  } else if (submitBtn) {
+    submitBtn.disabled = false;
   }
 }
 
