@@ -398,6 +398,7 @@ function finishExam(isAutoTimeout = false) {
   if (!isExamActive) return;
   recordCurrentQuestionDuration();
   isExamActive = false;
+  document.body.classList.remove("exam-mode-active");
 
   if (timerInterval) {
     clearInterval(timerInterval);
@@ -645,6 +646,13 @@ function startExam() {
       : "nav-filter-btn flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700";
   });
 
+  document.body.classList.add("exam-mode-active");
+  if (typeof closeChatPanel === "function") {
+    closeChatPanel();
+  } else {
+    const chatEl = document.getElementById("chatPanel");
+    if (chatEl) chatEl.classList.add("hidden");
+  }
   showScreen("exam");
   startTimerLoop();
   renderExamQuestion();
@@ -1157,6 +1165,13 @@ function initializeAppOnLoad() {
           if (hpName) hpName.textContent = participantName;
           if (hpMode) hpMode.textContent = examModeLabel;
 
+          document.body.classList.add("exam-mode-active");
+          if (typeof closeChatPanel === "function") {
+            closeChatPanel();
+          } else {
+            const chatEl = document.getElementById("chatPanel");
+            if (chatEl) chatEl.classList.add("hidden");
+          }
           showScreen("exam");
           startTimerLoop();
           renderExamQuestion();
