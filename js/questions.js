@@ -574,9 +574,7 @@ function buildDefaultQuestionBank() {
   return bank;
 }
 
-if (typeof questionBank === "undefined") {
-  var questionBank = buildDefaultQuestionBank();
-} else {
+if (!Array.isArray(questionBank) || questionBank.length === 0) {
   questionBank = buildDefaultQuestionBank();
 }
 
