@@ -2097,7 +2097,7 @@ async function resetSurveyDataAsAdmin() {
   }
 }
 
-async function sanitizePublicSurveyItem_(item, index = 0) {
+function sanitizePublicSurveyItem_(item, index = 0) {
   const unsurArr = Array.isArray(item?.unsur) && item.unsur.length === 9
     ? item.unsur.map(v => Number(v || 0))
     : [];
