@@ -766,3 +766,92 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
     showScreen("setup");
   }
 }
+function formatInstitutionInputValue(rawText, finalizeCase = false) {
+  const src = String(rawText || "");
+  if (!src) return "";
+
+  const minorWords = new Set(["dan", "atau", "serta", "di", "ke", "dari", "yang", "untuk", "pada", "dalam"]);
+  const hasTrailingSpace = /\s$/.test(src);
+
+  const tokens = src.split(/(\s+)/);
+  const wordTokens = tokens.filter(t => t && !/^\s+$/.test(t));
+  let wordIdx = 0;
+
+  const formatted = tokens.map(part => {
+    if (!part || /^\s+$/.test(part)) return part;
+
+    const currentWordIndex = wordIdx++;
+    const isLastWord = currentWordIndex === wordTokens.length - 1;
+    const lowerPart = part.toLowerCase();
+
+    if (lowerPart === "kementerian") {
+      return "Kementerian" + part.slice(11);
+    }
+
+    if (finalizeCase && currentWordIndex > 0 && !isLastWord && minorWords.has(lowerPart)) {
+      return lowerPart;
+    }
+
+    const firstAlphaMatch = part.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+    if (!firstAlphaMatch) return part;
+
+    const pos = firstAlphaMatch.index;
+    const before = part.slice(0, pos);
+    const ch = part.charAt(pos).toUpperCase();
+    const after = finalizeCase ? part.slice(pos + 1).toLowerCase() : part.slice(pos + 1);
+    return `${before}${ch}${after}`;
+  }).join("");
+
+  if (!finalizeCase && !hasTrailingSpace) {
+    return formatted;
+  }
+  return formatted;
+}
+
+function applyAutoCapitalizeToInput(inputEl, finalizeCase = false) {
+  if (!inputEl) return;
+  const originalVal = inputEl.value;
+  if (!originalVal) return;
+
+  const selStart = inputEl.selectionStart;
+  const selEnd = inputEl.selectionEnd;
+  const nextVal = formatInstitutionInputValue(originalVal, finalizeCase);
+
+  if (nextVal !== originalVal) {
+    inputEl.value = nextVal;
+    if (!finalizeCase && typeof selStart === "number" && typeof selEnd === "number") {
+      const diff = nextVal.length - originalVal.length;
+      const safeStart = Math.max(0, Math.min(nextVal.length, selStart + diff));
+      const safeEnd = Math.max(0, Math.min(nextVal.length, selEnd + diff));
+      try {
+        inputEl.setSelectionRange(safeStart, safeEnd);
+      } catch (err) {}
+    }
+  }
+}
+
+function bindInstitutionAutoCapitalize() {
+  const instInput = document.getElementById("appliedInstitutionInput");
+  if (instInput && !instInput.dataset.autoCapBound) {
+    instInput.dataset.autoCapBound = "1";
+    instInput.addEventListener("input", () => {
+      applyAutoCapitalizeToInput(instInput, false);
+      validateInstitutionInputRealtime();
+    });
+    instInput.addEventListener("blur", () => {
+      applyAutoCapitalizeToInput(instInput, true);
+      validateInstitutionInputRealtime();
+    });
+  }
+
+  const profileInstInput = document.getElementById("profileInstitutionInput");
+  if (profileInstInput && !profileInstInput.dataset.autoCapBound) {
+    profileInstInput.dataset.autoCapBound = "1";
+    profileInstInput.addEventListener("input", () => {
+      applyAutoCapitalizeToInput(profileInstInput, false);
+    });
+    profileInstInput.addEventListener("blur", () => {
+      applyAutoCapitalizeToInput(profileInstInput, true);
+    });
+  }
+}
