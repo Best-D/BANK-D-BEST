@@ -1007,7 +1007,9 @@ function renderDashboardTable() {
 
   renderFormationCompetitionSummary(sortedRows, eduFilter, formationFilter);
 
-  const rowsToDisplay = top10Only ? sortedRows.slice(0, 10) : sortedRows;
+  const limitRaw = document.getElementById("dashboardLimitSelect")?.value || (top10Only ? "10" : "ALL");
+  const parsedLimit = limitRaw === "ALL" ? null : Math.max(1, Math.min(100, parseInt(limitRaw, 10) || 10));
+  const rowsToDisplay = parsedLimit ? sortedRows.slice(0, parsedLimit) : sortedRows;
 
   const totalAttempts = rowsToDisplay.length;
   const highestScore = totalAttempts > 0 ? Math.max(...rowsToDisplay.map(r => Number(r.total || 0))) : 0;
