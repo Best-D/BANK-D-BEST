@@ -590,8 +590,9 @@ function startExam() {
     alert("Formasi yang dilamar mengandung kata yang tidak sopan.");
     return;
   }
-  if (!instVal) {
-    alert("Isi Instansi yang Dilamar terlebih dahulu.");
+  const instLettersCount = instVal.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, "").length;
+  if (!instVal || instLettersCount < 7) {
+    alert("Isi Instansi yang Dilamar minimal 7 huruf.");
     if (instInput) instInput.focus();
     return;
   }
