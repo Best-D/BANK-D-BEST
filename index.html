@@ -584,6 +584,88 @@
         <button type="button" onclick="openDashboard()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl">
           Lihat Dashboard Semua Skor
         </button>
+        <!-- KOTAK KONTAK SURVEI & DONASI SETELAH UJIAN SELESAI -->
+      <div id="postExamSurveyDonationCard" class="hidden mx-6 mb-6 no-print">
+        <div class="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50/90 via-white to-blue-50/60 p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="space-y-1 max-w-2xl">
+              <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                Umpan Balik &amp; Dukungan Aplikasi
+              </span>
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-800">
+                Kontak Survei &amp; Donasi Seikhlasnya
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Terima kasih telah menyelesaikan simulasi. Jika berkenan, silakan sampaikan masukan melalui kontak survei atau beri dukungan donasi—atau klik <strong>Nanti Saja</strong> bila ingin meninjau hasil dan pembahasan terlebih dahulu.
+              </p>
+            </div>
+            <button type="button" onclick="dismissPostExamPrompt()"
+              class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shrink-0 transition">
+              Nanti Saja
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 pt-1">
+            <button type="button" onclick="togglePostExamSurveyForm()"
+              class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition">
+              Isi Kontak Survei
+            </button>
+            <button type="button" onclick="openDonationModal()"
+              class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold transition">
+              Donasi Seikhlasnya
+            </button>
+            <span class="text-[11px] text-slate-500">
+              Kontak / WhatsApp / Email: <strong class="text-slate-700">082388494114</strong> • <strong class="text-slate-700">Best D Pamungkas</strong>
+            </span>
+          </div>
+
+          <form id="postExamSurveyForm" onsubmit="submitPostExamSurvey(event)"
+            class="hidden pt-3 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label for="surveyContactInput" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Kontak (WA / Email — Opsional)
+              </label>
+              <input type="text" id="surveyContactInput" maxlength="100"
+                placeholder="Contoh: 08xx / nama@email.com"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-blue-600 outline-none" />
+            </div>
+            <div class="sm:col-span-2">
+              <label for="surveyFeedbackInput" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Saran / Kesan Simulasi <span class="text-rose-600">*</span>
+              </label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="surveyFeedbackInput" maxlength="300"
+                  placeholder="Tuliskan kesan, kesulitan soal, atau saran perbaikan..."
+                  class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-blue-600 outline-none" />
+                <button type="submit" id="submitSurveyBtn"
+                  class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 transition">
+                  Kirim Survei
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <p id="postExamSurveyStatus" class="hidden text-xs font-semibold"></p>
+        </div>
+      </div>
+
+      <!-- PINTASAN MUNCUL KEMBALI JIKA DIKLIK "NANTI SAJA" -->
+      <div id="reopenSurveyDonationBar" class="hidden px-6 pb-6 no-print">
+        <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs">
+          <span class="text-slate-600">Kontak survei &amp; donasi disembunyikan sementara.</span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="reopenPostExamPrompt(true)"
+              class="font-bold text-blue-700 hover:underline">
+              Buka Survei
+            </button>
+            <span class="text-slate-300">•</span>
+            <button type="button" onclick="openDonationModal()"
+              class="font-bold text-amber-700 hover:underline">
+              Donasi Nanti
+            </button>
+          </div>
+        </div>
+      </div>
         <button type="button" onclick="window.print()" class="bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl">
           Cetak / Simpan PDF
         </button>
