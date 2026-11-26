@@ -6,6 +6,7 @@ let chatPollTimer = null;
 let bestScorePerAccountOnly = true;
 
 const SURVEY_HISTORY_STORAGE_KEY = "cat_skd_skm_survey_v1";
+const SURVEY_COMPLETED_ACCOUNTS_KEY = "cat_skd_skm_completed_accounts_v1";
 
 const STANDARD_EDUCATION_LEVELS = [
   "SMA/SMK/Sederajat",
@@ -67,6 +68,43 @@ function getActiveUserFilterName() {
   }
   const inputVal = (document.getElementById("participantNameInput")?.value || "").trim();
   return inputVal;
+}
+
+function getSurveyAccountKey_() {
+  if (typeof loggedUser !== "undefined" && loggedUser) {
+    const raw = loggedUser.username || loggedUser.email || loggedUser.nama || "";
+    const norm = safeAccountKey(raw);
+    if (norm) return norm;
+  }
+  const activeName = getActiveUserFilterName();
+  return activeName ? safeAccountKey(activeName) : "guest_default";
+}
+
+function getCompletedSurveyAccountsMap_() {
+  try {
+    const raw = localStorage.getItem(SURVEY_COMPLETED_ACCOUNTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function hasAccountCompletedSurvey_(accountKey = "") {
+  const key = accountKey || getSurveyAccountKey_();
+  const map = getCompletedSurveyAccountsMap_();
+  if (Boolean(map[key])) return true;
+
+  const localSurveys = getLocalSurveyHistory();
+  return localSurveys.some(item => safeAccountKey(item.accountKey || item.username || item.nama || "") === key);
+}
+
+function markAccountSurveyCompleted_(accountKey = "") {
+  const key = accountKey || getSurveyAccountKey_();
+  const map = getCompletedSurveyAccountsMap_();
+  map[key] = true;
+  localStorage.setItem(SURVEY_COMPLETED_ACCOUNTS_KEY, JSON.stringify(map));
+  markPostExamSurveyCompleted_();
 }
 
 function getExamHistory() {
@@ -2056,6 +2094,7 @@ async function submitDashboardSurvey(event) {
 
   const avgUnsur = Number((uVals.reduce((a, b) => a + b, 0) / 9).toFixed(2));
   const ikmKonversi = Number((avgUnsur * 25).toFixed(2));
+  const qCat = getSurveyQualityCategory_(ikmKonversi);
 
   const nameInput = (document.getElementById("dashSurveyNameInput")?.value || "").trim();
   const contactInput = (document.getElementById("dashSurveyContactInput")?.value || "").trim();
@@ -2074,28 +2113,32 @@ async function submitDashboardSurvey(event) {
   }
 
   const reporterName = nameInput || getActiveUserFilterName() || "Peserta Dashboard";
+  const accKey = safeAccountKey(loggedUser?.username || loggedUser?.email || reporterName);
   const summaryMeta =
     `U1:${uVals[0]} | U2:${uVals[1]} | U3:${uVals[2]} | U4:${uVals[3]} | U5:${uVals[4]} | ` +
     `U6:${uVals[5]} | U7:${uVals[6]} | U8:${uVals[7]} | U9:${uVals[8]} ` +
-    `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}) • Kontak:${contactInput || "-"}`;
+    `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}, Mutu:${qCat.label}) • Kontak:${contactInput || "-"}`;
 
   saveSurveyToLocalHistory({
     id: `skm_${Date.now()}`,
     waktu: new Date().toISOString(),
+    accountKey: accKey,
     nama: reporterName,
     kontak: contactInput || "-",
     unsur: uVals,
     nrr: avgUnsur,
     ikm: ikmKonversi,
+    kategori: qCat.label,
     catatan: feedbackText
   });
+  markAccountSurveyCompleted_(accKey);
   renderDashboardSurveySummary();
 
   const endpoint = getScriptEndpoint();
   if (!endpoint || endpoint.includes("TEMPEL_URL")) {
     if (feedbackEl) feedbackEl.value = "";
     if (statusEl) {
-      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei 9 unsur tercatat secara lokal.`;
+      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi} • ${qCat.label}). Survei 9 unsur tercatat untuk akun ini.`;
       statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
       statusEl.classList.remove("hidden");
     }
@@ -2117,15 +2160,22 @@ async function submitDashboardSurvey(event) {
         subtest: "SURVEI_SKM_9",
         category: "Survei SKM 9 Unsur (Dashboard)",
         question: summaryMeta.slice(0, 450),
-        catatan: feedbackText,
-        pelapor: reporterName
+        catatan: `${feedbackText} [NRR: ${avgUnsur}/4 | IKM: ${ikmKonversi} | Mutu: ${qCat.label}]`,
+        pelapor: reporterName,
+        username: loggedUser?.username || accKey,
+        u1: uVals[0], u2: uVals[1], u3: uVals[2],
+        u4: uVals[3], u5: uVals[4], u6: uVals[5],
+        u7: uVals[6], u8: uVals[7], u9: uVals[8],
+        nrr: avgUnsur,
+        ikm: ikmKonversi,
+        kategori_mutu: qCat.label
       })
     });
     const json = await res.json();
     if (statusEl) {
       if (json && json.status === "sukses") {
         if (feedbackEl) feedbackEl.value = "";
-        statusEl.textContent = `Terima kasih! Survei 9 unsur SKM Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) berhasil dikirim ke Google Sheets.`;
+        statusEl.textContent = `Terima kasih! Survei 9 unsur SKM Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi} • ${qCat.label}) berhasil dikirim ke Google Sheets.`;
         statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
       } else {
         statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
@@ -2159,16 +2209,29 @@ function markPostExamSurveyCompleted_() {
 }
 
 function resetPostExamSurveySessionState_() {
-  postExamSurveyCompletedForSession = false;
+  const alreadyDoneForAccount = typeof hasAccountCompletedSurvey_ === "function"
+    ? hasAccountCompletedSurvey_()
+    : false;
+  postExamSurveyCompletedForSession = alreadyDoneForAccount;
   const openBtn = document.getElementById("openPostExamSurveyBtn");
   if (openBtn) {
-    openBtn.textContent = "Isi Survei SKM Dulu";
-    openBtn.className = "px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition";
+    if (alreadyDoneForAccount) {
+      openBtn.textContent = "Survei SKM Sudah Terisi ✓";
+      openBtn.className = "px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold transition";
+    } else {
+      openBtn.textContent = "Isi Survei SKM Dulu";
+      openBtn.className = "px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition";
+    }
   }
 }
 
 function isMandatorySurveyCompleted() {
-  return Boolean(postExamSurveyCompletedForSession);
+  if (postExamSurveyCompletedForSession) return true;
+  if (typeof hasAccountCompletedSurvey_ === "function" && hasAccountCompletedSurvey_()) {
+    postExamSurveyCompletedForSession = true;
+    return true;
+  }
+  return false;
 }
 
 function requireSurveyBeforeAction(actionLabel = "melanjutkan") {
@@ -2184,7 +2247,7 @@ function requireSurveyBeforeAction(actionLabel = "melanjutkan") {
     formEl.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   if (statusEl) {
-    statusEl.textContent = `Silakan isi & kirim Survei SKM 9 Unsur terlebih dahulu sebelum ${actionLabel}.`;
+    statusEl.textContent = `Silakan isi & kirim Survei SKM 9 Unsur (sekali per akun) sebelum ${actionLabel}.`;
     statusEl.className = "text-xs font-semibold text-amber-800";
     statusEl.classList.remove("hidden");
   }
