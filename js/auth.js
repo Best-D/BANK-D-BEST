@@ -679,7 +679,9 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
   const educationVal = (document.getElementById("profileEducationSelect")?.value || "").trim();
   const formationVal = (document.getElementById("profileFormationInput")?.value || "").trim();
   const institutionVal = (document.getElementById("profileInstitutionInput")?.value || "").trim();
-
+const profInstEl = document.getElementById("profileInstitutionInput");
+if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
+  
   if (!fullName || fullName.length < 3) {
     showProfileFeedback("Nama lengkap peserta minimal 3 karakter.", true);
     return;
