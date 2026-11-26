@@ -2100,3 +2100,50 @@ async function submitDashboardSurvey(event) {
     }
   }
 }
+
+let postExamSurveyCompletedForSession = false;
+
+function markPostExamSurveyCompleted_() {
+  postExamSurveyCompletedForSession = true;
+  const openBtn = document.getElementById("openPostExamSurveyBtn");
+  if (openBtn) {
+    openBtn.textContent = "Survei SKM Sudah Terisi ✓";
+    openBtn.className = "px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold transition";
+  }
+}
+
+function resetPostExamSurveySessionState_() {
+  postExamSurveyCompletedForSession = false;
+  const openBtn = document.getElementById("openPostExamSurveyBtn");
+  if (openBtn) {
+    openBtn.textContent = "Isi Survei SKM Dulu";
+    openBtn.className = "px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition";
+  }
+}
+
+function isMandatorySurveyCompleted() {
+  return Boolean(postExamSurveyCompletedForSession);
+}
+
+function requireSurveyBeforeAction(actionLabel = "melanjutkan") {
+  if (isMandatorySurveyCompleted()) return true;
+
+  reopenPostExamPrompt(true);
+  const formEl = document.getElementById("postExamSurveyForm");
+  const fbInput = document.getElementById("surveyFeedbackInput");
+  const statusEl = document.getElementById("postExamSurveyStatus");
+
+  if (formEl) {
+    formEl.classList.remove("hidden");
+    formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  if (statusEl) {
+    statusEl.textContent = `Silakan isi & kirim Survei SKM 9 Unsur terlebih dahulu sebelum ${actionLabel}.`;
+    statusEl.className = "text-xs font-semibold text-amber-800";
+    statusEl.classList.remove("hidden");
+  }
+  if (fbInput) {
+    setTimeout(() => fbInput.focus(), 120);
+  }
+  return false;
+}
