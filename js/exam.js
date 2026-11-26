@@ -560,7 +560,13 @@ function startExam() {
   }
 
   const nameVal = (nameInput?.value || loggedUser?.nama || "").trim();
-  const eduVal = (eduSelect?.value || loggedUser?.pendidikan || "").trim();
+  const eduVal = (
+    eduSelect?.value ||
+    document.getElementById("profileEducationSelect")?.value ||
+    loggedUser?.pendidikan ||
+    participantEducation ||
+    ""
+  ).trim();
   const formVal = (formInput?.value || "").trim();
   const instVal = (instInput?.value || "").trim();
   const durMinutes = Number(durSelect?.value || 100);
