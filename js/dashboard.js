@@ -2137,6 +2137,7 @@ function sanitizePublicSurveyItem_(item, index = 0) {
 }
 
 async function renderDashboardSurveySummary() {
+  const nrrCardEl = document.getElementById("dashSurveyAvgNrr")?.closest("div");
   const nrrEl = document.getElementById("dashSurveyAvgNrr");
   const ikmEl = document.getElementById("dashSurveyAvgIkm");
   const catEl = document.getElementById("dashSurveyAvgCategory");
@@ -2145,13 +2146,16 @@ async function renderDashboardSurveySummary() {
   updateAdminSurveyResetVisibility_();
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
+  if (nrrCardEl) {
+    nrrCardEl.classList.add("hidden");
+  }
+
   if (listEl) {
-    listEl.innerHTML = `<div class="text-xs text-slate-500">Memuat data survei dari spreadsheet...</div>`;
+    listEl.innerHTML = `<div class="text-xs text-slate-500">Memuat ringkasan survei dari spreadsheet...</div>`;
   }
 
   const remoteList = await fetchSharedSurveyListFromServer_();
   if (!Array.isArray(remoteList)) {
-    if (nrrEl) nrrEl.textContent = "-";
     if (ikmEl) ikmEl.textContent = "-";
     if (catEl) {
       catEl.textContent = "-";
@@ -2159,7 +2163,7 @@ async function renderDashboardSurveySummary() {
     }
     if (countEl) countEl.textContent = "0 Responden";
     if (listEl) {
-      listEl.innerHTML = `<div class="text-xs text-rose-600 font-semibold">Gagal mengambil data survei dari spreadsheet. Periksa URL &amp; deployment Apps Script (?mode=survei).</div>`;
+      listEl.innerHTML = `<div class="text-xs text-rose-600 font-semibold">Gagal mengambil data survei dari spreadsheet.</div>`;
     }
     return;
   }
@@ -2203,15 +2207,12 @@ async function renderDashboardSurveySummary() {
 
   list.slice(0, 10).forEach((item) => {
     const qItem = getSurveyQualityCategory_(item.ikm);
-    const unsurText = Array.isArray(item.unsur) && item.unsur.length === 9
-      ? ` • Unsur [${item.unsur.join(",")}]`
-      : "";
     const row = document.createElement("div");
     row.className = "bg-white border border-slate-200 rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-2";
     row.innerHTML = `
-      <div class="min-w-0">
+      <div class="min-w-0 space-y-1">
         <div class="flex flex-wrap items-center gap-1.5 text-xs font-extrabold text-slate-800">
-          <span class="text-blue-700">NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})${safeText(unsurText)}</span>
+          <span class="text-blue-700">IKM ${safeText(item.ikm)}</span>
           <span class="text-[10px] px-2 py-0.5 rounded-full ${qItem.badgeCls}">${safeText(qItem.label)}</span>
         </div>
         <div class="text-[11px] text-slate-600 break-words">${safeText(item.catatan)}</div>
