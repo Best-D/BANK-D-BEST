@@ -782,6 +782,26 @@
             </button>
             <button type="button" id="scopeTop10Btn" onclick="setDashboardTop10Mode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">
               10 Besar (Berurutan)
+<div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="scopeAllBtn" onclick="setDashboardScope('ALL')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white">
+              Semua Peserta
+            </button>
+            <button type="button" id="scopeMineBtn" onclick="setDashboardScope('MINE')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Skor Saya Saja
+            </button>
+            <button type="button" id="scopeTop10Btn" onclick="setDashboardTop10Mode()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">
+              10 Besar (Berurutan)
+            </button>
+            <select id="dashboardLimitSelect" onchange="handleDashboardLimitChange()"
+              class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="ALL">Tampil: Semua</option>
+              <option value="10">Tampil: 10 Besar</option>
+              <option value="50">Tampil: 50 Besar</option>
+              <option value="100">Tampil: 100 Besar</option>
+            </select>
+          </div>
+
+              
             </button>
           </div>
 
