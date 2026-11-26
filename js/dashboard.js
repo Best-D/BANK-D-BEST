@@ -2097,42 +2097,20 @@ async function resetSurveyDataAsAdmin() {
   }
 }
 
-function sanitizePublicSurveyItem_(item, index = 0) {
-  const rawUnsur = Array.isArray(item?.unsur) ? item.unsur : [];
-  const unsurArr = rawUnsur.length === 9
-    ? rawUnsur.map(v => {
-        const num = Number(v);
-        return Number.isFinite(num) && num >= 1 && num <= 4 ? num : 3;
-      })
+async function sanitizePublicSurveyItem_(item, index = 0) {
+  const unsurArr = Array.isArray(item?.unsur) && item.unsur.length === 9
+    ? item.unsur.map(v => Number(v || 0))
     : [];
-
-  let nrrVal = Number(item?.nrr);
-  let ikmVal = Number(item?.ikm);
-
-  if ((!Number.isFinite(nrrVal) || nrrVal <= 0) && unsurArr.length === 9) {
-    nrrVal = Number((unsurArr.reduce((a, b) => a + b, 0) / 9).toFixed(2));
-  } else if (!Number.isFinite(nrrVal)) {
-    nrrVal = 0;
-  }
-
-  if ((!Number.isFinite(ikmVal) || ikmVal <= 0) && nrrVal > 0) {
-    ikmVal = Number((nrrVal * 25).toFixed(2));
-  } else if (!Number.isFinite(ikmVal)) {
-    ikmVal = 0;
-  }
-
-  const catatanStr = String(item?.catatan || "").trim();
-  const hasMeaningfulData = unsurArr.length === 9 || nrrVal > 0 || ikmVal > 0 || catatanStr.length > 0;
-  if (!hasMeaningfulData) return null;
-
+  const nrrVal = Number(item?.nrr || 0);
+  const ikmVal = Number(item?.ikm || 0);
   return {
     id: `anon_srv_${index}`,
     waktu: item?.waktu || "",
     unsur: unsurArr,
     nrr: nrrVal,
     ikm: ikmVal,
-    kategori: String(item?.kategori || "").trim(),
-    catatan: catatanStr || "-"
+    kategori: item?.kategori || "",
+    catatan: item?.catatan || ""
   };
 }
 
@@ -2145,16 +2123,12 @@ async function renderDashboardSurveySummary() {
   updateAdminSurveyResetVisibility_();
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
-  const localList = getLocalSurveyHistory()
-    .map((item, idx) => sanitizePublicSurveyItem_(item, idx))
-    .filter(Boolean);
+  const localList = getLocalSurveyHistory().map((item, idx) => sanitizePublicSurveyItem_(item, idx));
   const remoteList = await fetchSharedSurveyListFromServer_();
   let list = localList;
 
   if (Array.isArray(remoteList)) {
-    const cleanRemote = remoteList
-      .map((item, idx) => sanitizePublicSurveyItem_(item, idx))
-      .filter(Boolean);
+    const cleanRemote = remoteList.map((item, idx) => sanitizePublicSurveyItem_(item, idx));
     const mergedMap = new Map();
     cleanRemote.forEach(item => {
       const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
@@ -2200,7 +2174,7 @@ async function renderDashboardSurveySummary() {
     return;
   }
 
-  list.slice(0, 10).forEach((item, idx) => {
+  list.slice(0, 10).forEach((item) => {
     const qItem = getSurveyQualityCategory_(item.ikm);
     const unsurText = Array.isArray(item.unsur) && item.unsur.length === 9
       ? ` • Unsur [${item.unsur.join(",")}]`
@@ -2210,8 +2184,7 @@ async function renderDashboardSurveySummary() {
     row.innerHTML = `
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-1.5 text-xs font-extrabold text-slate-800">
-          <span>Responden #${idx + 1}</span>
-          <span class="text-blue-700">• NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})${safeText(unsurText)}</span>
+          <span class="text-blue-700">NRR ${safeText(item.nrr)}/4 (IKM ${safeText(item.ikm)})${safeText(unsurText)}</span>
           <span class="text-[10px] px-2 py-0.5 rounded-full ${qItem.badgeCls}">${safeText(qItem.label)}</span>
         </div>
         <div class="text-[11px] text-slate-600 break-words">${safeText(item.catatan)}</div>
@@ -2221,6 +2194,7 @@ async function renderDashboardSurveySummary() {
     listEl.appendChild(row);
   });
 }
+
 function openDashboardSurveyModal() {
   if (typeof isExamActive !== "undefined" && isExamActive) {
     alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum mengisi survei.");
