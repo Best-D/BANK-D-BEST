@@ -229,7 +229,6 @@ function resetAndRestartFromSetup() {
 }
 
 function startExam(customWeakQuestions = null) {
-  const nameVal = document.getElementById("participantNameInput").value.trim();
   if (!loggedUser || !loggedUser.nama) {
     alert(
       "Silakan Daftar Akun atau Login terlebih dahulu pada bagian Akun Peserta Unik sebelum memulai ujian."
@@ -239,18 +238,24 @@ function startExam(customWeakQuestions = null) {
     return;
   }
 
+  const nameEl = document.getElementById("participantNameInput");
+  const formEl = document.getElementById("appliedFormationInput");
   const instEl = document.getElementById("appliedInstitutionInput");
-  if (instEl && typeof applyAutoCapitalizeToInput === "function") {
-    applyAutoCapitalizeToInput(instEl, true);
+
+  if (typeof applyAutoCapitalizeToInput === "function") {
+    if (nameEl) applyAutoCapitalizeToInput(nameEl, true);
+    if (formEl) applyAutoCapitalizeToInput(formEl, true);
+    if (instEl) applyAutoCapitalizeToInput(instEl, true);
   }
 
+  const nameVal = (nameEl?.value || "").trim();
   const educationVal = (document.getElementById("participantEducationSelect")?.value || loggedUser.pendidikan || "").trim();
-  const formationVal = document.getElementById("appliedFormationInput").value.trim();
+  const formationVal = (formEl?.value || "").trim();
   const institutionVal = (instEl?.value || "").trim();
 
   if (!nameVal) {
     alert("Silakan isi Nama Lengkap Peserta terlebih dahulu sebelum memulai ujian.");
-    document.getElementById("participantNameInput").focus();
+    nameEl?.focus();
     return;
   }
 
@@ -262,7 +267,7 @@ function startExam(customWeakQuestions = null) {
       `Nama mengandung kata kasar/penghinaan (${profanityHits.join(", ")}). ` +
       "Ujian tidak dapat dimulai sebelum nama diganti dengan nama yang wajar dan sopan."
     );
-    document.getElementById("participantNameInput").focus();
+    nameEl?.focus();
     return;
   }
 
@@ -274,7 +279,7 @@ function startExam(customWeakQuestions = null) {
 
   if (!formationVal) {
     alert("Silakan ketik Formasi yang Dilamar terlebih dahulu.");
-    document.getElementById("appliedFormationInput").focus();
+    formEl?.focus();
     return;
   }
 
@@ -286,13 +291,13 @@ function startExam(customWeakQuestions = null) {
       `Formasi yang dilamar mengandung kata kasar/penghinaan (${formationProfanity.join(", ")}). ` +
       "Silakan perbaiki sebelum memulai ujian."
     );
-    document.getElementById("appliedFormationInput").focus();
+    formEl?.focus();
     return;
   }
 
   if (!institutionVal) {
     alert("Silakan ketik Instansi yang Dilamar terlebih dahulu.");
-    document.getElementById("appliedInstitutionInput").focus();
+    instEl?.focus();
     return;
   }
 
@@ -304,7 +309,7 @@ function startExam(customWeakQuestions = null) {
       `Instansi yang dilamar mengandung kata kasar/penghinaan (${institutionProfanity.join(", ")}). ` +
       "Silakan perbaiki sebelum memulai ujian."
     );
-    document.getElementById("appliedInstitutionInput").focus();
+    instEl?.focus();
     return;
   }
 
