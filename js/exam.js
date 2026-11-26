@@ -1,1530 +1,497 @@
-const FAVORITE_QUESTIONS_KEY = "cat_skd_favorite_questions_v1";
-let reviewOnlyFavoriteMode = false;
+function buildDefaultQuestionBank() {
+  const bank = [];
+  let qId = 1;
 
-function getFavoriteQuestionIds() {
-  try {
-    const raw = localStorage.getItem(FAVORITE_QUESTIONS_KEY);
-    const list = raw ? JSON.parse(raw) : [];
-    return Array.isArray(list) ? list : [];
-  } catch (err) {
-    return [];
-  }
-}
+  const twkTopics = [
+    {
+      category: "Nasionalisme",
+      question: "Semangat kebangsaan yang menempatkan kepentingan bangsa dan negara di atas kepentingan pribadi maupun golongan merupakan wujud pengamalan nilai...",
+      options: ["Sila Pertama Pancasila", "Sila Kedua Pancasila", "Sila Ketiga Pancasila", "Sila Keempat Pancasila", "Sila Kelima Pancasila"],
+      answer: 2,
+      explanation: "Persatuan Indonesia (Sila Ketiga) menegaskan penempatan persatuan, kesatuan, serta kepentingan bangsa dan negara di atas kepentingan pribadi atau golongan."
+    },
+    {
+      category: "Integritas",
+      question: "Seorang ASN menolak pemberian bingkisan hari raya dari rekanan pengadaan barang dan jasa meskipun proses lelang telah selesai dilaksanakan. Sikap ASN tersebut mencerminkan nilai integritas...",
+      options: ["Tanggung jawab dan kerja keras", "Kejujuran dan kemandirian", "Keadilan dan keberanian", "Kesederhanaan dan kepedulian", "Kedisiplinan dan ketekunan"],
+      answer: 1,
+      explanation: "Menolak gratifikasi yang berpotensi menimbulkan konflik kepentingan adalah wujud kejujuran dan kemandirian menjaga integritas jabatan."
+    },
+    {
+      category: "Bela Negara",
+      question: "Berdasarkan Pasal 27 ayat (3) UUD NRI Tahun 1945, setiap warga negara berhak dan wajib ikut serta dalam upaya...",
+      options: ["Pertahanan dan keamanan negara", "Pembelaan negara", "Pembangunan nasional", "Pendidikan dasar", "Perekonomian nasional"],
+      answer: 1,
+      explanation: "Pasal 27 ayat (3) UUD 1945 menyatakan setiap warga negara berhak dan wajib ikut serta dalam upaya pembelaan negara."
+    },
+    {
+      category: "Pilar Negara",
+      question: "Lembaga negara yang berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD NRI Tahun 1945 adalah...",
+      options: ["Mahkamah Agung", "Mahkamah Konstitusi", "Komisi Yudisial", "Majelis Permusyawaratan Rakyat", "Dewan Perwakilan Rakyat"],
+      answer: 1,
+      explanation: "Sesuai Pasal 24C ayat (1) UUD 1945, Mahkamah Konstitusi berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD."
+    },
+    {
+      category: "Bahasa Negara",
+      question: "Penulisan gabungan kata di bawah ini yang sesuai dengan kaidah Ejaan Bahasa Indonesia yang Disempurnakan (EYD V) adalah...",
+      options: ["Bertanggungjawab", "Menyebar luaskan", "Diberitahukan", "Penghancur leburan", "Ketidak adilan"],
+      answer: 2,
+      explanation: "Gabungan kata yang mendapat awalan dan akhiran sekaligus (konfiks) ditulis serangkai, seperti 'diberitahukan' dan 'menyebarluaskan'."
+    },
+    {
+      category: "Nasionalisme",
+      question: "Penggunaan produk dalam negeri oleh aparatur negara dan masyarakat dalam kegiatan resmi instansi merupakan langkah konkret memperkuat...",
+      options: ["Kemandirian ekonomi nasional", "Kewenangan daerah otonom", "Eksklusivitas budaya lokal", "Liberalisasi perdagangan", "Sentralisasi anggaran"],
+      answer: 0,
+      explanation: "Mengutamakan produk dalam negeri mendukung kemandirian industri nasional, penyerapan tenaga kerja lokal, dan ketahanan ekonomi."
+    },
+    {
+      category: "Integritas",
+      question: "Ketika menemukan kesalahan pencatatan anggaran pada laporan unit kerja sebelum ditandatangani pimpinan, tindakan paling berintegritas yang dilakukan staf adalah...",
+      options: ["Membiarkannya karena tanggung jawab ada pada penandatangan", "Menyampaikan temuan secara objektif disertai bukti dan usulan perbaikan sebelum laporan disahkan", "Menghapus data lama tanpa membuat catatan koreksi", "Menunggu audit eksternal menemukan kesalahan tersebut", "Mengalihkan dokumen ke staf lain agar tidak terlacak"],
+      answer: 1,
+      explanation: "Integritas menuntut kejujuran, transparansi, dan keberanian mengoreksi kekeliruan secara prosedural sebelum merugikan organisasi."
+    },
+    {
+      category: "Bela Negara",
+      question: "Dalam konteks ancaman nonmiliter di ruang digital, peran warga negara dalam menjaga ketahanan informasi nasional dapat diwujudkan melalui...",
+      options: ["Menyebarkan ulang informasi viral agar cepat diketahui publik", "Memverifikasi kredibilitas sumber berita sebelum membagikan dan menjaga etika bermedia digital", "Menonaktifkan seluruh akses informasi publik", "Menggunakan identitas palsu untuk menyerang akun tertentu", "Mengabaikan keamanan akun resmi instansi"],
+      answer: 1,
+      explanation: "Literasi digital, pengecekan fakta, dan kepatuhan etika ruang siber merupakan bagian dari kesadaran bela negara di era modern."
+    },
+    {
+      category: "Pilar Negara",
+      question: "Prinsip negara hukum Indonesia ditegaskan dalam UUD NRI Tahun 1945 bahwa kekuasaan kehakiman merupakan kekuasaan yang merdeka untuk menyelenggarakan peradilan guna...",
+      options: ["Membantu kebijakan kementerian teknis", "Menegakkan hukum dan keadilan", "Menetapkan APBN bersama pemerintah", "Mengawasi pemilihan kepala desa", "Menyusun kurikulum nasional"],
+      answer: 1,
+      explanation: "Pasal 24 ayat (1) UUD NRI Tahun 1945 menegaskan kekuasaan kehakiman yang merdeka untuk menegakkan hukum dan keadilan."
+    },
+    {
+      category: "Bahasa Negara",
+      question: "Kalimat berikut yang menggunakan kata baku dan struktur efektif sesuai kaidah bahasa Indonesia adalah...",
+      options: ["Para peserta diharap untuk hadir tepat waktu.", "Kami mohon maaf atas ketidaknyamanannya.", "Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin.", "Dia membicarakan tentang rencana kerja tahun depan.", "Semua pegawai-pegawai mengikuti apel pagi."],
+      answer: 2,
+      explanation: "Kalimat 'Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin' tepat secara ejaan, bentuk kata, dan keefektifan kalimat."
+    }
+  ];
 
-function getQuestionBookmarkKey(q) {
-  const sub = String(q?.subtest || "").trim().toUpperCase();
-  const cat = String(q?.category || "").trim().toLowerCase();
-  const text = String(q?.question || "").trim().toLowerCase().replace(/\s+/g, " ").slice(0, 120);
-  return `${sub}|${cat}|${text}`;
-}
-
-function isQuestionFavorited(q) {
-  const key = getQuestionBookmarkKey(q);
-  return getFavoriteQuestionIds().includes(key);
-}
-
-function toggleFavoriteQuestion(q) {
-  const key = getQuestionBookmarkKey(q);
-  if (!key) return;
-  const current = getFavoriteQuestionIds();
-  const exists = current.includes(key);
-  const next = exists ? current.filter(k => k !== key) : [...current, key];
-  localStorage.setItem(FAVORITE_QUESTIONS_KEY, JSON.stringify(next));
-
-  const activeSub = document.querySelector(".review-subtest-btn.active-subtest")?.dataset.subtest || "ALL";
-  if (typeof renderReview === "function") {
-    renderReview(activeSub);
-  }
-}
-
-function toggleReviewFavoriteOnly() {
-  reviewOnlyFavoriteMode = !reviewOnlyFavoriteMode;
-  const btn = document.getElementById("reviewOnlyFavoriteBtn");
-  if (btn) {
-    btn.className = reviewOnlyFavoriteMode
-      ? "px-3 py-1 text-xs font-bold rounded-lg bg-amber-600 text-white"
-      : "px-3 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100";
-  }
-  const activeSub = document.querySelector(".review-subtest-btn.active-subtest")?.dataset.subtest || "ALL";
-  if (typeof renderReview === "function") {
-    renderReview(activeSub);
-  }
-}
-
-async function reportQuestionToSheet(q, questionNumber) {
-  const note = prompt(
-    `Laporkan kendala pada Soal No. ${questionNumber} (${q.subtest || "-"} • ${q.category || "-"}):\n` +
-    "Tuliskan catatan (misal: salah ketik opsi, kunci jawaban kurang tepat, atau ambigu):"
-  );
-  if (note === null) return;
-  const cleanNote = String(note || "").trim();
-  if (cleanNote.length < 5) {
-    alert("Tuliskan catatan laporan minimal 5 karakter agar mudah diperiksa.");
-    return;
-  }
-
-  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
-  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
-    alert("Laporan dicatat lokal. Hubungkan GOOGLE_SCRIPT_URL agar terkirim ke tab LaporanSoal di Google Sheets.");
-    return;
-  }
-
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "report_question",
-        nomor_soal: questionNumber,
-        subtest: q.subtest || "-",
-        category: q.category || "-",
-        question: String(q.question || "").slice(0, 500),
-        catatan: cleanNote,
-        pelapor: (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta"
-      })
+  for (let i = 0; i < 30; i++) {
+    const base = twkTopics[i % twkTopics.length];
+    const variantNum = Math.floor(i / twkTopics.length) + 1;
+    bank.push({
+      id: qId++,
+      subtest: "TWK",
+      category: base.category,
+      question: variantNum === 1
+        ? base.question
+        : `[Kasus ${base.category} Seri ${variantNum}] ${base.question}`,
+      options: [...base.options],
+      answer: base.answer,
+      explanation: base.explanation
     });
-    const json = await res.json();
-    if (json && json.status === "sukses") {
-      alert("Terima kasih, laporan soal berhasil dikirim ke tab LaporanSoal di Google Sheets.");
-    } else {
-      alert("Laporan belum terkirim: " + ((json && json.pesan) || "periksa deployment Apps Script."));
-    }
-  } catch (err) {
-    alert("Gagal mengirim laporan soal. Periksa koneksi internet Anda.");
-  }
-}
-
-function recordCurrentQuestionDuration() {
-  if (!isExamActive || !currentQuestionEnteredAt) return;
-  const elapsedSec = Math.max(0, Math.round((Date.now() - currentQuestionEnteredAt) / 1000));
-  questionDurations[currentIndex] = (questionDurations[currentIndex] || 0) + elapsedSec;
-  currentQuestionEnteredAt = Date.now();
-}
-
-function saveExamSessionToStorage() {
-  if (!isExamActive) return;
-  try {
-    const snapshot = {
-      participantName,
-      participantEducation,
-      appliedFormation,
-      appliedInstitution,
-      examModeLabel,
-      examStartedAt,
-      examEndTime,
-      currentIndex,
-      currentFilter,
-      questionBank,
-      userAnswers,
-      doubtFlags,
-      questionDurations
-    };
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(snapshot));
-  } catch (err) {
-    console.warn("Gagal menyimpan sesi ke localStorage:", err);
-  }
-}
-
-function clearExamSessionFromStorage() {
-  try {
-    localStorage.removeItem(SESSION_STORAGE_KEY);
-  } catch (err) {}
-}
-
-function enterExamWorkspaceUI() {
-  document.getElementById("setupScreen").classList.add("hidden");
-  document.getElementById("resultScreen").classList.add("hidden");
-  document.getElementById("dashboardScreen").classList.add("hidden");
-  document.getElementById("reviewSection").classList.add("hidden");
-  document.getElementById("examScreen").classList.remove("hidden");
-
-  document.getElementById("navHeaderControls").classList.add("hidden");
-  const headerCtrl = document.getElementById("examHeaderControls");
-  headerCtrl.classList.remove("hidden");
-  headerCtrl.classList.add("flex");
-
-  const eduTag = participantEducation ? ` (${participantEducation})` : "";
-  document.getElementById("headerParticipantName").textContent = `${participantName}${eduTag} • ${appliedInstitution}`;
-  document.getElementById("headerExamMode").textContent = `${appliedFormation} (${examModeLabel})`;
-}
-
-function tryRestoreExamSession() {
-  try {
-    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!raw) return false;
-
-    const snap = JSON.parse(raw);
-    if (
-      !snap ||
-      !Array.isArray(snap.questionBank) ||
-      snap.questionBank.length === 0 ||
-      !snap.examEndTime
-    ) {
-      clearExamSessionFromStorage();
-      return false;
-    }
-
-    const secsLeft = Math.floor((Number(snap.examEndTime) - Date.now()) / 1000);
-
-    participantName = snap.participantName || "Peserta Umum";
-    participantEducation = snap.participantEducation || (loggedUser?.pendidikan || "-");
-    appliedFormation = snap.appliedFormation || "-";
-    appliedInstitution = snap.appliedInstitution || "Kementerian Pertahanan";
-    examModeLabel = snap.examModeLabel || "Reguler (100 Menit)";
-    examStartedAt = Number(snap.examStartedAt) || Date.now();
-    examEndTime = Number(snap.examEndTime);
-    questionBank = snap.questionBank;
-    userAnswers = Array.isArray(snap.userAnswers)
-      ? snap.userAnswers
-      : new Array(questionBank.length).fill(null);
-    doubtFlags = Array.isArray(snap.doubtFlags)
-      ? snap.doubtFlags
-      : new Array(questionBank.length).fill(false);
-    questionDurations = Array.isArray(snap.questionDurations)
-      ? snap.questionDurations
-      : new Array(questionBank.length).fill(0);
-    currentIndex = Math.min(Math.max(Number(snap.currentIndex) || 0, 0), questionBank.length - 1);
-    currentFilter = snap.currentFilter || "ALL";
-
-    if (secsLeft <= 0) {
-      remainingSeconds = 0;
-      isExamActive = false;
-      clearExamSessionFromStorage();
-      alert("Waktu ujian yang sedang berjalan telah habis saat halaman dimuat ulang. Hasil akan dikumpulkan otomatis.");
-      finishExam();
-      return true;
-    }
-
-    const shouldResume = confirm(
-      `Ditemukan sesi ujian aktif atas nama "${participantName}" dengan sisa waktu ${Math.floor(secsLeft / 60)} menit ${secsLeft % 60} detik.\n\n` +
-      "Klik OK untuk MELANJUTKAN ujian dari soal terakhir, atau Batal untuk memulai ulang dari awal."
-    );
-
-    if (!shouldResume) {
-      clearExamSessionFromStorage();
-      return false;
-    }
-
-    remainingSeconds = secsLeft;
-    isExamActive = true;
-    currentQuestionEnteredAt = Date.now();
-    enterExamWorkspaceUI();
-    filterNav(currentFilter);
-    renderQuestion();
-    renderGrid();
-    startTimer();
-    return true;
-  } catch (err) {
-    clearExamSessionFromStorage();
-    return false;
-  }
-}
-
-function resetAndRestartFromSetup() {
-  clearInterval(timerInterval);
-  isExamActive = false;
-  clearExamSessionFromStorage();
-  document.getElementById("reviewSection").classList.add("hidden");
-  showScreen("setup");
-}
-
-function startExam(customWeakQuestions = null) {
-  if (!loggedUser || !loggedUser.nama) {
-    alert(
-      "Silakan Daftar Akun atau Login terlebih dahulu pada bagian Akun Peserta Unik sebelum memulai ujian."
-    );
-    switchAuthMode("login");
-    document.getElementById("loginUsernameInput")?.focus();
-    return;
   }
 
-  const nameEl = document.getElementById("participantNameInput");
-  const formEl = document.getElementById("appliedFormationInput");
-  const instEl = document.getElementById("appliedInstitutionInput");
+  const tiuSeriesRules = [
+    { start: 2, stepAdd: 3, label: "Pola selisih bertambah 3 (+3, +6, +9, +12, +15)" },
+    { start: 3, mult: 2, add: 1, label: "Pola dikali 2 lalu ditambah 1" },
+    { start: 100, stepSub: 7, label: "Pola berkurang 7 secara tetap (-7)" },
+    { start: 4, mult: 3, label: "Pola dikali 3 secara berurutan (×3)" },
+    { start: 1, fibLike: true, label: "Pola deret Fibonacci (jumlah dua suku sebelumnya)" }
+  ];
 
-  if (typeof applyAutoCapitalizeToInput === "function") {
-    if (nameEl) applyAutoCapitalizeToInput(nameEl, true);
-    if (formEl) applyAutoCapitalizeToInput(formEl, true);
-    if (instEl) applyAutoCapitalizeToInput(instEl, true);
-  }
+  const tiuAnalogies = [
+    ["KONSTITUSI : NEGARA", "Anggaran Dasar : Organisasi", ["Pasal : Undang-Undang", "Anggaran Dasar : Organisasi", "Hakim : Pengadilan", "Peraturan : Sanksi", "Rakyat : Wilayah"], 1, "Konstitusi menjadi landasan dasar negara sebagaimana Anggaran Dasar menjadi landasan dasar organisasi."],
+    ["KOMPAS : ARAH", "Termometer : Suhu", ["Jam : Detik", "Termometer : Suhu", "Peta : Pulau", "Jarum : Kompor", "Lensa : Kacamata"], 1, "Kompas berfungsi mengukur/menunjukkan arah sebagaimana termometer berfungsi mengukur suhu."],
+    ["BENIH : PANEN", "Belajar : Kompetensi", ["Hujan : Payung", "Belajar : Kompetensi", "Ujian : Nilai", "Buku : Rak", "Lampu : Gelap"], 1, "Benih yang dirawat menghasilkan panen sebagaimana proses belajar menghasilkan kompetensi."],
+    ["ARSITEK : DENAH", "Programmer : Flowchart", ["Dokter : Resep", "Programmer : Flowchart", "Petani : Cangkul", "Koki : Piring", "Pilot : Bandara"], 1, "Arsitek merancang denah sebelum membangun sebagaimana programmer menyusun flowchart sebelum membuat program."],
+    ["PENULIS : NASKAH", "Sutradara : Skenario", ["Penyanyi : Mikrofon", "Sutradara : Skenario", "Pelukis : Kanvas", "Guru : Papan Tulis", "Nelayan : Jaring"], 1, "Naskah/skenario diarahkan oleh sutradara dalam produksi film sebagaimana tulisan diolah oleh penulis."]
+  ];
 
-  const nameVal = (nameEl?.value || "").trim();
-  const educationVal = (document.getElementById("participantEducationSelect")?.value || loggedUser.pendidikan || "").trim();
-  const formationVal = (formEl?.value || "").trim();
-  const institutionVal = (instEl?.value || "").trim();
+  const tiuSyllogisms = [
+    ["Semua peserta seleksi CPNS wajib mengikuti tes SKD. Sebagian peserta tes SKD berasal dari luar daerah.", "Sebagian peserta seleksi CPNS berasal dari luar daerah.", ["Semua peserta seleksi CPNS berasal dari luar daerah.", "Sebagian peserta seleksi CPNS berasal dari luar daerah.", "Tidak ada peserta SKD yang berasal dari dalam daerah.", "Semua yang berasal dari luar daerah adalah peserta CPNS.", "Sebagian peserta seleksi CPNS tidak mengikuti tes SKD."], 1, "Karena seluruh peserta CPNS mengikuti SKD dan sebagian peserta SKD berasal dari luar daerah, maka sebagian peserta seleksi CPNS berasal dari luar daerah."],
+    ["Semua pegawai yang hadir tepat waktu mendapat poin kedisiplinan. Budi hadir tepat waktu.", "Budi mendapat poin kedisiplinan.", ["Budi tidak mendapat poin kedisiplinan.", "Budi mendapat poin kedisiplinan.", "Semua pegawai pasti Budi.", "Hanya Budi yang hadir tepat waktu.", "Budi belum tentu disiplin."], 1, "Premis mayor dan minor bersifat afirmatif langsung sehingga Budi pasti mendapat poin kedisiplinan."],
+    ["Tidak ada dokumen rahasia yang boleh diunggah ke penyimpanan publik. Dokumen A adalah dokumen rahasia.", "Dokumen A tidak boleh diunggah ke penyimpanan publik.", ["Dokumen A boleh diunggah ke penyimpanan publik.", "Dokumen A tidak boleh diunggah ke penyimpanan publik.", "Semua dokumen di penyimpanan publik adalah rahasia.", "Dokumen A bukan dokumen resmi.", "Dokumen A boleh disalin bebas."], 1, "Karena tidak ada dokumen rahasia yang boleh diunggah ke publik dan Dokumen A bersifat rahasia, maka Dokumen A tidak boleh diunggah ke publik."],
+    ["Jika hujan deras turun, jalan menuju kantor tergenang. Hari ini jalan menuju kantor tidak tergenang.", "Hujan deras tidak turun.", ["Hujan deras pasti turun.", "Hujan deras tidak turun.", "Kantor diliburkan.", "Jalan sedang diperbaiki.", "Tidak dapat disimpulkan."], 1, "Dengan kaidah modus tollens (jika P maka Q; negasi Q; maka negasi P), hujan deras tidak turun."],
+    ["Setiap peserta pelatihan wajib menyelesaikan tugas akhir. Rina adalah peserta pelatihan.", "Rina wajib menyelesaikan tugas akhir.", ["Rina tidak wajib menyelesaikan tugas akhir.", "Rina wajib menyelesaikan tugas akhir.", "Rina sudah lulus pelatihan.", "Tugas akhir Rina dibatalkan.", "Sebagian peserta tidak mengerjakan tugas."], 1, "Rina termasuk anggota himpunan peserta pelatihan sehingga terikat kewajiban menyelesaikan tugas akhir."]
+  ];
 
-  if (!nameVal) {
-    alert("Silakan isi Nama Lengkap Peserta terlebih dahulu sebelum memulai ujian.");
-    nameEl?.focus();
-    return;
-  }
+  for (let i = 0; i < 35; i++) {
+    const modType = i % 5;
+    if (modType === 0) {
+      const ana = tiuAnalogies[Math.floor(i / 5) % tiuAnalogies.length];
+      bank.push({
+        id: qId++,
+        subtest: "TIU",
+        category: "Verbal - Analogi",
+        question: `${ana[0].split(" : ")[0]} : ${ana[0].split(" : ")[1]} = ... : ...`,
+        options: [...ana[2]],
+        answer: ana[3],
+        explanation: ana[4]
+      });
+    } else if (modType === 1) {
+      const syl = tiuSyllogisms[Math.floor(i / 5) % tiuSyllogisms.length];
+      bank.push({
+        id: qId++,
+        subtest: "TIU",
+        category: "Verbal - Silogisme",
+        question: `${syl[0]} Kesimpulan yang paling tepat adalah...`,
+        options: [...syl[2]],
+        answer: syl[3],
+        explanation: syl[4]
+      });
+    } else if (modType === 2) {
+      const ruleIdx = Math.floor(i / 5) % tiuSeriesRules.length;
+      const rule = tiuSeriesRules[ruleIdx];
+      let seq = [];
+      let nextVal = 0;
 
-  const profanityHits = findProfanityInName(nameVal);
-  if (profanityHits.length > 0) {
-    validateNameInputRealtime();
-    alert(
-      "⛔ NAMA DITOLAK:\n" +
-      `Nama mengandung kata kasar/penghinaan (${profanityHits.join(", ")}). ` +
-      "Ujian tidak dapat dimulai sebelum nama diganti dengan nama yang wajar dan sopan."
-    );
-    nameEl?.focus();
-    return;
-  }
-
-  if (!educationVal) {
-    alert("Silakan pilih Pendidikan Terakhir Anda terlebih dahulu.");
-    document.getElementById("participantEducationSelect")?.focus();
-    return;
-  }
-
-  if (!formationVal) {
-    alert("Silakan ketik Formasi yang Dilamar terlebih dahulu.");
-    formEl?.focus();
-    return;
-  }
-
-  const formationProfanity = findProfanityInName(formationVal);
-  if (formationProfanity.length > 0) {
-    validateFormationInputRealtime();
-    alert(
-      "⛔ FORMASI DITOLAK:\n" +
-      `Formasi yang dilamar mengandung kata kasar/penghinaan (${formationProfanity.join(", ")}). ` +
-      "Silakan perbaiki sebelum memulai ujian."
-    );
-    formEl?.focus();
-    return;
-  }
-
-  if (!institutionVal) {
-    alert("Silakan ketik Instansi yang Dilamar terlebih dahulu.");
-    instEl?.focus();
-    return;
-  }
-
-  const institutionProfanity = findProfanityInName(institutionVal);
-  if (institutionProfanity.length > 0) {
-    validateInstitutionInputRealtime();
-    alert(
-      "⛔ INSTANSI DITOLAK:\n" +
-      `Instansi yang dilamar mengandung kata kasar/penghinaan (${institutionProfanity.join(", ")}). ` +
-      "Silakan perbaiki sebelum memulai ujian."
-    );
-    instEl?.focus();
-    return;
-  }
-
-  const inputIssues = checkInputAnomalyPreview(nameVal, formationVal, institutionVal);
-  if (inputIssues.length > 0) {
-    alert(
-      "⚠️ PERINGATAN DATA TIDAK WAJAR:\n" +
-      inputIssues.map(item => "• " + item).join("\n") +
-      "\n\nSistem akan tetap mencatat aktivitas, perangkat, IP publik, dan menandai data ini sebagai WARNING pada rekap."
-    );
-  }
-
-  participantName = nameVal;
-  participantEducation = educationVal;
-  appliedFormation = formationVal;
-  appliedInstitution = institutionVal;
-  examStartedAt = Date.now();
-  currentQuestionEnteredAt = Date.now();
-  isExamActive = true;
-
-  const durationMinutes = parseInt(document.getElementById("durationSelect").value, 10) || 100;
-  const orderMode = document.getElementById("orderSelect").value;
-  const focusMode = (document.getElementById("subtestFocusSelect")?.value || "ALL").toUpperCase();
-  const isDisability = durationMinutes === 130;
-  let activeMinutes = durationMinutes;
-
-  examModeLabel = isDisability ? "Disabilitas (130 Menit)" : "Reguler (100 Menit)";
-
-  if (Array.isArray(customWeakQuestions) && customWeakQuestions.length > 0) {
-    const picked = orderMode === "shuffled" ? shuffleArray(customWeakQuestions) : [...customWeakQuestions];
-    questionBank = picked.map((item, idx) => ({ ...item, id: idx + 1 }));
-    examModeLabel = `${examModeLabel} • Ulangi Soal Salah & Ragu (${questionBank.length} Soal)`;
-  } else {
-    const defaultBank = buildDefaultQuestionBank();
-
-    function buildSubtestQuota(subtest, targetCount) {
-      const sheetItems = questionBank.filter(q => q.subtest === subtest);
-      const fallbackItems = defaultBank.filter(q => q.subtest === subtest);
-
-      const seenTexts = new Set();
-      const uniqueSheet = [];
-      for (const item of sheetItems) {
-        const key = String(item.question || "").trim().toLowerCase();
-        if (key && !seenTexts.has(key)) {
-          seenTexts.add(key);
-          uniqueSheet.push({ ...item });
+      if (rule.stepAdd) {
+        let cur = rule.start + (i * 2);
+        let step = rule.stepAdd;
+        for (let k = 0; k < 5; k++) {
+          seq.push(cur);
+          cur += step;
+          step += 3;
         }
-      }
-
-      let selected = orderMode === "shuffled" ? shuffleArray(uniqueSheet) : [...uniqueSheet];
-      if (selected.length > targetCount) {
-        selected = selected.slice(0, targetCount);
-      }
-
-      if (selected.length < targetCount) {
-        const extraPool = orderMode === "shuffled" ? shuffleArray(fallbackItems) : [...fallbackItems];
-        for (const fb of extraPool) {
-          if (selected.length >= targetCount) break;
-          const key = String(fb.question || "").trim().toLowerCase();
-          if (!seenTexts.has(key)) {
-            seenTexts.add(key);
-            selected.push({ ...fb });
-          }
+        nextVal = cur;
+      } else if (rule.mult && rule.add) {
+        let cur = rule.start + (i % 3);
+        for (let k = 0; k < 5; k++) {
+          seq.push(cur);
+          cur = cur * rule.mult + rule.add;
         }
-        let idx = 0;
-        while (selected.length < targetCount && extraPool.length > 0) {
-          selected.push({ ...extraPool[idx % extraPool.length] });
-          idx++;
+        nextVal = cur;
+      } else if (rule.stepSub) {
+        let cur = rule.start + (i * 3);
+        for (let k = 0; k < 5; k++) {
+          seq.push(cur);
+          cur -= rule.stepSub;
         }
-      }
-
-      return orderMode === "shuffled" ? shuffleArray(selected) : selected;
-    }
-
-    if (focusMode === "TWK") {
-      activeMinutes = isDisability ? 33 : 25;
-      questionBank = buildSubtestQuota("TWK", 30).map((item, idx) => ({
-        ...item,
-        id: idx + 1
-      }));
-      examModeLabel = `${isDisability ? "Disabilitas" : "Reguler"} • Fokus TWK (${activeMinutes} Menit, 30 Soal)`;
-    } else if (focusMode === "TIU") {
-      activeMinutes = isDisability ? 52 : 40;
-      questionBank = buildSubtestQuota("TIU", 35).map((item, idx) => ({
-        ...item,
-        id: idx + 1
-      }));
-      examModeLabel = `${isDisability ? "Disabilitas" : "Reguler"} • Fokus TIU (${activeMinutes} Menit, 35 Soal)`;
-    } else if (focusMode === "TKP") {
-      activeMinutes = isDisability ? 45 : 35;
-      questionBank = buildSubtestQuota("TKP", 45).map((item, idx) => ({
-        ...item,
-        id: idx + 1
-      }));
-      examModeLabel = `${isDisability ? "Disabilitas" : "Reguler"} • Fokus TKP (${activeMinutes} Menit, 45 Soal)`;
-    } else {
-      const twk = buildSubtestQuota("TWK", 30);
-      const tiu = buildSubtestQuota("TIU", 35);
-      const tkp = buildSubtestQuota("TKP", 45);
-      questionBank = [...twk, ...tiu, ...tkp].map((item, idx) => ({
-        ...item,
-        id: idx + 1
-      }));
-    }
-  }
-
-  remainingSeconds = activeMinutes * 60;
-  examEndTime = Date.now() + remainingSeconds * 1000;
-
-  userAnswers = new Array(questionBank.length).fill(null);
-  doubtFlags = new Array(questionBank.length).fill(false);
-  questionDurations = new Array(questionBank.length).fill(0);
-  currentIndex = 0;
-  currentFilter = "ALL";
-
-  enterExamWorkspaceUI();
-  saveExamSessionToStorage();
-  renderQuestion();
-  renderGrid();
-  startTimer();
-}
-
-function retryWrongAndDoubtQuestions() {
-  const sourceQ = reviewQuestions.length ? reviewQuestions : questionBank;
-  const sourceA = reviewAnswers.length ? reviewAnswers : userAnswers;
-  const sourceD = reviewDoubts.length ? reviewDoubts : doubtFlags;
-  const history = getExamHistory();
-  const latestWithQuestions = history.find(h => Array.isArray(h.questions) && h.questions.length > 0);
-
-  const qList = sourceQ.length ? sourceQ : (latestWithQuestions ? latestWithQuestions.questions : []);
-  const aList = sourceA.length ? sourceA : (latestWithQuestions ? latestWithQuestions.answers : []);
-  const dList = sourceD.length ? sourceD : (latestWithQuestions && Array.isArray(latestWithQuestions.doubts) ? latestWithQuestions.doubts : []);
-
-  if (!qList.length) {
-    alert("Belum ada sesi dengan rincian soal untuk diulangi.");
-    return;
-  }
-
-  const weakQuestions = [];
-  qList.forEach((q, idx) => {
-    const ans = aList[idx] ?? null;
-    const isDoubt = Boolean(dList[idx]);
-    if (q.subtest === "TKP") {
-      const pts = ans === null ? 0 : Number(q.scores?.[ans] ?? 0);
-      if (ans === null || pts < 5 || isDoubt) {
-        weakQuestions.push({ ...q });
-      }
-    } else {
-      if (ans === null || ans !== q.answer || isDoubt) {
-        weakQuestions.push({ ...q });
-      }
-    }
-  });
-
-  if (!weakQuestions.length) {
-    alert("Hebat! Semua soal pada sesi ini sudah terjawab dengan nilai maksimal tanpa ragu.");
-    return;
-  }
-
-  if (!document.getElementById("participantNameInput").value.trim() && participantName) {
-    document.getElementById("participantNameInput").value = participantName;
-  }
-  const eduSelect = document.getElementById("participantEducationSelect");
-  if (eduSelect && !eduSelect.value && participantEducation) {
-    eduSelect.value = participantEducation;
-  }
-  if (!document.getElementById("appliedFormationInput").value.trim() && appliedFormation) {
-    document.getElementById("appliedFormationInput").value = appliedFormation;
-  }
-  if (!document.getElementById("appliedInstitutionInput").value.trim() && appliedInstitution) {
-    document.getElementById("appliedInstitutionInput").value = appliedInstitution;
-  }
-
-  startExam(weakQuestions);
-}
-
-function startTimer() {
-  clearInterval(timerInterval);
-  updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    remainingSeconds = Math.max(0, Math.floor((examEndTime - Date.now()) / 1000));
-    updateTimerDisplay();
-    if (remainingSeconds <= 0) {
-      clearInterval(timerInterval);
-      alert("Waktu ujian telah habis! Jawaban Anda akan dikumpulkan secara otomatis.");
-      finishExam();
-    }
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const mins = Math.floor(remainingSeconds / 60);
-  const secs = remainingSeconds % 60;
-  const el = document.getElementById("timerDisplay");
-  el.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  if (remainingSeconds <= 300) {
-    el.classList.remove("text-emerald-400");
-    el.classList.add("text-rose-400");
-  } else {
-    el.classList.remove("text-rose-400");
-    el.classList.add("text-emerald-400");
-  }
-}
-
-function updateDoubtButtonUI() {
-  const doubtBtn = document.getElementById("doubtBtn");
-  if (!doubtBtn) return;
-  const isDoubt = Boolean(doubtFlags[currentIndex]);
-  if (isDoubt) {
-    doubtBtn.textContent = "✓ Ditandai Ragu-Ragu";
-    doubtBtn.className = "px-4 py-2 rounded-xl bg-amber-400 border border-amber-500 text-slate-950 text-sm font-bold shadow-xs";
-  } else {
-    doubtBtn.textContent = "Ragu-Ragu";
-    doubtBtn.className = "px-4 py-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 text-sm font-semibold hover:bg-amber-200";
-  }
-}
-
-function renderQuestion() {
-  const q = questionBank[currentIndex];
-  if (!q) return;
-
-  document.getElementById("questionSubtestBadge").textContent = q.subtest;
-  document.getElementById("questionCategoryLabel").textContent = q.category;
-  document.getElementById("questionNumberTitle").textContent =
-    `Soal No. ${currentIndex + 1} dari ${questionBank.length}`;
-  document.getElementById("questionText").textContent = q.question;
-
-  const mediaBox = document.getElementById("questionMedia");
-  const safeMedia = sanitizeQuestionMedia(q.svg);
-  if (safeMedia) {
-    mediaBox.innerHTML = safeMedia;
-    mediaBox.classList.remove("hidden");
-  } else {
-    mediaBox.replaceChildren();
-    mediaBox.classList.add("hidden");
-  }
-
-  const container = document.getElementById("optionsContainer");
-  container.replaceChildren();
-
-  q.options.forEach((optText, idx) => {
-    const isSelected = userAnswers[currentIndex] === idx;
-    const btn = document.createElement("button");
-
-    btn.type = "button";
-    btn.className = `w-full text-left p-3.5 rounded-xl border transition flex items-start gap-3 ${
-      isSelected
-        ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600"
-        : "bg-white border-slate-200 hover:bg-slate-50"
-    }`;
-    btn.onclick = () => selectOption(idx);
-
-    const letter = document.createElement("span");
-    letter.className = `w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 ${
-      isSelected
-        ? "bg-blue-600 text-white"
-        : "bg-slate-100 text-slate-700"
-    }`;
-    letter.textContent = ["A", "B", "C", "D", "E"][idx] || String(idx + 1);
-
-    const optionText = document.createElement("span");
-    optionText.className = "text-sm text-slate-800 pt-0.5";
-    optionText.textContent = optText;
-
-    btn.append(letter, optionText);
-    container.appendChild(btn);
-  });
-
-  document.getElementById("prevBtn").disabled = currentIndex === 0;
-  updateDoubtButtonUI();
-
-  const nextBtn = document.getElementById("nextBtn");
-  if (nextBtn) {
-    if (currentIndex === questionBank.length - 1) {
-      nextBtn.textContent = "Selesai Ujian ✓";
-      nextBtn.className = "px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow";
-    } else {
-      nextBtn.textContent = "Simpan & Lanjutkan →";
-      nextBtn.className = "px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow";
-    }
-  }
-
-  const answeredCount = userAnswers.filter(answer => answer !== null).length;
-  document.getElementById("answeredCounter").textContent =
-    `${answeredCount} / ${questionBank.length} Dijawab`;
-}
-
-function selectOption(optIdx) {
-  const q = questionBank[currentIndex];
-  if (!q || !Array.isArray(q.options) || optIdx < 0 || optIdx >= q.options.length) return;
-  recordCurrentQuestionDuration();
-  userAnswers[currentIndex] = optIdx;
-  saveExamSessionToStorage();
-  renderQuestion();
-  renderGrid();
-}
-
-function toggleDoubt() {
-  recordCurrentQuestionDuration();
-  doubtFlags[currentIndex] = !doubtFlags[currentIndex];
-  saveExamSessionToStorage();
-  updateDoubtButtonUI();
-  renderGrid();
-}
-
-function prevQuestion() {
-  if (currentIndex > 0) {
-    recordCurrentQuestionDuration();
-    currentIndex--;
-    currentQuestionEnteredAt = Date.now();
-    saveExamSessionToStorage();
-    renderQuestion();
-    renderGrid();
-  }
-}
-
-function saveAndNext() {
-  recordCurrentQuestionDuration();
-  if (currentIndex < questionBank.length - 1) {
-    currentIndex++;
-    currentQuestionEnteredAt = Date.now();
-    saveExamSessionToStorage();
-    renderQuestion();
-    renderGrid();
-  } else {
-    confirmFinishExam();
-  }
-}
-
-function filterNav(subtest) {
-  currentFilter = subtest;
-  document.querySelectorAll(".nav-filter-btn").forEach(btn => {
-    if (btn.dataset.filter === subtest) {
-      btn.className = "nav-filter-btn flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-white";
-    } else {
-      btn.className = "nav-filter-btn flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700";
-    }
-  });
-  if (isExamActive) saveExamSessionToStorage();
-  renderGrid();
-}
-
-function renderGrid() {
-  const grid = document.getElementById("questionGrid");
-  grid.innerHTML = "";
-  questionBank.forEach((q, idx) => {
-    if (currentFilter !== "ALL" && q.subtest !== currentFilter) return;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = idx + 1;
-    btn.onclick = () => {
-      recordCurrentQuestionDuration();
-      currentIndex = idx;
-      currentQuestionEnteredAt = Date.now();
-      saveExamSessionToStorage();
-      renderQuestion();
-      renderGrid();
-    };
-
-    let colorClass = "bg-rose-500 text-white";
-    if (doubtFlags[idx]) {
-      colorClass = "bg-amber-400 text-slate-900";
-    } else if (userAnswers[idx] !== null) {
-      colorClass = "bg-emerald-500 text-white";
-    }
-
-    const activeRing = idx === currentIndex ? "ring-2 ring-offset-1 ring-blue-600 scale-105" : "";
-    btn.className = `h-8 rounded-lg text-xs font-bold transition ${colorClass} ${activeRing}`;
-    grid.appendChild(btn);
-  });
-}
-
-function confirmFinishExam() {
-  const unanswered = userAnswers.filter(a => a === null).length;
-  const msg = unanswered > 0
-    ? `Masih ada ${unanswered} soal yang belum dijawab. Apakah Anda yakin ingin mengakhiri ujian sekarang?`
-    : "Apakah Anda yakin ingin mengakhiri ujian dan melihat hasil nilai Anda?";
-  if (confirm(msg)) {
-    finishExam();
-  }
-}
-
-async function getPublicIpAddress() {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2500);
-  try {
-    const res = await fetch("https://api.ipify.org?format=json", {
-      signal: controller.signal
-    });
-    if (!res.ok) return "Tidak terdeteksi";
-    const json = await res.json();
-    return json.ip ? String(json.ip).trim() : "Tidak terdeteksi";
-  } catch (err) {
-    return "Tidak terdeteksi";
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-function parseDeviceInfo() {
-  const ua = navigator.userAgent || "Unknown";
-
-  let os = "OS Lainnya";
-  if (/Android/i.test(ua)) os = "Android";
-  else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
-  else if (/Windows/i.test(ua)) os = "Windows";
-  else if (/Mac OS X|Macintosh/i.test(ua)) os = "macOS";
-  else if (/Linux/i.test(ua)) os = "Linux";
-
-  let browser = "Browser Lainnya";
-  if (/Edg\//i.test(ua)) browser = "Edge";
-  else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = "Opera";
-  else if (/Chrome\//i.test(ua) && !/Edg\//i.test(ua)) browser = "Chrome";
-  else if (/Firefox\//i.test(ua)) browser = "Firefox";
-  else if (/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) browser = "Safari";
-
-  const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(ua);
-  const deviceType = isMobile ? "Mobile/Tablet" : "Desktop/Laptop";
-
-  return `${deviceType} • ${os} • ${browser} (${ua.slice(0, 120)})`;
-}
-
-function detectSuspiciousSubmission(payload) {
-  const warnings = checkInputAnomalyPreview(
-    String(payload.nama || "").trim(),
-    String(payload.formasi || "").trim(),
-    String(payload.instansi || "").trim()
-  );
-
-  const profanityHits = findProfanityInName(payload.nama);
-  if (profanityHits.length > 0) {
-    warnings.push(`Kata kasar/penghinaan pada nama (${profanityHits.join(", ")})`);
-  }
-
-  const formationHits = findProfanityInName(payload.formasi);
-  if (formationHits.length > 0) {
-    warnings.push(`Kata kasar/penghinaan pada formasi (${formationHits.join(", ")})`);
-  }
-
-  const institutionHits = findProfanityInName(payload.instansi);
-  if (institutionHits.length > 0) {
-    warnings.push(`Kata kasar/penghinaan pada instansi (${institutionHits.join(", ")})`);
-  }
-
-  if (
-    payload.twk < 0 || payload.twk > 150 ||
-    payload.tiu < 0 || payload.tiu > 175 ||
-    payload.tkp < 0 || payload.tkp > 225 ||
-    payload.total !== (payload.twk + payload.tiu + payload.tkp)
-  ) {
-    warnings.push("Skor tidak valid/tidak konsisten");
-  }
-
-  const elapsedSeconds = examStartedAt ? Math.floor((Date.now() - examStartedAt) / 1000) : 0;
-  const answeredCount = userAnswers.filter(a => a !== null).length;
-  if (answeredCount >= 20 && elapsedSeconds < 60) {
-    warnings.push(`Pengerjaan terlalu cepat (${elapsedSeconds} detik untuk ${answeredCount} soal)`);
-  }
-
-  const lastSubmitTime = Number(localStorage.getItem("lastCatSubmitAt") || "0");
-  const now = Date.now();
-  if (lastSubmitTime && now - lastSubmitTime < 15000) {
-    warnings.push("Pengiriman berulang kurang dari 15 detik");
-  }
-  localStorage.setItem("lastCatSubmitAt", String(now));
-
-  return warnings;
-}
-
-function renderResultComparisonWithPrevious(currentSession) {
-  const compEl = document.getElementById("resultComparisonNote");
-  if (!compEl) return;
-
-  const userSessions = getFilteredUserSessions();
-  const prev = userSessions.find(s => s.id !== currentSession.id);
-  if (!prev) {
-    compEl.textContent = "Perbandingan Sesi: Ini sesi pertama yang tercatat untuk peserta ini.";
-    compEl.classList.remove("hidden");
-    return;
-  }
-
-  const diffTotal = Number(currentSession.total || 0) - Number(prev.total || 0);
-  const diffTwk = Number(currentSession.twk || 0) - Number(prev.twk || 0);
-  const diffTiu = Number(currentSession.tiu || 0) - Number(prev.tiu || 0);
-  const diffTkp = Number(currentSession.tkp || 0) - Number(prev.tkp || 0);
-
-  const fmtSign = (n) => (n > 0 ? `+${n}` : `${n}`);
-  compEl.textContent =
-    `vs. Sesi Sebelumnya (${prev.total}): Total ${fmtSign(diffTotal)} ` +
-    `(TWK ${fmtSign(diffTwk)} • TIU ${fmtSign(diffTiu)} • TKP ${fmtSign(diffTkp)})`;
-  compEl.classList.remove("hidden");
-}
-
-async function finishExam() {
-  recordCurrentQuestionDuration();
-  clearInterval(timerInterval);
-  isExamActive = false;
-  clearExamSessionFromStorage();
-
-  let twkScore = 0;
-  let tiuScore = 0;
-  let tkpScore = 0;
-
-  questionBank.forEach((q, idx) => {
-    const ans = userAnswers[idx];
-    if (ans === null) return;
-    if (q.subtest === "TWK") {
-      if (ans === q.answer) twkScore += 5;
-    } else if (q.subtest === "TIU") {
-      if (ans === q.answer) tiuScore += 5;
-    } else if (q.subtest === "TKP") {
-      tkpScore += (q.scores && typeof q.scores[ans] === "number") ? q.scores[ans] : 0;
-    }
-  });
-
-  const totalScore = twkScore + tiuScore + tkpScore;
-  const passTWK = twkScore >= 65;
-  const passTIU = tiuScore >= 80;
-  const passTKP = tkpScore >= 166;
-  const overallPass = passTWK && passTIU && passTKP;
-  const statusPG = overallPass ? "LULUS PG" : "TIDAK LULUS PG";
-
-  document.getElementById("examScreen").classList.add("hidden");
-  document.getElementById("examHeaderControls").classList.add("hidden");
-  document.getElementById("examHeaderControls").classList.remove("flex");
-  document.getElementById("navHeaderControls").classList.remove("hidden");
-  document.getElementById("resultScreen").classList.remove("hidden");
-
-  const finishTimeLabel = new Date().toLocaleString("id-ID");
-  const eduPrefix = participantEducation && participantEducation !== "-" ? `${participantEducation} • ` : "";
-  document.getElementById("resultParticipantTitle").textContent = `Hasil Ujian: ${participantName}`;
-  document.getElementById("resultFormationInfo").textContent = `${eduPrefix}${appliedFormation} • ${appliedInstitution}`;
-  document.getElementById("resultMetaInfo").textContent = `${examModeLabel} • Selesai pada ${finishTimeLabel}`;
-  document.getElementById("totalScoreDisplay").textContent = totalScore;
-
-  const statusBadge = document.getElementById("resultStatusBadge");
-  statusBadge.textContent = overallPass ? "MEMENUHI PASSING GRADE BKN" : "BELUM MEMENUHI PASSING GRADE";
-  statusBadge.className = `inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 ${
-    overallPass ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
-  }`;
-
-  document.getElementById("twkScoreVal").textContent = twkScore;
-  document.getElementById("tiuScoreVal").textContent = tiuScore;
-  document.getElementById("tkpScoreVal").textContent = tkpScore;
-
-  setSubtestBadge("twkPassBadge", passTWK);
-  setSubtestBadge("tiuPassBadge", passTIU);
-  setSubtestBadge("tkpPassBadge", passTKP);
-
-  const focusNoteEl = document.getElementById("resultFocusTargetNote");
-  if (focusNoteEl) {
-    const lowerMode = String(examModeLabel || "").toLowerCase();
-    if (lowerMode.includes("fokus twk")) {
-      focusNoteEl.textContent = `Target PG Subtes TWK: ${twkScore}/65 (${passTWK ? "Tercapai" : "Belum Tercapai"}) — catatan ini khusus mode fokus subtes.`;
-      focusNoteEl.classList.remove("hidden");
-    } else if (lowerMode.includes("fokus tiu")) {
-      focusNoteEl.textContent = `Target PG Subtes TIU: ${tiuScore}/80 (${passTIU ? "Tercapai" : "Belum Tercapai"}) — catatan ini khusus mode fokus subtes.`;
-      focusNoteEl.classList.remove("hidden");
-    } else if (lowerMode.includes("fokus tkp")) {
-      focusNoteEl.textContent = `Target PG Subtes TKP: ${tkpScore}/166 (${passTKP ? "Tercapai" : "Belum Tercapai"}) — catatan ini khusus mode fokus subtes.`;
-      focusNoteEl.classList.remove("hidden");
-    } else {
-      focusNoteEl.textContent = "";
-      focusNoteEl.classList.add("hidden");
-    }
-  }
-
-  const syncStatusBox = document.getElementById("sheetSyncStatus");
-  const syncText = document.getElementById("sheetSyncText");
-  syncText.textContent = "Mendeteksi informasi perangkat, IP publik, dan memvalidasi data...";
-
-  const ipAddress = await getPublicIpAddress();
-  const deviceInfo = parseDeviceInfo();
-  const warnings = detectSuspiciousSubmission({
-    nama: participantName,
-    formasi: appliedFormation,
-    instansi: appliedInstitution,
-    twk: twkScore,
-    tiu: tiuScore,
-    tkp: tkpScore,
-    total: totalScore
-  });
-  const warningText = warnings.length > 0 ? `WARNING: ${warnings.join("; ")}` : "Normal";
-
-  const alertBox = document.getElementById("userAnomalyAlert");
-  const alertDetail = document.getElementById("userAnomalyDetail");
-
-  if (warnings.length > 0) {
-    syncStatusBox.className =
-      "px-6 py-3 bg-amber-50 border-b border-amber-200 text-xs font-medium text-amber-900 flex items-center justify-between gap-3";
-    if (alertBox && alertDetail) {
-      alertDetail.textContent =
-        `Aktivitas atau isian Anda terdeteksi tidak wajar (${warnings.join("; ")}). Informasi perangkat (${deviceInfo.split(" (")[0]}), alamat IP (${ipAddress}), dan status warning telah dicatat ke sistem rekap.`;
-      alertBox.classList.remove("hidden");
-    }
-  } else {
-    syncStatusBox.className =
-      "px-6 py-3 bg-blue-50 border-b border-blue-100 text-xs font-medium text-blue-800 flex items-center justify-between gap-3";
-    if (alertBox) alertBox.classList.add("hidden");
-  }
-
-  const newAttempt = {
-    id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    nama: participantName,
-    username: loggedUser?.username || "",
-    pendidikan: participantEducation || "-",
-    formasi: appliedFormation,
-    instansi: appliedInstitution,
-    mode: examModeLabel,
-    twk: twkScore,
-    tiu: tiuScore,
-    tkp: tkpScore,
-    total: totalScore,
-    status_pg: statusPG,
-    warning: warningText,
-    waktuLabel: finishTimeLabel,
-    questions: questionBank.map(q => ({ ...q })),
-    answers: [...userAnswers],
-    durations: [...questionDurations],
-    doubts: [...doubtFlags]
-  };
-
-  saveAttemptToHistory(newAttempt);
-  renderResultComparisonWithPrevious(newAttempt);
-
-  reviewQuestions = questionBank.map(q => ({ ...q }));
-  reviewAnswers = [...userAnswers];
-  reviewDurations = [...questionDurations];
-  reviewDoubts = [...doubtFlags];
-  reviewOnlyWeakMode = false;
-  reviewMetaLabel = `Sesi Terbaru — ${participantName} (${finishTimeLabel})`;
-
-  if (typeof renderTimeAnalysisOnResult === "function") {
-    renderTimeAnalysisOnResult();
-  }
-
-  updateRestoreHistoryButtons();
-  renderAttemptHistory();
-  renderDashboardUserPreviousExams();
-  renderUserScoreTrendChart();
-
-  lastExamPayload = {
-    action: "submit_score",
-    nama: participantName,
-    username: loggedUser?.username || "",
-    email: loggedUser?.email || "",
-    pendidikan_terakhir: participantEducation || "-",
-    formasi: appliedFormation,
-    instansi: appliedInstitution,
-    mode: examModeLabel,
-    twk: twkScore,
-    tiu: tiuScore,
-    tkp: tkpScore,
-    total: totalScore,
-    status_pg: statusPG,
-    perangkat: deviceInfo,
-    ip_address: ipAddress,
-    warning: warningText
-  };
-
-  sendResultsToGoogleSheet(lastExamPayload);
-  showPostExamSurveyDonationPrompt();
-}
-
-function showPostExamSurveyDonationPrompt() {
-  const card = document.getElementById("postExamSurveyDonationCard");
-  const reopenBar = document.getElementById("reopenSurveyDonationBar");
-  const form = document.getElementById("postExamSurveyForm");
-  const statusEl = document.getElementById("postExamSurveyStatus");
-  const contactEl = document.getElementById("surveyContactInput");
-
-  if (form) form.classList.add("hidden");
-  if (statusEl) statusEl.classList.add("hidden");
-  if (contactEl && !contactEl.value && typeof loggedUser !== "undefined" && loggedUser?.email) {
-    contactEl.value = loggedUser.email;
-  }
-  if (card) card.classList.remove("hidden");
-  if (reopenBar) reopenBar.classList.add("hidden");
-}
-
-function dismissPostExamPrompt() {
-  const card = document.getElementById("postExamSurveyDonationCard");
-  const reopenBar = document.getElementById("reopenSurveyDonationBar");
-  if (card) card.classList.add("hidden");
-  if (reopenBar) reopenBar.classList.remove("hidden");
-}
-
-function reopenPostExamPrompt(openForm = false) {
-  const card = document.getElementById("postExamSurveyDonationCard");
-  const reopenBar = document.getElementById("reopenSurveyDonationBar");
-  if (card) card.classList.remove("hidden");
-  if (reopenBar) reopenBar.classList.add("hidden");
-  if (openForm) {
-    const form = document.getElementById("postExamSurveyForm");
-    if (form) form.classList.remove("hidden");
-  }
-}
-
-function togglePostExamSurveyForm() {
-  const form = document.getElementById("postExamSurveyForm");
-  if (!form) return;
-  form.classList.toggle("hidden");
-  if (!form.classList.contains("hidden")) {
-    document.getElementById("surveyFeedbackInput")?.focus();
-  }
-}
-
-async function submitPostExamSurvey(event) {
-  if (event) event.preventDefault();
-  const feedbackEl = document.getElementById("surveyFeedbackInput");
-  const contactEl = document.getElementById("surveyContactInput");
-  const statusEl = document.getElementById("postExamSurveyStatus");
-  const submitBtn = document.getElementById("submitSurveyBtn");
-
-  const pVal = Number(document.getElementById("surveyProsedurSelect")?.value || 3);
-  const wVal = Number(document.getElementById("surveyWaktuSelect")?.value || 3);
-  const sVal = Number(document.getElementById("surveySaranaSelect")?.value || 3);
-  const aVal = Number(document.getElementById("surveyPengaduanSelect")?.value || 3);
-
-  const avgUnsur = Number(((pVal + wVal + sVal + aVal) / 4).toFixed(2));
-  const ikmKonversi = Number((avgUnsur * 25).toFixed(2));
-
-  const feedbackText = (feedbackEl?.value || "").trim();
-  const contactText = (contactEl?.value || "").trim();
-
-  if (feedbackText.length < 4) {
-    if (statusEl) {
-      statusEl.textContent = "Tuliskan saran atau masukan minimal 4 karakter.";
-      statusEl.className = "text-xs font-semibold text-rose-600";
-      statusEl.classList.remove("hidden");
-    }
-    return;
-  }
-
-  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
-  const reporterName = (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta";
-  const summaryMeta =
-    `Prosedur:${pVal} | Waktu:${wVal} | Sarana:${sVal} | Pengaduan:${aVal} ` +
-    `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}) • Kontak:${contactText || "-"}`;
-
-  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
-    if (feedbackEl) feedbackEl.value = "";
-    if (statusEl) {
-      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei tercatat di sesi ini.`;
-      statusEl.className = "text-xs font-semibold text-emerald-700";
-      statusEl.classList.remove("hidden");
-    }
-    return;
-  }
-
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Mengirim...";
-  }
-
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "report_question",
-        nomor_soal: 0,
-        subtest: "SURVEI_SKM",
-        category: "Pelayanan Publik KemenPANRB",
-        question: summaryMeta.slice(0, 400),
-        catatan: feedbackText,
-        pelapor: reporterName
-      })
-    });
-    const json = await res.json();
-    if (statusEl) {
-      if (json && json.status === "sukses") {
-        if (feedbackEl) feedbackEl.value = "";
-        statusEl.textContent = `Terima kasih! Survei pelayanan publik Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) telah terkirim.`;
-        statusEl.className = "text-xs font-semibold text-emerald-700";
+        nextVal = cur;
+      } else if (rule.mult) {
+        let cur = rule.start + (i % 2);
+        for (let k = 0; k < 5; k++) {
+          seq.push(cur);
+          cur *= rule.mult;
+        }
+        nextVal = cur;
       } else {
-        statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
-        statusEl.className = "text-xs font-semibold text-rose-600";
+        let a = 1 + (i % 3);
+        let b = 2 + (i % 2);
+        seq = [a, b];
+        for (let k = 2; k < 5; k++) {
+          const nxt = seq[k - 1] + seq[k - 2];
+          seq.push(nxt);
+        }
+        nextVal = seq[4] + seq[3];
       }
-      statusEl.classList.remove("hidden");
-    }
-  } catch (err) {
-    if (statusEl) {
-      statusEl.textContent = "Gagal mengirim survei. Periksa koneksi internet Anda.";
-      statusEl.className = "text-xs font-semibold text-rose-600";
-      statusEl.classList.remove("hidden");
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Kirim Survei";
+
+      const distractors = new Set([nextVal]);
+      for (const delta of [-4, -2, 2, 4, 6]) {
+        if (distractors.size < 5) distractors.add(nextVal + delta);
+      }
+      const opts = Array.from(distractors).sort((a, b) => a - b).map(String);
+      const ansIdx = opts.indexOf(String(nextVal));
+
+      bank.push({
+        id: qId++,
+        subtest: "TIU",
+        category: "Numerik - Deret Angka",
+        question: `Tentukan bilangan berikutnya dari deret berikut: ${seq.join(", ")}, ...`,
+        options: opts,
+        answer: ansIdx >= 0 ? ansIdx : 0,
+        explanation: `Deret: ${seq.join(", ")}, ${nextVal}. ${rule.label}.`
+      });
+    } else if (modType === 3) {
+      const pct = 20 + ((i % 4) * 5);
+      const baseX = 200 + ((i % 5) * 40);
+      const xVal = (pct / 100) * baseX;
+      const yVal = xVal + ((i % 3) - 1) * 5;
+      let relSymbol = "=";
+      let ansIdx = 2;
+      if (xVal > yVal) {
+        relSymbol = ">";
+        ansIdx = 0;
+      } else if (xVal < yVal) {
+        relSymbol = "<";
+        ansIdx = 1;
+      }
+      bank.push({
+        id: qId++,
+        subtest: "TIU",
+        category: "Numerik - Perbandingan",
+        question: `Jika x = ${pct}% dari ${baseX} dan y = ${yVal}, maka hubungan yang tepat antara x dan y adalah...`,
+        options: ["x > y", "x < y", "x = y", `x + y = ${xVal + yVal}`, "Hubungan tidak dapat ditentukan"],
+        answer: ansIdx,
+        explanation: `Nilai x = (${pct}/100) × ${baseX} = ${xVal}, sedangkan y = ${yVal}, sehingga berlaku x ${relSymbol} y.`
+      });
+    } else {
+      const dirs = ["Utara", "Timur", "Selatan", "Barat"];
+      const startIdx = i % 4;
+      const stepCount = 3;
+      const endIdx = (startIdx + stepCount) % 4;
+      const seqDirs = [
+        dirs[startIdx % 4],
+        dirs[(startIdx + 1) % 4],
+        dirs[(startIdx + 2) % 4]
+      ];
+      const expectedDir = dirs[endIdx];
+      const opts = ["Utara", "Timur Laut", "Barat", "Tenggara", "Selatan"];
+      const ansIdx = opts.indexOf(expectedDir);
+
+      bank.push({
+        id: qId++,
+        subtest: "TIU",
+        category: "Figural - Pola Gambar",
+        question: `Perhatikan urutan rotasi panah searah jarum jam sebesar 90 derajat setiap langkah: ${seqDirs.join(" → ")} → ... Arah panah berikutnya adalah...`,
+        svg: '<svg viewBox="0 0 260 60" class="w-64 h-16 mx-auto"><rect x="5" y="5" width="50" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6"/><path d="M30 42 L30 18 M23 25 L30 18 L37 25" stroke="#1d4ed8" stroke-width="3" fill="none"/><rect x="70" y="5" width="50" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6"/><path d="M83 30 L107 30 M100 23 L107 30 L100 37" stroke="#1d4ed8" stroke-width="3" fill="none"/><rect x="135" y="5" width="50" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6"/><path d="M160 18 L160 42 M153 35 L160 42 L167 35" stroke="#1d4ed8" stroke-width="3" fill="none"/><rect x="200" y="5" width="50" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="4"/><text x="225" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#b45309">?</text></svg>',
+        options: opts,
+        answer: ansIdx >= 0 ? ansIdx : 2,
+        explanation: `Urutan rotasi searah jarum jam 90 derajat dari ${seqDirs[0]} menghasilkan arah berikutnya yaitu ${expectedDir}.`
+      });
     }
   }
+
+  const tkpTemplates = [
+    {
+      category: "Pelayanan Publik",
+      question: "Saat jam pelayanan hampir berakhir, datang seorang warga lansia dari desa terpencil yang berkas permohonannya belum lengkap. Sikap Anda sebagai petugas pelayanan adalah...",
+      options: [
+        "Meminta warga tersebut kembali esok hari karena loket segera tutup.",
+        "Menjelaskan kekurangan berkas dengan ramah, membantu mencatat rincian yang perlu dilengkapi, dan memprioritaskan pelayanannya saat berkas siap.",
+        "Menerima berkas apa adanya agar warga cepat pulang meskipun nantinya ditolak sistem.",
+        "Menyarankan warga tersebut meminta bantuan calo di luar kantor agar lebih cepat.",
+        "Menutup loket sesuai jam operasional tanpa memberikan penjelasan panjang."
+      ],
+      scores: [2, 5, 3, 1, 2],
+      explanation: "Pelayanan publik menuntut empati, kejelasan informasi, dan solusi prosedural tanpa melanggar aturan."
+    },
+    {
+      category: "Jejaring Kerja",
+      question: "Tim kerja Anda mendapat tugas lintas bidang yang membutuhkan koordinasi cepat dengan unit lain yang memiliki gaya kerja berbeda. Langkah pertama yang Anda lakukan adalah...",
+      options: [
+        "Mengerjakan bagian tim sendiri terlebih dahulu tanpa menunggu unit lain.",
+        "Menginisiasi rapat koordinasi singkat untuk menyepakati pembagian peran, jadwal, dan kanal komunikasi bersama.",
+        "Melaporkan kepada atasan bahwa koordinasi lintas unit sulit dilakukan.",
+        "Menunggu unit lain menghubungi tim Anda terlebih dahulu.",
+        "Mengambil alih seluruh pekerjaan agar tidak terjadi perbedaan pendapat."
+      ],
+      scores: [3, 5, 1, 2, 2],
+      explanation: "Membangun komunikasi aktif dan menyepakati alur kerja bersama adalah kunci efektivitas jejaring kerja."
+    },
+    {
+      category: "Sosial Budaya",
+      question: "Anda ditempatkan di daerah dengan adat istiadat dan bahasa daerah yang berbeda dari daerah asal Anda. Agar dapat beradaptasi dengan baik di lingkungan kerja dan masyarakat, Anda akan...",
+      options: [
+        "Tetap menggunakan kebiasaan daerah asal karena merasa paling nyaman.",
+        "Mempelajari nilai budaya setempat, menghormati tradisi lokal, serta menggunakan bahasa Indonesia yang santun sambil belajar kosakata dasar daerah.",
+        "Membatasi interaksi hanya pada urusan pekerjaan formal di kantor.",
+        "Membanding-bandingkan budaya setempat dengan budaya daerah asal Anda.",
+        "Menghindari kegiatan kemasyarakatan agar tidak salah bersikap."
+      ],
+      scores: [2, 5, 3, 1, 2],
+      explanation: "Sikap adaptif, terbuka, dan menghormati kearifan lokal mencerminkan kompetensi sosial budaya ASN."
+    },
+    {
+      category: "Teknologi Informasi & Komunikasi",
+      question: "Instansi Anda meluncurkan aplikasi persuratan digital baru untuk menggantikan proses manual, namun beberapa rekan senior kesulitan menggunakannya. Sikap Anda adalah...",
+      options: [
+        "Menggunakan aplikasi hanya untuk diri sendiri karena bukan tugas Anda mengajari orang lain.",
+        "Membuat panduan ringkas bergambar dan meluangkan waktu mendampingi rekan senior hingga terbiasa mengoperasikannya.",
+        "Mengusulkan agar instansi kembali ke sistem kertas manual saja.",
+        "Mengerjakan seluruh input surat rekan senior agar cepat selesai.",
+        "Mengkritik rekan senior yang lambat beradaptasi dengan teknologi."
+      ],
+      scores: [2, 5, 1, 3, 1],
+      explanation: "Pemanfaatan TIK optimal tercapai ketika ASN mampu mengoperasikan sistem sekaligus mendorong kolaborasi literasi digital di unit kerjanya."
+    },
+    {
+      category: "Profesionalisme",
+      question: "Anda diberikan dua tugas penting dengan tenggat waktu bersamaan oleh atasan. Tindakan yang paling profesional adalah...",
+      options: [
+        "Mengerjakan tugas yang paling mudah dan menunda tugas lainnya melewati tenggat.",
+        "Memetakan skala prioritas dan estimasi waktu pengerjaan, mengomunikasikan rencana penyelesaian kepada atasan, lalu mengeksekusi secara fokus.",
+        "Mengeluh kepada rekan kerja karena beban kerja terasa tidak adil.",
+        "Mengerjakan keduanya secara terburu-buru tanpa memeriksa ketelitian hasil.",
+        "Menolak salah satu tugas secara sepihak tanpa diskusi."
+      ],
+      scores: [2, 5, 1, 3, 1],
+      explanation: "Profesionalisme ditunjukkan melalui manajemen prioritas, komunikasi asertif dengan pimpinan, dan komitmen terhadap kualitas hasil."
+    },
+    {
+      category: "Anti Radikalisme",
+      question: "Di grup percakapan lingkungan tempat tinggal, beredar pesan provokatif yang mengajak warga menolak keberadaan rumah ibadah kelompok lain. Sikap Anda adalah...",
+      options: [
+        "Ikut meneruskan pesan tersebut agar warga lain mengetahui isinya.",
+        "Mengingatkan warga dengan santun untuk menahan diri, mengklarifikasi informasi berdasarkan aturan kerukunan umat beragama, dan mengajak berdialog damai.",
+        "Keluar dari grup tanpa memberikan tanggapan apa pun.",
+        "Mendukung ajakan tersebut demi menjaga homogenitas lingkungan.",
+        "Membiarkan perdebatan memanas karena bukan urusan pribadi Anda."
+      ],
+      scores: [1, 5, 3, 1, 2],
+      explanation: "ASN berperan aktif menjaga persatuan, toleransi, dan meredam potensi intoleransi maupun radikalisme di masyarakat."
+    }
+  ];
+
+  for (let i = 0; i < 45; i++) {
+    const tpl = tkpTemplates[i % tkpTemplates.length];
+    const cycle = Math.floor(i / tkpTemplates.length) + 1;
+    bank.push({
+      id: qId++,
+      subtest: "TKP",
+      category: tpl.category,
+      question: cycle === 1
+        ? tpl.question
+        : `[Situasi ${tpl.category} #${cycle}] ${tpl.question}`,
+      options: [...tpl.options],
+      scores: [...tpl.scores],
+      explanation: tpl.explanation
+    });
+  }
+
+  return bank;
 }
 
-function setSubtestBadge(elId, isPass) {
-  const el = document.getElementById(elId);
-  el.textContent = isPass ? "LULUS" : "TIDAK LULUS";
-  el.className = `text-xs font-bold px-2 py-0.5 rounded ${
-    isPass ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-  }`;
+questionBank = buildDefaultQuestionBank();
+
+function sanitizeQuestionMedia(rawMarkup) {
+  if (typeof rawMarkup !== "string" || !rawMarkup.trim()) return "";
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawMarkup, "text/html");
+
+  const svgEl = doc.body.querySelector("svg");
+  if (svgEl) {
+    const forbiddenTags = ["script", "iframe", "object", "embed", "foreignobject", "link", "meta"];
+    forbiddenTags.forEach((tag) => {
+      svgEl.querySelectorAll(tag).forEach((el) => el.remove());
+    });
+
+    [svgEl, ...svgEl.querySelectorAll("*")].forEach((el) => {
+      Array.from(el.attributes).forEach((attr) => {
+        const attrName = attr.name.toLowerCase();
+        const attrVal = String(attr.value || "").trim().toLowerCase();
+        if (
+          attrName.startsWith("on") ||
+          ((attrName === "href" || attrName === "xlink:href") && attrVal.startsWith("javascript:"))
+        ) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+
+    return svgEl.outerHTML;
+  }
+
+  const imgEl = doc.body.querySelector("img");
+  if (imgEl) {
+    const src = String(imgEl.getAttribute("src") || "").trim();
+    const isAllowedUrl =
+      src.startsWith("https://drive.google.com/thumbnail") ||
+      src.startsWith("https://lh3.googleusercontent.com/");
+    if (!isAllowedUrl) return "";
+
+    const cleanImg = document.createElement("img");
+    cleanImg.src = src;
+    cleanImg.alt = imgEl.getAttribute("alt") || "Gambar Soal";
+    cleanImg.className = "max-h-56 mx-auto rounded-lg border border-slate-200";
+    return cleanImg.outerHTML;
+  }
+
+  return "";
 }
 
-async function sendResultsToGoogleSheet(payload) {
-  if (isSubmittingScore) return;
-  isSubmittingScore = true;
+function updateQuestionStatsUI(sourceLabel) {
+  const badge = document.getElementById("heroQuestionSummaryBadge");
+  const twkLabel = document.getElementById("twkCountLabel");
+  const tiuLabel = document.getElementById("tiuCountLabel");
+  const tkpLabel = document.getElementById("tkpCountLabel");
+  const reviewBtn = document.getElementById("toggleReviewBtn");
+  const statusEl = document.getElementById("bankLoadStatus");
 
-  const syncText = document.getElementById("sheetSyncText");
-  const retryBtn = document.getElementById("retrySyncBtn");
-  retryBtn.classList.add("hidden");
+  const twkTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TWK").length;
+  const tiuTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TIU").length;
+  const tkpTotal = questionBank.filter(q => String(q.subtest || "").toUpperCase() === "TKP").length;
+  const allTotal = questionBank.length;
 
-  const hasWarning = payload.warning && payload.warning !== "Normal";
+  if (badge) badge.textContent = `${allTotal} Soal • TWK (${twkTotal}) • TIU (${tiuTotal}) • TKP (${tkpTotal})`;
+  if (twkLabel) twkLabel.textContent = `1. TWK (${twkTotal} Soal)`;
+  if (tiuLabel) tiuLabel.textContent = `2. TIU (${tiuTotal} Soal)`;
+  if (tkpLabel) tkpLabel.textContent = `3. TKP (${tkpTotal} Soal)`;
+  if (reviewBtn) reviewBtn.textContent = `Lihat Kunci Jawaban & Pembahasan (${allTotal} Soal)`;
+  if (sourceLabel && statusEl) statusEl.textContent = sourceLabel;
+}
+
+async function muatBankSoalDariSheet() {
+  const badge = document.getElementById("scriptConfigBadge");
+  const statusEl = document.getElementById("bankLoadStatus");
 
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
-    syncText.textContent = "Info: URL Google Apps Script belum ditempel pada kode HTML, hasil hanya ditampilkan di layar ini.";
-    isSubmittingScore = false;
+    if (badge) {
+      badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
+      badge.className = "font-semibold text-amber-700";
+    }
+    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
     return;
   }
 
-  syncText.textContent = hasWarning
-    ? `⚠️ Peringatan Data (${payload.warning}). Mengirim rekap nilai ke Google Sheets...`
-    : "Mengirim rekap nilai ke Google Sheets...";
+  if (badge) {
+    badge.textContent = "Terhubung ke Google Sheets";
+    badge.className = "font-semibold text-emerald-700";
+  }
+  if (statusEl) statusEl.textContent = "Memuat soal terbaru dari tab BankSoal...";
 
   try {
-    const res = await fetch(GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
-    });
+    const res = await fetch(`${GOOGLE_SCRIPT_URL}?mode=soal`);
+    const json = await res.json();
 
-    const result = await res.json();
-    if (result && result.status === "sukses") {
-      const finalWarning = result.warning || payload.warning;
-      if (finalWarning && finalWarning !== "Normal") {
-        syncText.textContent =
-          `⚠️ Rekap nilai terkirim ke Google Sheets dengan catatan ${finalWarning}.`;
-      } else {
-        syncText.textContent =
-          "Rekap nilai, pendidikan terakhir, formasi, instansi, serta info perangkat & IP berhasil dikirim ke database Google Sheets!";
-      }
+    if (
+      json &&
+      json.status === "sukses" &&
+      Array.isArray(json.soal) &&
+      json.soal.length > 0
+    ) {
+      questionBank = json.soal.map((item, idx) => {
+        const subtest = String(item.subtest || "TWK").trim().toUpperCase();
+        const normalized = {
+          id: item.id || idx + 1,
+          subtest,
+          category: item.category || "Umum",
+          question: item.question || "",
+          options: Array.isArray(item.options) ? item.options : [],
+          explanation: item.explanation || "",
+          svg: item.svg || ""
+        };
+
+        if (subtest === "TKP") {
+          if (Array.isArray(item.scores) && item.scores.length >= 5) {
+            normalized.scores = item.scores.map(Number);
+          } else if (item.keyRaw) {
+            const parsedScores = String(item.keyRaw).split(",").map(s => Number(s.trim()) || 0);
+            normalized.scores = parsedScores.length >= 5 ? parsedScores : [1, 2, 3, 4, 5];
+          } else {
+            normalized.scores = [1, 2, 3, 4, 5];
+          }
+        } else {
+          if (typeof item.answer === "number") {
+            normalized.answer = item.answer;
+          } else {
+            const rawKey = String(item.keyRaw || "A").trim().toUpperCase();
+            if (/^[0-4]$/.test(rawKey)) {
+              normalized.answer = Number(rawKey);
+            } else {
+              const letterIdx = ["A", "B", "C", "D", "E"].indexOf(rawKey);
+              normalized.answer = letterIdx >= 0 ? letterIdx : 0;
+            }
+          }
+        }
+        return normalized;
+      });
+      updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
     } else {
-      syncText.textContent = `Gagal menyimpan ke Google Sheets: ${(result && result.pesan) || "Respons tidak valid"}.`;
-      retryBtn.classList.remove("hidden");
+      updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
     }
   } catch (err) {
-    syncText.textContent = "Gagal mengirim rekap nilai ke Google Sheets. Periksa koneksi internet Anda.";
-    retryBtn.classList.remove("hidden");
-  } finally {
-    isSubmittingScore = false;
+    console.warn("Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.", err);
+    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
   }
 }
-
-function retrySendToSheet() {
-  if (lastExamPayload && !isSubmittingScore) sendResultsToGoogleSheet(lastExamPayload);
-}
-
-function populateReviewCategoryFilter(sourceQuestions) {
-  const selectEl = document.getElementById("reviewCategoryFilter");
-  if (!selectEl) return;
-
-  const prevVal = selectEl.value || "ALL";
-  const cats = Array.from(
-    new Set(sourceQuestions.map(q => String(q.category || "Umum").trim()).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b, "id"));
-
-  selectEl.replaceChildren();
-  const allOpt = document.createElement("option");
-  allOpt.value = "ALL";
-  allOpt.textContent = "Semua Kategori";
-  selectEl.appendChild(allOpt);
-
-  cats.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    selectEl.appendChild(opt);
-  });
-
-  selectEl.value = cats.includes(prevVal) ? prevVal : "ALL";
-}
-
-function updateWeakFilterButtonUI() {
-  const btn = document.getElementById("reviewOnlyWeakBtn");
-  if (!btn) return;
-  btn.className = reviewOnlyWeakMode
-    ? "px-3 py-1 text-xs font-bold rounded-lg bg-rose-600 text-white"
-    : "px-3 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100";
-}
-
-function toggleReviewWeakOnly() {
-  reviewOnlyWeakMode = !reviewOnlyWeakMode;
-  updateWeakFilterButtonUI();
-  const activeSubtest = document.querySelector(".review-subtest-btn.active-subtest")?.dataset.subtest || "ALL";
-  renderReview(activeSubtest);
-}
-
-function toggleReviewSection() {
-  const sec = document.getElementById("reviewSection");
-  sec.classList.toggle("hidden");
-  if (!sec.classList.contains("hidden")) {
-    if (!reviewQuestions.length) {
-      reviewQuestions = questionBank;
-      reviewAnswers = userAnswers;
-      reviewDurations = questionDurations;
-      reviewDoubts = doubtFlags;
-    }
-    if (typeof setBackToDashboardButtonVisible === "function") {
-      setBackToDashboardButtonVisible(false);
-    }
-    document.getElementById("reviewSectionTitle").textContent = "Pembahasan Lengkap Soal SKD";
-    document.getElementById("reviewSessionSubtitle").textContent = reviewMetaLabel;
-    populateReviewCategoryFilter(reviewQuestions);
-    updateWeakFilterButtonUI();
-    renderReview("ALL");
-  }
-}
-
-function renderReviewSubtestStats(sourceQuestions, sourceAnswers, sourceDurations) {
-  const statsEl = document.getElementById("reviewSubtestStats");
-  if (!statsEl) return;
-
-  let twkTotal = 0, twkCorrect = 0, twkSec = 0;
-  let tiuTotal = 0, tiuCorrect = 0, tiuSec = 0;
-  let tkpTotal = 0, tkpPoints = 0, tkpSec = 0;
-
-  sourceQuestions.forEach((q, idx) => {
-    const ans = sourceAnswers[idx] ?? null;
-    const sec = Number(sourceDurations[idx] || 0);
-    if (q.subtest === "TWK") {
-      twkTotal++;
-      twkSec += sec;
-      if (ans !== null && ans === q.answer) twkCorrect++;
-    } else if (q.subtest === "TIU") {
-      tiuTotal++;
-      tiuSec += sec;
-      if (ans !== null && ans === q.answer) tiuCorrect++;
-    } else if (q.subtest === "TKP") {
-      tkpTotal++;
-      tkpSec += sec;
-      if (ans !== null && Array.isArray(q.scores)) {
-        tkpPoints += Number(q.scores[ans] || 0);
-      }
-    }
-  });
-
-  const avgTwk = twkTotal > 0 ? Math.round(twkSec / twkTotal) : 0;
-  const avgTiu = tiuTotal > 0 ? Math.round(tiuSec / tiuTotal) : 0;
-  const avgTkp = tkpTotal > 0 ? Math.round(tkpSec / tkpTotal) : 0;
-
-  statsEl.innerHTML = `
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-      <div class="font-bold text-slate-700">TWK</div>
-      <div class="text-sm font-extrabold text-blue-700 mt-0.5">${twkCorrect} / ${twkTotal} Benar (${twkCorrect * 5} Poin)</div>
-      <div class="text-[11px] text-slate-500 mt-0.5">Rata-rata waktu: ${avgTwk} dtk/soal</div>
-    </div>
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-      <div class="font-bold text-slate-700">TIU</div>
-      <div class="text-sm font-extrabold text-blue-700 mt-0.5">${tiuCorrect} / ${tiuTotal} Benar (${tiuCorrect * 5} Poin)</div>
-      <div class="text-[11px] text-slate-500 mt-0.5">Rata-rata waktu: ${avgTiu} dtk/soal</div>
-    </div>
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-      <div class="font-bold text-slate-700">TKP (${tkpTotal} Soal)</div>
-      <div class="text-sm font-extrabold text-emerald-700 mt-0.5">Total ${tkpPoints} Poin</div>
-      <div class="text-[11px] text-slate-500 mt-0.5">Rata-rata waktu: ${avgTkp} dtk/soal</div>
-    </div>
-  `;
-}
-
-function renderReviewCategoryStats(sourceQuestions, sourceAnswers) {
-  const catBox = document.getElementById("reviewCategoryStats");
-  if (!catBox) return;
-
-  const map = new Map();
-  sourceQuestions.forEach((q, idx) => {
-    const cat = q.category || "Umum";
-    if (!map.has(cat)) {
-      map.set(cat, { subtest: q.subtest, total: 0, correct: 0, tkpPoints: 0 });
-    }
-    const entry = map.get(cat);
-    entry.total++;
-    const ans = sourceAnswers[idx] ?? null;
-    if (q.subtest === "TKP") {
-      if (ans !== null && Array.isArray(q.scores)) {
-        entry.tkpPoints += Number(q.scores[ans] || 0);
-      }
-    } else if (ans !== null && ans === q.answer) {
-      entry.correct++;
-    }
-  });
-
-  catBox.replaceChildren();
-  map.forEach((val, catName) => {
-    const card = document.createElement("div");
-    card.className = "bg-slate-50 border border-slate-200 rounded-lg px-3 py-2";
-    const metricText = val.subtest === "TKP"
-      ? `${val.tkpPoints} Poin (${val.total} soal)`
-      : `${val.correct}/${val.total} Benar (${Math.round((val.correct / Math.max(1, val.total)) * 100)}%)`;
-
-    card.innerHTML = `
-      <div class="text-[11px] font-bold text-slate-700">${escapeHtml(catName)} <span class="text-blue-700">(${escapeHtml(val.subtest)})</span></div>
-      <div class="text-xs font-extrabold text-slate-900 mt-0.5">${escapeHtml(metricText)}</div>
-    `;
-    catBox.appendChild(card);
-  });
-}
-
-function isWeakReviewItem(q, userAns) {
-  if (q.subtest === "TKP") {
-    const pts = userAns === null ? 0 : Number(q.scores?.[userAns] ?? 0);
-    return userAns === null || pts < 5;
-  }
-  return userAns === null || userAns !== q.answer;
-}
-
-function renderReview(filterSubtest) {
-  document.querySelectorAll(".review-subtest-btn").forEach(btn => {
-    const isMatch = btn.dataset.subtest === filterSubtest;
-    btn.classList.toggle("active-subtest", isMatch);
-    btn.className = `review-subtest-btn px-3 py-1 text-xs font-bold rounded-lg ${
-      isMatch ? "bg-slate-800 text-white active-subtest" : "bg-slate-100 text-slate-700"
-    }`;
-  });
-
-  const selectedCat = document.getElementById("reviewCategoryFilter")?.value || "ALL";
-  const list = document.getElementById("reviewList");
-  const letters = ["A", "B", "C", "D", "E"];
-  const sourceQuestions = reviewQuestions.length ? reviewQuestions : questionBank;
-  const sourceAnswers = reviewAnswers.length ? reviewAnswers : userAnswers;
-  const sourceDurations = reviewDurations.length ? reviewDurations : questionDurations;
-
-  renderReviewSubtestStats(sourceQuestions, sourceAnswers, sourceDurations);
-  renderReviewCategoryStats(sourceQuestions, sourceAnswers);
-  list.replaceChildren();
-
-  let renderedCount = 0;
-
-  sourceQuestions.forEach((q, idx) => {
-    if (filterSubtest !== "ALL" && q.subtest !== filterSubtest) return;
-    if (selectedCat !== "ALL" && (q.category || "Umum") !== selectedCat) return;
-
-    const userAns = sourceAnswers[idx] ?? null;
-    if (reviewOnlyWeakMode && !isWeakReviewItem(q, userAns)) return;
-    if (reviewOnlyFavoriteMode && !isQuestionFavorited(q)) return;
-
-    renderedCount++;
-    const durSec = Number(sourceDurations[idx] || 0);
-    const favActive = isQuestionFavorited(q);
-
-    const card = document.createElement("div");
-    card.className = "p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2";
-
-    const heading = document.createElement("div");
-    heading.className = "text-xs font-bold text-blue-700 flex flex-wrap items-center justify-between gap-2";
-
-    const leftLabel = document.createElement("span");
-    leftLabel.textContent = `No. ${idx + 1} • ${q.subtest} (${q.category})`;
-
-    const rightControls = document.createElement("div");
-    rightControls.className = "flex flex-wrap items-center gap-1.5";
-
-    const durBadge = document.createElement("span");
-    durBadge.className = "text-[11px] font-semibold text-slate-500 mr-1";
-    durBadge.textContent = `Durasi: ${durSec} dtk`;
-
-    const favBtn = document.createElement("button");
-    favBtn.type = "button";
-    favBtn.className = favActive
-      ? "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-500 text-white"
-      : "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100";
-    favBtn.textContent = favActive ? "★ Tersimpan" : "☆ Simpan ke Favorit";
-    favBtn.onclick = () => toggleFavoriteQuestion(q);
-
-    const reportBtn = document.createElement("button");
-    reportBtn.type = "button";
-    reportBtn.className = "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-white text-slate-600 border border-slate-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200";
-    reportBtn.textContent = "Laporkan Soal";
-    reportBtn.onclick = () => reportQuestionToSheet(q, idx + 1);
-
-    rightControls.append(durBadge, favBtn, reportBtn);
-    heading.append(leftLabel, rightControls);
-
-    const answer = document.createElement("p");
-    answer.className = "text-xs";
-
-    if (q.subtest === "TKP") {
-      const points = userAns === null ? 0 : (q.scores?.[userAns] ?? 0);
-      const bestIndex = Array.isArray(q.scores) ? q.scores.indexOf(5) : -1;
-      const bestAnswer =
-        bestIndex >= 0 ? letters[bestIndex] : "tidak tersedia";
-
-      answer.textContent =
-        `Jawaban Anda: ${
-          userAns === null
-            ? "Kosong (0 poin)"
-            : `${letters[userAns]} (${points} poin)`
-        } • Poin tertinggi: ${bestAnswer}`;
-    } else {
-      const ansIdx = typeof q.answer === "number"
-        ? q.answer
-        : letters.indexOf(String(q.keyRaw || "A").trim().toUpperCase());
-      const validAnsIdx = ansIdx >= 0 ? ansIdx : 0;
-
-      answer.textContent =
-        `Jawaban Anda: ${
-          userAns === null ? "Kosong" : letters[userAns]
-        } • Kunci benar: ${letters[validAnsIdx]}`;
-    }
-
-    const question = document.createElement("p");
-    question.className = "text-sm text-slate-800 font-medium";
-    question.textContent = q.question;
-
-    const rawExplanation = String(q.explanation || q.pembahasan || "").trim();
-    const explanation = document.createElement("p");
-    explanation.className =
-      "text-xs text-slate-600 bg-white p-3 rounded-lg border border-slate-200";
-    explanation.textContent = `Pembahasan: ${
-      rawExplanation || "Pembahasan belum tersedia pada baris soal ini."
-    }`;
-
-    card.append(heading, answer, question, explanation);
-    list.appendChild(card);
-  });
-
-  if (renderedCount === 0) {
-    const empty = document.createElement("div");
-    empty.className = "text-xs text-slate-500 text-center py-6";
-    empty.textContent = "Tidak ada soal yang sesuai dengan filter pembahasan aktif.";
-    list.appendChild(empty);
-  }
-}
-
-window.addEventListener("beforeunload", (e) => {
-  if (isExamActive) {
-    recordCurrentQuestionDuration();
-    saveExamSessionToStorage();
-    e.preventDefault();
-    e.returnValue = "Ujian simulasi CAT sedang berlangsung. Progres otomatis tersimpan jika halaman di-refresh.";
-    return e.returnValue;
-  }
-});
-
-window.addEventListener("keydown", (e) => {
-  if (!isExamActive) return;
-  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
-  if (activeTag === "input" || activeTag === "textarea" || activeTag === "select") return;
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-  const key = e.key.toUpperCase();
-  const optionMap = { A: 0, B: 1, C: 2, D: 3, E: 4 };
-  if (Object.prototype.hasOwnProperty.call(optionMap, key)) {
-    e.preventDefault();
-    selectOption(optionMap[key]);
-    return;
-  }
-
-  if (e.key === "ArrowLeft") {
-    e.preventDefault();
-    prevQuestion();
-  } else if (e.key === "ArrowRight") {
-    e.preventDefault();
-    saveAndNext();
-  }
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadLoggedUserFromStorage();
-  updateRestoreHistoryButtons();
-  renderAttemptHistory();
-  renderDashboardUserPreviousExams();
-  renderUserScoreTrendChart();
-
-  syncHistoryFromDatabaseIfEmpty().then((synced) => {
-    if (synced && synced.length > 0) {
-      renderAttemptHistory();
-      renderDashboardUserPreviousExams();
-      renderUserScoreTrendChart();
-    }
-  });
-
-  const nameInput = document.getElementById("participantNameInput");
-  if (nameInput) {
-    nameInput.addEventListener("input", () => {
-      validateNameInputRealtime();
-      renderDashboardUserPreviousExams();
-      renderUserScoreTrendChart();
-    });
-    nameInput.addEventListener("blur", validateNameInputRealtime);
-  }
-
-  const formationInput = document.getElementById("appliedFormationInput");
-  if (formationInput) {
-    formationInput.addEventListener("input", validateFormationInputRealtime);
-    formationInput.addEventListener("blur", validateFormationInputRealtime);
-  }
-
-  const institutionInput = document.getElementById("appliedInstitutionInput");
-  if (institutionInput) {
-    institutionInput.addEventListener("input", validateInstitutionInputRealtime);
-    institutionInput.addEventListener("blur", validateInstitutionInputRealtime);
-  }
-
-  if (typeof bindInstitutionAutoCapitalize === "function") {
-    bindInstitutionAutoCapitalize();
-  }
-
-  if (!tryRestoreExamSession()) {
-    muatBankSoalDariSheet();
-  } else {
-    const badge = document.getElementById("scriptConfigBadge");
-    if (badge && GOOGLE_SCRIPT_URL) {
-      badge.textContent = "Terhubung ke Google Sheets";
-      badge.className = "font-semibold text-emerald-700";
-    }
-  }
-});
