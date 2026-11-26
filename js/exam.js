@@ -1104,63 +1104,6 @@ async function submitPostExamSurvey(event) {
     }
   }
 }
-  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
-  const reporterName = (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta";
-
-  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
-    if (feedbackEl) feedbackEl.value = "";
-    if (statusEl) {
-      statusEl.textContent = `Terima kasih ${reporterName}, survei tercatat di sesi ini.`;
-      statusEl.className = "text-xs font-semibold text-emerald-700";
-      statusEl.classList.remove("hidden");
-    }
-    return;
-  }
-
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Mengirim...";
-  }
-
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "report_question",
-        nomor_soal: 0,
-        subtest: "SURVEI",
-        category: "Umpan Balik Pasca Ujian",
-        question: `Kontak: ${contactText || "-"} • Mode: ${examModeLabel || "-"}`,
-        catatan: feedbackText,
-        pelapor: reporterName
-      })
-    });
-    const json = await res.json();
-    if (statusEl) {
-      if (json && json.status === "sukses") {
-        if (feedbackEl) feedbackEl.value = "";
-        statusEl.textContent = "Terima kasih! Masukan survei Anda telah terkirim.";
-        statusEl.className = "text-xs font-semibold text-emerald-700";
-      } else {
-        statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
-        statusEl.className = "text-xs font-semibold text-rose-600";
-      }
-      statusEl.classList.remove("hidden");
-    }
-  } catch (err) {
-    if (statusEl) {
-      statusEl.textContent = "Gagal mengirim survei. Periksa koneksi internet Anda.";
-      statusEl.className = "text-xs font-semibold text-rose-600";
-      statusEl.classList.remove("hidden");
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Kirim Survei";
-    }
-  }
-}
 
 function setSubtestBadge(elId, isPass) {
   const el = document.getElementById(elId);
