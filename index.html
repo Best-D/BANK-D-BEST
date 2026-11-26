@@ -750,10 +750,30 @@
               </div>
             </div>
           </form>
-
-          <p id="postExamSurveyStatus" class="hidden text-xs font-semibold"></p>
+<p id="postExamSurveyStatus" class="hidden text-xs font-semibold"></p>
         </div>
       </div>
+
+      <!-- PINTASAN MUNCUL KEMBALI JIKA DIKLIK "NANTI SAJA" -->
+      <div id="reopenSurveyDonationBar" class="hidden px-6 pb-6 no-print">
+        <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs">
+          <span class="text-slate-600">Survei SKM &amp; donasi disembunyikan sementara.</span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="reopenPostExamPrompt(true)"
+              class="font-bold text-blue-700 hover:underline">
+              Buka Survei SKM
+            </button>
+            <span class="text-slate-300">•</span>
+            <button type="button" onclick="openDonationModal()"
+              class="font-bold text-amber-700 hover:underline">
+              Donasi Nanti
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+      
   <!-- HALAMAN 4: DASHBOARD SEMUA SKOR PESERTA -->
   <section id="dashboardScreen" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
