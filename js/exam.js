@@ -239,12 +239,15 @@ function startExam(customWeakQuestions = null) {
     return;
   }
 
+  const instEl = document.getElementById("appliedInstitutionInput");
+  if (instEl && typeof applyAutoCapitalizeToInput === "function") {
+    applyAutoCapitalizeToInput(instEl, true);
+  }
+
   const educationVal = (document.getElementById("participantEducationSelect")?.value || loggedUser.pendidikan || "").trim();
   const formationVal = document.getElementById("appliedFormationInput").value.trim();
-  const institutionVal = document.getElementById("appliedInstitutionInput").value.trim();
-const instEl = document.getElementById("appliedInstitutionInput");
-if (instEl) applyAutoCapitalizeToInput(instEl, true);
-  
+  const institutionVal = (instEl?.value || "").trim();
+
   if (!nameVal) {
     alert("Silakan isi Nama Lengkap Peserta terlebih dahulu sebelum memulai ujian.");
     document.getElementById("participantNameInput").focus();
@@ -1372,6 +1375,10 @@ window.addEventListener("DOMContentLoaded", () => {
   if (institutionInput) {
     institutionInput.addEventListener("input", validateInstitutionInputRealtime);
     institutionInput.addEventListener("blur", validateInstitutionInputRealtime);
+  }
+
+  if (typeof bindInstitutionAutoCapitalize === "function") {
+    bindInstitutionAutoCapitalize();
   }
 
   if (!tryRestoreExamSession()) {
