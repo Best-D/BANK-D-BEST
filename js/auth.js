@@ -712,7 +712,13 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
     showProfileFeedback("Isi Formasi yang Dilamar dengan kata yang wajar dan sopan.", true);
     return;
   }
-  if (!institutionVal || findProfanityInName(institutionVal).length > 0) {
+  const profileInstLetters = institutionVal.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, "").length;
+  if (!institutionVal || profileInstLetters < 7) {
+    showProfileFeedback("Isi Instansi yang Dilamar minimal 7 huruf.", true);
+    profInstEl?.focus();
+    return;
+  }
+  if (findProfanityInName(institutionVal).length > 0) {
     showProfileFeedback("Isi Instansi yang Dilamar dengan kata yang wajar dan sopan.", true);
     return;
   }
