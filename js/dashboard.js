@@ -927,6 +927,7 @@ async function refreshDashboardData() {
   populateDashboardInstitutionFilter();
   renderDashboardTable();
   loadVerifiedDonationsForDashboard();
+  renderDashboardSurveySummary();
 }
 
 function renderTimeAnalysisOnResult() {
