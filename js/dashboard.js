@@ -2097,20 +2097,42 @@ async function resetSurveyDataAsAdmin() {
   }
 }
 
-async function sanitizePublicSurveyItem_(item, index = 0) {
-  const unsurArr = Array.isArray(item?.unsur) && item.unsur.length === 9
-    ? item.unsur.map(v => Number(v || 0))
+function sanitizePublicSurveyItem_(item, index = 0) {
+  const rawUnsur = Array.isArray(item?.unsur) ? item.unsur : [];
+  const unsurArr = rawUnsur.length === 9
+    ? rawUnsur.map(v => {
+        const num = Number(v);
+        return Number.isFinite(num) && num >= 1 && num <= 4 ? num : 3;
+      })
     : [];
-  const nrrVal = Number(item?.nrr || 0);
-  const ikmVal = Number(item?.ikm || 0);
+
+  let nrrVal = Number(item?.nrr);
+  let ikmVal = Number(item?.ikm);
+
+  if ((!Number.isFinite(nrrVal) || nrrVal <= 0) && unsurArr.length === 9) {
+    nrrVal = Number((unsurArr.reduce((a, b) => a + b, 0) / 9).toFixed(2));
+  } else if (!Number.isFinite(nrrVal)) {
+    nrrVal = 0;
+  }
+
+  if ((!Number.isFinite(ikmVal) || ikmVal <= 0) && nrrVal > 0) {
+    ikmVal = Number((nrrVal * 25).toFixed(2));
+  } else if (!Number.isFinite(ikmVal)) {
+    ikmVal = 0;
+  }
+
+  const catatanStr = String(item?.catatan || "").trim();
+  const hasMeaningfulData = unsurArr.length === 9 || nrrVal > 0 || ikmVal > 0 || catatanStr.length > 0;
+  if (!hasMeaningfulData) return null;
+
   return {
     id: `anon_srv_${index}`,
     waktu: item?.waktu || "",
     unsur: unsurArr,
     nrr: nrrVal,
     ikm: ikmVal,
-    kategori: item?.kategori || "",
-    catatan: item?.catatan || ""
+    kategori: String(item?.kategori || "").trim(),
+    catatan: catatanStr || "-"
   };
 }
 
@@ -2123,12 +2145,16 @@ async function renderDashboardSurveySummary() {
   updateAdminSurveyResetVisibility_();
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
-  const localList = getLocalSurveyHistory().map((item, idx) => sanitizePublicSurveyItem_(item, idx));
+  const localList = getLocalSurveyHistory()
+    .map((item, idx) => sanitizePublicSurveyItem_(item, idx))
+    .filter(Boolean);
   const remoteList = await fetchSharedSurveyListFromServer_();
   let list = localList;
 
   if (Array.isArray(remoteList)) {
-    const cleanRemote = remoteList.map((item, idx) => sanitizePublicSurveyItem_(item, idx));
+    const cleanRemote = remoteList
+      .map((item, idx) => sanitizePublicSurveyItem_(item, idx))
+      .filter(Boolean);
     const mergedMap = new Map();
     cleanRemote.forEach(item => {
       const k = `${item.waktu}_${item.nrr}_${item.ikm}_${String(item.catatan || "").slice(0, 30)}`;
@@ -2195,7 +2221,6 @@ async function renderDashboardSurveySummary() {
     listEl.appendChild(row);
   });
 }
-
 function openDashboardSurveyModal() {
   if (typeof isExamActive !== "undefined" && isExamActive) {
     alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum mengisi survei.");
