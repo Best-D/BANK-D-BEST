@@ -972,6 +972,125 @@ async function finishExam() {
 
   sendResultsToGoogleSheet(lastExamPayload);
 }
+function showPostExamSurveyDonationPrompt() {
+  const card = document.getElementById("postExamSurveyDonationCard");
+  const reopenBar = document.getElementById("reopenSurveyDonationBar");
+  const form = document.getElementById("postExamSurveyForm");
+  const statusEl = document.getElementById("postExamSurveyStatus");
+  const contactEl = document.getElementById("surveyContactInput");
+
+  if (form) form.classList.add("hidden");
+  if (statusEl) statusEl.classList.add("hidden");
+  if (contactEl && !contactEl.value && typeof loggedUser !== "undefined" && loggedUser?.email) {
+    contactEl.value = loggedUser.email;
+  }
+  if (card) card.classList.remove("hidden");
+  if (reopenBar) reopenBar.classList.add("hidden");
+}
+
+function dismissPostExamPrompt() {
+  const card = document.getElementById("postExamSurveyDonationCard");
+  const reopenBar = document.getElementById("reopenSurveyDonationBar");
+  if (card) card.classList.add("hidden");
+  if (reopenBar) reopenBar.classList.remove("hidden");
+}
+
+function reopenPostExamPrompt(openForm = false) {
+  const card = document.getElementById("postExamSurveyDonationCard");
+  const reopenBar = document.getElementById("reopenSurveyDonationBar");
+  if (card) card.classList.remove("hidden");
+  if (reopenBar) reopenBar.classList.add("hidden");
+  if (openForm) {
+    const form = document.getElementById("postExamSurveyForm");
+    if (form) form.classList.remove("hidden");
+  }
+}
+
+function togglePostExamSurveyForm() {
+  const form = document.getElementById("postExamSurveyForm");
+  if (!form) return;
+  form.classList.toggle("hidden");
+  if (!form.classList.contains("hidden")) {
+    document.getElementById("surveyFeedbackInput")?.focus();
+  }
+}
+
+async function submitPostExamSurvey(event) {
+  if (event) event.preventDefault();
+  const feedbackEl = document.getElementById("surveyFeedbackInput");
+  const contactEl = document.getElementById("surveyContactInput");
+  const statusEl = document.getElementById("postExamSurveyStatus");
+  const submitBtn = document.getElementById("submitSurveyBtn");
+
+  const feedbackText = (feedbackEl?.value || "").trim();
+  const contactText = (contactEl?.value || "").trim();
+
+  if (feedbackText.length < 4) {
+    if (statusEl) {
+      statusEl.textContent = "Tuliskan saran atau kesan minimal 4 karakter.";
+      statusEl.className = "text-xs font-semibold text-rose-600";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  const reporterName = (typeof loggedUser !== "undefined" && loggedUser?.nama) || participantName || "Peserta";
+
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    if (feedbackEl) feedbackEl.value = "";
+    if (statusEl) {
+      statusEl.textContent = `Terima kasih ${reporterName}, survei tercatat di sesi ini.`;
+      statusEl.className = "text-xs font-semibold text-emerald-700";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Mengirim...";
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "report_question",
+        nomor_soal: 0,
+        subtest: "SURVEI",
+        category: "Umpan Balik Pasca Ujian",
+        question: `Kontak: ${contactText || "-"} • Mode: ${examModeLabel || "-"}`,
+        catatan: feedbackText,
+        pelapor: reporterName
+      })
+    });
+    const json = await res.json();
+    if (statusEl) {
+      if (json && json.status === "sukses") {
+        if (feedbackEl) feedbackEl.value = "";
+        statusEl.textContent = "Terima kasih! Masukan survei Anda telah terkirim.";
+        statusEl.className = "text-xs font-semibold text-emerald-700";
+      } else {
+        statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
+        statusEl.className = "text-xs font-semibold text-rose-600";
+      }
+      statusEl.classList.remove("hidden");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "Gagal mengirim survei. Periksa koneksi internet Anda.";
+      statusEl.className = "text-xs font-semibold text-rose-600";
+      statusEl.classList.remove("hidden");
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Kirim Survei";
+    }
+  }
+}
 
 function setSubtestBadge(elId, isPass) {
   const el = document.getElementById(elId);
