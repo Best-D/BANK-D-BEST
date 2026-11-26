@@ -112,35 +112,3 @@ function showScreen(screenName) {
     renderAttemptHistory();
   }
 }
-
-  document.getElementById("setupScreen").classList.toggle("hidden", screenName !== "setup");
-  document.getElementById("examScreen").classList.toggle("hidden", screenName !== "exam");
-  document.getElementById("resultScreen").classList.toggle("hidden", screenName !== "result");
-  document.getElementById("dashboardScreen").classList.toggle("hidden", screenName !== "dashboard");
-
-  const profileSec = document.getElementById("profileScreen");
-  if (profileSec) {
-    profileSec.classList.toggle("hidden", screenName !== "profile");
-  }
-
-  const reviewSec = document.getElementById("reviewSection");
-  if (reviewSec && screenName !== "result") {
-    reviewSec.classList.add("hidden");
-  }
-
-  const isExam = screenName === "exam";
-  document.getElementById("navHeaderControls").classList.toggle("hidden", isExam);
-  document.getElementById("examHeaderControls").classList.toggle("hidden", !isExam);
-  if (isExam) {
-    document.getElementById("examHeaderControls").classList.add("flex");
-  } else {
-    document.getElementById("examHeaderControls").classList.remove("flex");
-  }
-
-  if (screenName === "dashboard") {
-    refreshDashboardData();
-  } else if (screenName === "result") {
-    updateRestoreHistoryButtons();
-    renderAttemptHistory();
-  }
-}
