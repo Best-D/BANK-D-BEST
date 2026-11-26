@@ -77,26 +77,39 @@ function clearExamSessionState() {
 function buildExamQuestionSet(focusMode, orderMode) {
   const source = ensureQuestionBankReady_();
   const focusUpper = String(focusMode || "ALL").toUpperCase();
-  let selected = [];
+
+  // Kuota standar per subtes (total 110 soal: 30 TWK, 35 TIU, 45 TKP)
+  const quotaBySubtest = {
+    TWK: 30,
+    TIU: 35,
+    TKP: 45
+  };
+
+  const pickFromSubtest = (subName, maxCount) => {
+    const pool = source
+      .filter(q => String(q.subtest || "").trim().toUpperCase() === subName)
+      .map(q => ({ ...q, options: Array.isArray(q.options) ? [...q.options] : [] }));
+
+    // Selalu acak dari bank soal (misalnya 630 soal) agar variasi soal berganti tiap sesi
+    const randomized = shuffleArray(pool);
+    const sliced = typeof maxCount === "number" && maxCount > 0
+      ? randomized.slice(0, maxCount)
+      : randomized;
+
+    return orderMode === "standard" ? sliced : shuffleArray(sliced);
+  };
 
   if (focusUpper === "TWK" || focusUpper === "TIU" || focusUpper === "TKP") {
-    selected = source
-      .filter(q => String(q.subtest || "").toUpperCase() === focusUpper)
-      .map(q => ({ ...q, options: Array.isArray(q.options) ? [...q.options] : [] }));
-    if (orderMode === "shuffled") {
-      selected = shuffleArray(selected);
-    }
-  } else {
-    ["TWK", "TIU", "TKP"].forEach(sub => {
-      const part = source
-        .filter(q => String(q.subtest || "").toUpperCase() === sub)
-        .map(q => ({ ...q, options: Array.isArray(q.options) ? [...q.options] : [] }));
-      selected.push(...(orderMode === "shuffled" ? shuffleArray(part) : part));
-    });
+    return pickFromSubtest(focusUpper, quotaBySubtest[focusUpper]);
   }
 
-  return selected;
+  return [
+    ...pickFromSubtest("TWK", quotaBySubtest.TWK),
+    ...pickFromSubtest("TIU", quotaBySubtest.TIU),
+    ...pickFromSubtest("TKP", quotaBySubtest.TKP)
+  ];
 }
+
 
 function startTimerLoop() {
   if (timerInterval) {
