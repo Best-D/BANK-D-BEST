@@ -958,6 +958,19 @@ function reopenPostExamPrompt(showForm = false) {
 async function submitPostExamSurvey(event) {
   if (event) event.preventDefault();
 
+  const statusElEarly = document.getElementById("postExamSurveyStatus");
+  if (typeof hasAccountCompletedSurvey_ === "function" && hasAccountCompletedSurvey_()) {
+    if (typeof markAccountSurveyCompleted_ === "function") {
+      markAccountSurveyCompleted_();
+    }
+    if (statusElEarly) {
+      statusElEarly.textContent = "Akun ini sudah mengisi Survei SKM (1 akun = 1 survei); pembahasan soal sudah terbuka.";
+      statusElEarly.className = "text-xs font-semibold text-emerald-700";
+      statusElEarly.classList.remove("hidden");
+    }
+    return;
+  }
+
   const feedbackEl = document.getElementById("surveyFeedbackInput");
   const contactEl = document.getElementById("surveyContactInput");
   const statusEl = document.getElementById("postExamSurveyStatus");
