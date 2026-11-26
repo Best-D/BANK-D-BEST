@@ -678,10 +678,10 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
   const emailVal = (document.getElementById("profileEmailInput")?.value || "").trim().toLowerCase();
   const educationVal = (document.getElementById("profileEducationSelect")?.value || "").trim();
   const formationVal = (document.getElementById("profileFormationInput")?.value || "").trim();
-  const institutionVal = (document.getElementById("profileInstitutionInput")?.value || "").trim();
-const profInstEl = document.getElementById("profileInstitutionInput");
-if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
-  
+  const profInstEl = document.getElementById("profileInstitutionInput");
+  if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
+  const institutionVal = (profInstEl?.value || "").trim();
+
   if (!fullName || fullName.length < 3) {
     showProfileFeedback("Nama lengkap peserta minimal 3 karakter.", true);
     return;
@@ -768,6 +768,7 @@ if (profInstEl) applyAutoCapitalizeToInput(profInstEl, true);
     showScreen("setup");
   }
 }
+
 function formatInstitutionInputValue(rawText, finalizeCase = false) {
   const src = String(rawText || "");
   if (!src) return "";
