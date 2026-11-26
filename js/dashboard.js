@@ -980,6 +980,11 @@ function renderDashboardTable() {
     if (scope === "MINE") {
       if (!activeKey || safeAccountKey(rec.nama) !== activeKey) {
         return false;
+        const scopedRows = bestScorePerAccountOnly ? collapseToBestPerAccount_(filtered) : filtered;
+
+  const sortedRows = scopedRows
+    .slice()
+    .sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
       }
     }
 
