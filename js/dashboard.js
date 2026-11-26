@@ -178,6 +178,17 @@ function mapRekapRowToSession(rec, idx) {
 async function syncHistoryFromDatabaseIfEmpty() {
   const localHistory = getExamHistory();
   if (localHistory.length > 0) return localHistory;
+  saveSurveyToLocalHistory({
+    id: `skm_${Date.now()}`,
+    waktu: new Date().toISOString(),
+    nama: reporterName,
+    kontak: contactInput || "-",
+    unsur: uVals,
+    nrr: avgUnsur,
+    ikm: ikmKonversi,
+    catatan: feedbackText
+  });
+  renderDashboardSurveySummary();
   const endpoint = getScriptEndpoint();
   if (!endpoint || endpoint.includes("TEMPEL_URL")) return [];
 
