@@ -580,8 +580,9 @@ function startExam() {
     if (eduSelect) eduSelect.focus();
     return;
   }
-  if (!formVal) {
-    alert("Isi Formasi yang Dilamar terlebih dahulu.");
+  const formLettersCount = formVal.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, "").length;
+  if (!formVal || formLettersCount < 7) {
+    alert("Isi Formasi yang Dilamar minimal 7 huruf.");
     if (formInput) formInput.focus();
     return;
   }
