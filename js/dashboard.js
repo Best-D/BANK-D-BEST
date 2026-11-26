@@ -2147,24 +2147,23 @@ async function renderDashboardSurveySummary() {
   if (!nrrEl && !ikmEl && !catEl && !countEl && !listEl) return;
 
   if (nrrCardEl) {
-    nrrCardEl.classList.add("hidden");
+    nrrCardEl.classList.remove("hidden");
   }
 
   if (listEl) {
-    listEl.innerHTML = `<div class="text-xs text-slate-500">Memuat ringkasan survei dari spreadsheet...</div>`;
+    listEl.replaceChildren();
+    listEl.classList.add("hidden");
   }
 
   const remoteList = await fetchSharedSurveyListFromServer_();
   if (!Array.isArray(remoteList)) {
+    if (nrrEl) nrrEl.textContent = "-";
     if (ikmEl) ikmEl.textContent = "-";
     if (catEl) {
       catEl.textContent = "-";
       catEl.className = "text-xl font-extrabold text-slate-900 mt-0.5";
     }
     if (countEl) countEl.textContent = "0 Responden";
-    if (listEl) {
-      listEl.innerHTML = `<div class="text-xs text-rose-600 font-semibold">Gagal mengambil data survei dari spreadsheet.</div>`;
-    }
     return;
   }
 
@@ -2180,7 +2179,8 @@ async function renderDashboardSurveySummary() {
     ? Number((list.reduce((sum, item) => sum + Number(item.ikm || 0), 0) / totalCount).toFixed(2))
     : 0;
 
-  if (nrrEl) nrrEl.textContent = totalCount > 0 ? `${avgNrr} / 4,00` : "-";
+  if (countEl) countEl.textContent = `${totalCount} Responden`;
+  if (nrrEl) nrrEl.textContent = totalCount > 0 ? `${avgNrr} / 4,000` : "-";
   if (ikmEl) ikmEl.textContent = totalCount > 0 ? `${avgIkm}` : "-";
   if (catEl) {
     if (totalCount > 0) {
@@ -2192,35 +2192,6 @@ async function renderDashboardSurveySummary() {
       catEl.className = "text-xl font-extrabold text-slate-900 mt-0.5";
     }
   }
-  if (countEl) countEl.textContent = `${totalCount} Responden`;
-
-  if (!listEl) return;
-  listEl.replaceChildren();
-
-  if (totalCount === 0) {
-    const empty = document.createElement("div");
-    empty.className = "text-xs text-slate-500";
-    empty.textContent = "Belum ada data survei di spreadsheet.";
-    listEl.appendChild(empty);
-    return;
-  }
-
-  list.slice(0, 10).forEach((item) => {
-    const qItem = getSurveyQualityCategory_(item.ikm);
-    const row = document.createElement("div");
-    row.className = "bg-white border border-slate-200 rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-2";
-    row.innerHTML = `
-      <div class="min-w-0 space-y-1">
-        <div class="flex flex-wrap items-center gap-1.5 text-xs font-extrabold text-slate-800">
-          <span class="text-blue-700">IKM ${safeText(item.ikm)}</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full ${qItem.badgeCls}">${safeText(qItem.label)}</span>
-        </div>
-        <div class="text-[11px] text-slate-600 break-words">${safeText(item.catatan)}</div>
-        <div class="text-[10px] text-slate-400">${safeText(formatShortDate(item.waktu))}</div>
-      </div>
-    `;
-    listEl.appendChild(row);
-  });
 }
 
 function openDashboardSurveyModal() {
