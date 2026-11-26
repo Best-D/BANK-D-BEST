@@ -64,7 +64,7 @@
               class="text-slate-300 hover:text-white hover:underline underline-offset-2 transition">
               KepmenPANRB No. 674 Tahun 2026
             </a>
-            • Dibuat oleh <span class="text-amber-400 font-semibold">Best D Pamungkas</span>
+            - Dibuat oleh <span class="text-amber-400 font-semibold">Best D Pamungkas</span>
           </p>
         </div>
       </div>
@@ -89,14 +89,7 @@
           Keluar
         </button>
       </div>
-<div class="flex flex-wrap items-center gap-2">
-          <button type="button" onclick="openDashboardSurveyModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold px-4 py-2.5 rounded-xl transition">
-            Isi Survei SKM
-          </button>
-          <button type="button" onclick="refreshDashboardData()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
-            Muat Ulang Data Skor
-          </button>
-        </div>
+
       <div id="examHeaderControls" class="hidden items-center gap-3">
         <div class="hidden sm:block text-right">
           <div id="headerParticipantName" class="text-xs font-semibold text-slate-200"></div>
@@ -759,9 +752,14 @@
           <h2 class="text-2xl font-extrabold">Dashboard Semua Skor Peserta</h2>
           <p id="dashboardSourceInfo" class="text-xs text-blue-100 mt-1">Memuat data skor peserta...</p>
         </div>
-        <button type="button" onclick="refreshDashboardData()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
-          Muat Ulang Data Skor
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="openDashboardSurveyModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold px-4 py-2.5 rounded-xl transition">
+            Isi Survei SKM
+          </button>
+          <button type="button" onclick="refreshDashboardData()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+            Muat Ulang Data Skor
+          </button>
+        </div>
       </div>
 
       <div class="p-6 grid grid-cols-2 lg:grid-cols-4 gap-4 border-b border-slate-200">
@@ -1299,16 +1297,17 @@
       </div>
     </div>
   </div>
-<!-- MODAL SURVEI PELAYANAN PUBLIK (SKM) DARI DASHBOARD -->
+
+  <!-- MODAL SURVEI SKM (9 UNSUR) DARI DASHBOARD -->
   <div id="dashboardSurveyModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-xl w-full overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full overflow-hidden">
       <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-slate-900 p-5 text-white flex items-center justify-between gap-3">
         <div>
           <span class="inline-block bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full mb-1">
-            Survei Kepuasan Masyarakat (SKM)
+            Survei Kepuasan Masyarakat (9 Unsur SKM)
           </span>
-          <h3 class="text-lg font-extrabold">Survei Pelayanan Publik KemenPANRB</h3>
-          <p class="text-xs text-blue-100 mt-0.5">Penilaian 4 unsur layanan (Skala 1 = Kurang/Tidak Baik s.d. 4 = Sangat Baik).</p>
+          <h3 class="text-lg font-extrabold">Kuesioner Layanan Simulasi CAT SKD</h3>
+          <p class="text-xs text-blue-100 mt-0.5">Skala penilaian: 4 = Sangat Baik, 3 = Baik, 2 = Kurang Baik, 1 = Tidak Baik.</p>
         </div>
         <button type="button" onclick="closeDashboardSurveyModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
           Tutup
@@ -1318,54 +1317,110 @@
       <form onsubmit="submitDashboardSurvey(event)" class="p-5 space-y-4 text-xs max-h-[82vh] overflow-y-auto custom-scroll">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="dashSurveyProsedurSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
-              1. Prosedur &amp; Kemudahan Alur
+            <label for="skmU1" class="block text-[11px] font-bold text-slate-700 mb-1">
+              1. Persyaratan (Kejelasan Data &amp; Alur Akun/Input)
             </label>
-            <select id="dashSurveyProsedurSelect"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
-              <option value="4">4 - Sangat Mudah / Sangat Baik</option>
-              <option value="3" selected>3 - Mudah / Baik</option>
-              <option value="2">2 - Kurang Mudah / Kurang Baik</option>
-              <option value="1">1 - Sulit / Tidak Baik</option>
+            <select id="skmU1" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Sesuai / Mudah</option>
+              <option value="3" selected>3 - Sesuai / Mudah</option>
+              <option value="2">2 - Kurang Sesuai / Kurang Mudah</option>
+              <option value="1">1 - Tidak Sesuai / Sulit</option>
             </select>
           </div>
 
           <div>
-            <label for="dashSurveyWaktuSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
-              2. Kecepatan &amp; Ketepatan Waktu
+            <label for="skmU2" class="block text-[11px] font-bold text-slate-700 mb-1">
+              2. Sistem, Mekanisme, dan Prosedur (Navigasi &amp; UI/UX)
             </label>
-            <select id="dashSurveyWaktuSelect"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
-              <option value="4">4 - Sangat Cepat / Tepat</option>
-              <option value="3" selected>3 - Cepat / Tepat</option>
+            <select id="skmU2" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Mudah / Jelas</option>
+              <option value="3" selected>3 - Mudah / Jelas</option>
+              <option value="2">2 - Kurang Mudah / Berbelit</option>
+              <option value="1">1 - Sulit / Membingungkan</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="skmU3" class="block text-[11px] font-bold text-slate-700 mb-1">
+              3. Waktu Penyelesaian (Kecepatan Respons &amp; Proses)
+            </label>
+            <select id="skmU3" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Cepat</option>
+              <option value="3" selected>3 - Cepat</option>
               <option value="2">2 - Kurang Cepat</option>
               <option value="1">1 - Lambat</option>
             </select>
           </div>
 
           <div>
-            <label for="dashSurveySaranaSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
-              3. Sarana &amp; Sistem CAT
+            <label for="skmU4" class="block text-[11px] font-bold text-slate-700 mb-1">
+              4. Biaya / Tarif (Kejelasan Gratis &amp; Transparansi)
             </label>
-            <select id="dashSurveySaranaSelect"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
-              <option value="4">4 - Sangat Baik / Stabil</option>
-              <option value="3" selected>3 - Baik / Lancar</option>
-              <option value="2">2 - Kurang Baik</option>
-              <option value="1">1 - Bermasalah</option>
+            <select id="skmU4" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Jelas / Wajar</option>
+              <option value="3" selected>3 - Jelas / Wajar</option>
+              <option value="2">2 - Kurang Jelas</option>
+              <option value="1">1 - Tidak Jelas</option>
             </select>
           </div>
 
           <div>
-            <label for="dashSurveyPengaduanSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
-              4. Respons Saran &amp; Pengaduan
+            <label for="skmU5" class="block text-[11px] font-bold text-slate-700 mb-1">
+              5. Produk Spesifikasi Jenis Pelayanan (Hasil &amp; Rekap)
             </label>
-            <select id="dashSurveyPengaduanSelect"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
-              <option value="4">4 - Sangat Responsif</option>
-              <option value="3" selected>3 - Responsif</option>
-              <option value="2">2 - Kurang Responsif</option>
-              <option value="1">1 - Tidak Responsif</option>
+            <select id="skmU5" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Sesuai</option>
+              <option value="3" selected>3 - Sesuai</option>
+              <option value="2">2 - Kurang Sesuai</option>
+              <option value="1">1 - Tidak Sesuai</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="skmU6" class="block text-[11px] font-bold text-slate-700 mb-1">
+              6. Kompetensi Pelaksana (Kemampuan Admin/Sistem)
+            </label>
+            <select id="skmU6" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Kompeten</option>
+              <option value="3" selected>3 - Kompeten</option>
+              <option value="2">2 - Kurang Kompeten</option>
+              <option value="1">1 - Tidak Kompeten</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="skmU7" class="block text-[11px] font-bold text-slate-700 mb-1">
+              7. Perilaku Pelaksana (Responsivitas, Ramah &amp; Sopan)
+            </label>
+            <select id="skmU7" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Baik / Ramah</option>
+              <option value="3" selected>3 - Baik / Ramah</option>
+              <option value="2">2 - Kurang Baik</option>
+              <option value="1">1 - Tidak Baik</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="skmU8" class="block text-[11px] font-bold text-slate-700 mb-1">
+              8. Penanganan Pengaduan, Saran, dan Masukan
+            </label>
+            <select id="skmU8" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Dikelola Sangat Baik</option>
+              <option value="3" selected>3 - Dikelola dengan Baik</option>
+              <option value="2">2 - Kurang Terkelola</option>
+              <option value="1">1 - Tidak Ada / Tidak Berfungsi</option>
+            </select>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label for="skmU9" class="block text-[11px] font-bold text-slate-700 mb-1">
+              9. Sarana dan Prasarana (Kestabilan, Kecepatan &amp; Keamanan)
+            </label>
+            <select id="skmU9" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-600 outline-none">
+              <option value="4">4 - Sangat Baik / Stabil</option>
+              <option value="3" selected>3 - Baik / Lancar</option>
+              <option value="2">2 - Kurang Baik</option>
+              <option value="1">1 - Bermasalah / Lambat</option>
             </select>
           </div>
         </div>
@@ -1391,17 +1446,17 @@
 
         <div>
           <label for="dashSurveyFeedbackInput" class="block text-[11px] font-bold text-slate-700 mb-1">
-            Saran / Masukan Pelayanan <span class="text-rose-600">*</span>
+            Saran / Masukan Tambahan <span class="text-rose-600">*</span>
           </label>
           <textarea id="dashSurveyFeedbackInput" rows="3" maxlength="350"
-            placeholder="Tuliskan saran, masukan, atau kesan layanan simulasi CAT SKD..."
+            placeholder="Tuliskan catatan atau saran untuk peningkatan layanan aplikasi..."
             class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-blue-600 outline-none"></textarea>
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
           <button type="submit" id="dashSubmitSurveyBtn"
             class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
-            Kirim Survei
+            Kirim Survei SKM
           </button>
           <button type="button" onclick="closeDashboardSurveyModal()"
             class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
@@ -1413,10 +1468,11 @@
       </form>
     </div>
   </div>
-  <script src="js/config.js?v=14"></script>
-  <script src="js/questions.js?v=14"></script>
-  <script src="js/auth.js?v=14"></script>
-  <script src="js/dashboard.js?v=14"></script>
-  <script src="js/exam.js?v=14"></script>
+
+  <script src="js/config.js?v=16"></script>
+  <script src="js/questions.js?v=16"></script>
+  <script src="js/auth.js?v=16"></script>
+  <script src="js/dashboard.js?v=16"></script>
+  <script src="js/exam.js?v=16"></script>
 </body>
 </html>
