@@ -900,6 +900,19 @@
           </div>
 
           <div id="dashSurveyRecentList" class="space-y-2"></div>
+
+          <div id="adminSurveyResetBox" class="hidden pt-2 border-t border-blue-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="text-[11px] font-semibold text-slate-600">Kontrol Admin: Reset Seluruh Data Survei SKM di Spreadsheet</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="password" id="adminSurveyResetKeyInput" placeholder="Kunci reset admin..."
+                class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-rose-600 outline-none" />
+              <button type="button" id="adminResetSurveyBtn" onclick="resetSurveyDataAsAdmin()"
+                class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
+                Reset Survei (Admin)
+              </button>
+            </div>
+          </div>
+          <p id="adminSurveyResetStatus" class="hidden text-xs font-semibold"></p>
         </div>
       </div>
 
@@ -1515,10 +1528,10 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=20"></script>
-  <script src="js/questions.js?v=20"></script>
-  <script src="js/auth.js?v=20"></script>
-  <script src="js/dashboard.js?v=20"></script>
-  <script src="js/exam.js?v=20"></script>
+  <script src="js/config.js?v=21"></script>
+  <script src="js/questions.js?v=21"></script>
+  <script src="js/auth.js?v=21"></script>
+  <script src="js/dashboard.js?v=21"></script>
+  <script src="js/exam.js?v=21"></script>
 </body>
 </html>
