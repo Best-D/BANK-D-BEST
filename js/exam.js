@@ -318,9 +318,12 @@ function confirmFinishExam() {
   const unansweredTotal = examQuestions.length - answeredTotal;
 
   const msg =
-    `Selesaikan ujian sekarang?\n` +
-    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal\n` +
-    `• Belum terjawab: ${unansweredTotal} soal\n` +
+    `Selesaikan ujian sekarang?
+` +
+    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal
+` +
+    `• Belum terjawab: ${unansweredTotal} soal
+` +
     `• Ditandai Ragu-Ragu: ${doubtTotal} soal`;
 
   if (confirm(msg)) {
@@ -522,8 +525,17 @@ function finishExam(isAutoTimeout = false) {
     }
   }
 
+  const alreadySurveyDone = typeof isMandatorySurveyCompleted === "function"
+    ? isMandatorySurveyCompleted()
+    : false;
   const postSurveyCard = document.getElementById("postExamSurveyDonationCard");
-  if (postSurveyCard) postSurveyCard.classList.remove("hidden");
+  if (postSurveyCard) {
+    if (alreadySurveyDone) {
+      postSurveyCard.classList.add("hidden");
+    } else {
+      postSurveyCard.classList.remove("hidden");
+    }
+  }
 
   showScreen("result");
   if (typeof renderTimeAnalysisOnResult === "function") {
@@ -979,11 +991,15 @@ async function submitPostExamSurvey(event) {
   const avgNrr = Number((uVals.reduce((a, b) => a + b, 0) / 9).toFixed(2));
   const ikmVal = Number((avgNrr * 25).toFixed(2));
   const reporter = participantName || loggedUser?.nama || "Peserta Ujian";
+  const accKey = typeof safeAccountKey === "function"
+    ? safeAccountKey(loggedUser?.username || loggedUser?.email || reporter)
+    : String(reporter).trim().toLowerCase();
 
   if (typeof saveSurveyToLocalHistory === "function") {
     saveSurveyToLocalHistory({
       id: `skm_post_${Date.now()}`,
       waktu: new Date().toISOString(),
+      accountKey: accKey,
       nama: reporter,
       kontak: contactText || "-",
       unsur: uVals,
@@ -992,11 +1008,13 @@ async function submitPostExamSurvey(event) {
       catatan: feedbackText
     });
   }
+  if (typeof markAccountSurveyCompleted_ === "function") {
+    markAccountSurveyCompleted_(accKey);
+  } else if (typeof markPostExamSurveyCompleted_ === "function") {
+    markPostExamSurveyCompleted_();
+  }
   if (typeof renderDashboardSurveySummary === "function") {
     renderDashboardSurveySummary();
-  }
-  if (typeof markPostExamSurveyCompleted_ === "function") {
-    markPostExamSurveyCompleted_();
   }
 
   const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
@@ -1008,7 +1026,7 @@ async function submitPostExamSurvey(event) {
   if (!endpoint || endpoint.includes("TEMPEL_URL")) {
     if (feedbackEl) feedbackEl.value = "";
     if (statusEl) {
-      statusEl.textContent = `Terima kasih ${reporter} (NRR ${avgNrr}/4 • IKM ${ikmVal}). Survei 9 unsur tersimpan lokal; review soal sudah terbuka.`;
+      statusEl.textContent = `Terima kasih ${reporter} (NRR ${avgNrr}/4 • IKM ${ikmVal}). Survei 9 unsur tersimpan untuk akun ini; review soal sudah terbuka.`;
       statusEl.className = "text-xs font-semibold text-emerald-700";
       statusEl.classList.remove("hidden");
     }
@@ -1030,8 +1048,14 @@ async function submitPostExamSurvey(event) {
         subtest: "SURVEI_SKM_9",
         category: "Survei SKM 9 Unsur (Pasca Ujian)",
         question: summaryMeta.slice(0, 450),
-        catatan: feedbackText,
-        pelapor: reporter
+        catatan: `${feedbackText} [NRR: ${avgNrr}/4 | IKM: ${ikmVal}]`,
+        pelapor: reporter,
+        username: loggedUser?.username || accKey,
+        u1: uVals[0], u2: uVals[1], u3: uVals[2],
+        u4: uVals[3], u5: uVals[4], u6: uVals[5],
+        u7: uVals[6], u8: uVals[7], u9: uVals[8],
+        nrr: avgNrr,
+        ikm: ikmVal
       })
     });
     const json = await res.json();
