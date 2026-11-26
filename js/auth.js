@@ -702,7 +702,13 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
     showProfileFeedback("Pilih Pendidikan Terakhir terlebih dahulu.", true);
     return;
   }
-  if (!formationVal || findProfanityInName(formationVal).length > 0) {
+  const profileFormLetters = formationVal.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, "").length;
+  if (!formationVal || profileFormLetters < 7) {
+    showProfileFeedback("Isi Formasi yang Dilamar minimal 7 huruf.", true);
+    profFormEl?.focus();
+    return;
+  }
+  if (findProfanityInName(formationVal).length > 0) {
     showProfileFeedback("Isi Formasi yang Dilamar dengan kata yang wajar dan sopan.", true);
     return;
   }
