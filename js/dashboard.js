@@ -433,6 +433,23 @@ function setFocusTrendSeriesMode(mode) {
   renderUserScoreTrendChart();
 }
 
+function inspectTrendSession_(chartId, idx) {
+  const host = document.getElementById(chartId);
+  if (!host || !host._trendSessions || !host._trendSessions[idx]) return;
+  const s = host._trendSessions[idx];
+  const infoEl = host.querySelector("[data-trend-detail]");
+  if (!infoEl) return;
+
+  const pgTag = s.status_pg ? ` • ${s.status_pg}` : "";
+  const timeTag = s.waktuLabel ? ` • ${s.waktuLabel}` : "";
+  infoEl.innerHTML =
+    `Sesi #${idx + 1}: <span class="text-blue-700 font-extrabold">Tot ${Number(s.total || 0)}</span> • ` +
+    `<span class="text-violet-700 font-extrabold">TWK ${Number(s.twk || 0)}</span> • ` +
+    `<span class="text-teal-700 font-extrabold">TIU ${Number(s.tiu || 0)}</span> • ` +
+    `<span class="text-orange-700 font-extrabold">TKP ${Number(s.tkp || 0)}</span>` +
+    `<span class="text-slate-500">${safeText(pgTag + timeTag)}</span>`;
+}
+
 function renderSingleTrendGroup(containerEl, sessionsChronological, seriesMode, onSelectFnName, showPgLine, emptyText) {
   if (!containerEl) return;
 
@@ -448,68 +465,122 @@ function renderSingleTrendGroup(containerEl, sessionsChronological, seriesMode, 
     return;
   }
 
-  const width = 420;
-  const height = 135;
-  const padX = 28;
-  const padTop = 16;
-  const padBottom = 20;
+  const chartDomId = containerEl.id || `trend_box_${Math.random().toString(36).slice(2, 7)}`;
+  containerEl._trendSessions = sessionsChronological;
+
+  const width = 440;
+  const height = 152;
+  const padLeft = 28;
+  const padRight = 14;
+  const padTop = 18;
+  const padBottom = 22;
+  const plotWidth = width - padLeft - padRight;
   const plotHeight = height - padTop - padBottom;
   const totalPgThreshold = 311;
   const pgY = padTop + plotHeight - (totalPgThreshold / 550) * plotHeight;
 
   const seriesMeta = [
-    { key: "total", max: 550, color: "#2563eb", show: seriesMode === "ALL" || seriesMode === "TOTAL" },
-    { key: "twk", max: 150, color: "#7c3aed", show: seriesMode === "ALL" || seriesMode === "TWK" },
-    { key: "tiu", max: 175, color: "#0d9488", show: seriesMode === "ALL" || seriesMode === "TIU" },
-    { key: "tkp", max: 225, color: "#ea580c", show: seriesMode === "ALL" || seriesMode === "TKP" }
+    { key: "total", label: "Total", max: 550, color: "#2563eb", show: seriesMode === "ALL" || seriesMode === "TOTAL" },
+    { key: "twk", label: "TWK", max: 150, color: "#7c3aed", show: seriesMode === "ALL" || seriesMode === "TWK" },
+    { key: "tiu", label: "TIU", max: 175, color: "#0d9488", show: seriesMode === "ALL" || seriesMode === "TIU" },
+    { key: "tkp", label: "TKP", max: 225, color: "#ea580c", show: seriesMode === "ALL" || seriesMode === "TKP" }
   ];
 
-  const getX = (idx) => padX + (idx / (sessionsChronological.length - 1)) * (width - padX * 2);
+  const getX = (idx) => {
+    if (sessionsChronological.length === 1) return padLeft + plotWidth / 2;
+    return padLeft + (idx / (sessionsChronological.length - 1)) * plotWidth;
+  };
+
   const getY = (val, max) => {
     const clamped = Math.max(0, Math.min(max, Number(val || 0)));
     return padTop + plotHeight - (clamped / max) * plotHeight;
   };
 
-  const xLabelsHtml = sessionsChronological.map((_, idx) => {
-    const x = getX(idx);
-    return `<text x="${x.toFixed(1)}" y="${height - 4}" text-anchor="middle" font-size="8.5" fill="#64748b">#${idx + 1}</text>`;
+  const gridLinesHtml = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+    const y = padTop + plotHeight * (1 - ratio);
+    const pctLabel = Math.round(ratio * 100);
+    return `
+      <line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - padRight}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="0.9" />
+      <text x="${padLeft - 4}" y="${(y + 2.5).toFixed(1)}" text-anchor="end" font-size="7.5" fill="#94a3b8">${pctLabel}%</text>
+    `;
   }).join("");
 
-  const seriesSvgHtml = seriesMeta
-    .filter(sr => sr.show)
-    .map(sr => {
-      const pts = sessionsChronological.map((s, idx) => {
-        const rawVal = Number(s[sr.key] || 0);
-        return {
-          x: getX(idx),
-          y: getY(rawVal, sr.max),
-          val: rawVal
-        };
-      });
+  const xLabelsHtml = sessionsChronological.map((_, idx) => {
+    const x = getX(idx);
+    return `
+      <text x="${x.toFixed(1)}" y="${height - 5}" text-anchor="middle" font-size="8.5" font-weight="600" fill="#64748b"
+        class="cursor-pointer" onmouseenter="inspectTrendSession_('${chartDomId}', ${idx})" onclick="inspectTrendSession_('${chartDomId}', ${idx})">#${idx + 1}</text>
+    `;
+  }).join("");
 
-      const polylineStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-      const showPointLabels = seriesMode !== "ALL" || sr.key === "total";
+  const activeSeries = seriesMeta.filter(sr => sr.show);
+  const gradId = `grad_${chartDomId}_${seriesMode}`;
 
-      const pointsHtml = pts.map(p => {
-        const labelHtml = showPointLabels
-          ? `<text x="${p.x.toFixed(1)}" y="${Math.max(10, p.y - 5).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="${sr.color}">${p.val}</text>`
-          : "";
-        return `
-          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.2" fill="${sr.color}" stroke="#ffffff" stroke-width="1.2" />
-          ${labelHtml}
-        `;
-      }).join("");
+  const seriesSvgHtml = activeSeries.map(sr => {
+    const rawVals = sessionsChronological.map(s => Number(s[sr.key] || 0));
+    const maxVal = Math.max(...rawVals);
+    const minVal = Math.min(...rawVals);
+
+    const pts = sessionsChronological.map((s, idx) => {
+      const rawVal = Number(s[sr.key] || 0);
+      return {
+        idx,
+        x: getX(idx),
+        y: getY(rawVal, sr.max),
+        val: rawVal
+      };
+    });
+
+    const linePointsStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+    const areaPointsStr = pts.length > 0
+      ? `${pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")} ${pts[pts.length - 1].x.toFixed(1)},${(padTop + plotHeight).toFixed(1)} ${pts[0].x.toFixed(1)},${(padTop + plotHeight).toFixed(1)}`
+      : "";
+
+    const showArea = seriesMode !== "ALL" || sr.key === "total";
+    const areaHtml = showArea && areaPointsStr
+      ? `<polygon points="${areaPointsStr}" fill="url(#${gradId}_${sr.key})" opacity="0.22" />`
+      : "";
+
+    const pointsHtml = pts.map((p, i) => {
+      const isEndpoint = i === 0 || i === pts.length - 1;
+      const isExtremum = (p.val === maxVal || p.val === minVal) && maxVal !== minVal;
+      const shouldShowLabel = seriesMode !== "ALL"
+        ? (isEndpoint || isExtremum || pts.length <= 6)
+        : (sr.key === "total" && (isEndpoint || isExtremum));
+
+      const labelY = p.y < padTop + 12 ? p.y + 11 : p.y - 5;
+      const labelHtml = shouldShowLabel
+        ? `<text x="${p.x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="8" font-weight="bold" fill="${sr.color}">${p.val}</text>`
+        : "";
 
       return `
-        <polyline fill="none" stroke="${sr.color}" stroke-width="${sr.key === "total" ? "2.2" : "1.7"}" points="${polylineStr}" />
-        ${pointsHtml}
+        <g class="cursor-pointer" onmouseenter="inspectTrendSession_('${chartDomId}', ${p.idx})" onclick="inspectTrendSession_('${chartDomId}', ${p.idx})">
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="transparent" />
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${sr.key === "total" ? "3.6" : "3"}" fill="${sr.color}" stroke="#ffffff" stroke-width="1.4" />
+          ${labelHtml}
+        </g>
       `;
     }).join("");
 
+    return `
+      ${areaHtml}
+      <polyline fill="none" stroke="${sr.color}" stroke-linecap="round" stroke-linejoin="round" stroke-width="${sr.key === "total" ? "2.4" : "1.8"}" points="${linePointsStr}" />
+      ${pointsHtml}
+    `;
+  }).join("");
+
+  const defsHtml = activeSeries.map(sr => `
+    <linearGradient id="${gradId}_${sr.key}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${sr.color}" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="${sr.color}" stop-opacity="0.02" />
+    </linearGradient>
+  `).join("");
+
   const pgLineHtml = showPgLine && (seriesMode === "ALL" || seriesMode === "TOTAL")
     ? `
-      <line x1="${padX}" y1="${pgY.toFixed(1)}" x2="${width - padX}" y2="${pgY.toFixed(1)}" stroke="#10b981" stroke-dasharray="4" stroke-width="1" />
-      <text x="${width - padX}" y="${(pgY - 3).toFixed(1)}" text-anchor="end" font-size="7.5" font-weight="bold" fill="#059669">PG >= 311</text>
+      <line x1="${padLeft}" y1="${pgY.toFixed(1)}" x2="${width - padRight}" y2="${pgY.toFixed(1)}" stroke="#059669" stroke-dasharray="4 3" stroke-width="1.1" />
+      <rect x="${width - padRight - 46}" y="${(pgY - 11).toFixed(1)}" width="46" height="10" rx="2" fill="#ecfdf5" />
+      <text x="${width - padRight - 3}" y="${(pgY - 3.5).toFixed(1)}" text-anchor="end" font-size="7.2" font-weight="bold" fill="#047857">PG ≥ 311</text>
     `
     : "";
 
@@ -519,7 +590,7 @@ function renderSingleTrendGroup(containerEl, sessionsChronological, seriesMode, 
     : "px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 hover:bg-slate-200";
 
   containerEl.innerHTML = `
-    <div class="w-full space-y-1">
+    <div class="w-full space-y-1.5">
       <div class="flex flex-wrap items-center justify-between gap-1">
         <div class="flex flex-wrap items-center gap-1">
           <button type="button" onclick="${onSelectFnName}('ALL')" class="${btnCls("ALL")}">Semua</button>
@@ -528,14 +599,33 @@ function renderSingleTrendGroup(containerEl, sessionsChronological, seriesMode, 
           <button type="button" onclick="${onSelectFnName}('TIU')" class="${btnCls("TIU")}">TIU</button>
           <button type="button" onclick="${onSelectFnName}('TKP')" class="${btnCls("TKP")}">TKP</button>
         </div>
-        <div class="text-[10px] font-semibold text-slate-600">
-          Terakhir: <span class="text-blue-700 font-bold">Tot ${latest.total}</span> •
-          <span class="text-violet-700 font-bold">TWK ${latest.twk}</span> •
-          <span class="text-teal-700 font-bold">TIU ${latest.tiu}</span> •
-          <span class="text-orange-700 font-bold">TKP ${latest.tkp}</span>
-        </div>
       </div>
 
+      <div data-trend-detail class="text-[10px] font-semibold text-slate-600 bg-slate-50 border border-slate-100 rounded px-2 py-1 truncate">
+        Sesi #${sessionsChronological.length} (Terakhir): <span class="text-blue-700 font-extrabold">Tot ${latest.total}</span> •
+        <span class="text-violet-700 font-extrabold">TWK ${latest.twk}</span> •
+        <span class="text-teal-700 font-extrabold">TIU ${latest.tiu}</span> •
+        <span class="text-orange-700 font-extrabold">TKP ${latest.tkp}</span>
+      </div>
+
+      <svg viewBox="0 0 ${width} ${height}" class="w-full h-36">
+        <defs>${defsHtml}</defs>
+        ${gridLinesHtml}
+        <line x1="${padLeft}" y1="${padTop + plotHeight}" x2="${width - padRight}" y2="${padTop + plotHeight}" stroke="#94a3b8" stroke-width="1" />
+        ${pgLineHtml}
+        ${seriesSvgHtml}
+        ${xLabelsHtml}
+      </svg>
+
+      <div class="flex flex-wrap items-center justify-center gap-3 text-[10px] font-semibold text-slate-600">
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-1 rounded bg-blue-600 inline-block"></span> Total (/550)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-1 rounded bg-violet-600 inline-block"></span> TWK (/150)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-1 rounded bg-teal-600 inline-block"></span> TIU (/175)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-1 rounded bg-orange-600 inline-block"></span> TKP (/225)</span>
+      </div>
+    </div>
+  `;
+}
       <svg viewBox="0 0 ${width} ${height}" class="w-full h-32">
         <line x1="${padX}" y1="${padTop + plotHeight}" x2="${width - padX}" y2="${padTop + plotHeight}" stroke="#cbd5e1" stroke-width="1" />
         ${pgLineHtml}
