@@ -1889,3 +1889,128 @@ async function sendChatMessage(event) {
     }
   }
 }
+function openDashboardSurveyModal() {
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum mengisi survei.");
+    return;
+  }
+
+  const modal = document.getElementById("dashboardSurveyModal");
+  const nameEl = document.getElementById("dashSurveyNameInput");
+  const contactEl = document.getElementById("dashSurveyContactInput");
+  const statusEl = document.getElementById("dashSurveyStatusText");
+
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.add("hidden");
+  }
+
+  const activeName = getActiveUserFilterName();
+  if (nameEl && !nameEl.value && activeName) {
+    nameEl.value = activeName;
+  }
+  if (contactEl && !contactEl.value && typeof loggedUser !== "undefined" && loggedUser?.email) {
+    contactEl.value = loggedUser.email;
+  }
+
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+}
+
+function closeDashboardSurveyModal() {
+  const modal = document.getElementById("dashboardSurveyModal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
+
+async function submitDashboardSurvey(event) {
+  if (event) event.preventDefault();
+
+  const pVal = Number(document.getElementById("dashSurveyProsedurSelect")?.value || 3);
+  const wVal = Number(document.getElementById("dashSurveyWaktuSelect")?.value || 3);
+  const sVal = Number(document.getElementById("dashSurveySaranaSelect")?.value || 3);
+  const aVal = Number(document.getElementById("dashSurveyPengaduanSelect")?.value || 3);
+
+  const avgUnsur = Number(((pVal + wVal + sVal + aVal) / 4).toFixed(2));
+  const ikmKonversi = Number((avgUnsur * 25).toFixed(2));
+
+  const nameInput = (document.getElementById("dashSurveyNameInput")?.value || "").trim();
+  const contactInput = (document.getElementById("dashSurveyContactInput")?.value || "").trim();
+  const feedbackEl = document.getElementById("dashSurveyFeedbackInput");
+  const feedbackText = (feedbackEl?.value || "").trim();
+  const statusEl = document.getElementById("dashSurveyStatusText");
+  const submitBtn = document.getElementById("dashSubmitSurveyBtn");
+
+  if (feedbackText.length < 4) {
+    if (statusEl) {
+      statusEl.textContent = "Tuliskan saran atau masukan minimal 4 karakter.";
+      statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-rose-50 text-rose-700 border border-rose-200";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  const reporterName = nameInput || getActiveUserFilterName() || "Peserta Dashboard";
+  const summaryMeta =
+    `Prosedur:${pVal} | Waktu:${wVal} | Sarana:${sVal} | Pengaduan:${aVal} ` +
+    `(NRR:${avgUnsur}/4, IKM:${ikmKonversi}) • Kontak:${contactInput || "-"}`;
+
+  const endpoint = getScriptEndpoint();
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    if (feedbackEl) feedbackEl.value = "";
+    if (statusEl) {
+      statusEl.textContent = `Terima kasih ${reporterName} (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}). Survei tercatat secara lokal.`;
+      statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
+      statusEl.classList.remove("hidden");
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Mengirim...";
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "report_question",
+        nomor_soal: 0,
+        subtest: "SURVEI_SKM",
+        category: "Pelayanan Publik KemenPANRB (Dashboard)",
+        question: summaryMeta.slice(0, 400),
+        catatan: feedbackText,
+        pelapor: reporterName
+      })
+    });
+    const json = await res.json();
+    if (statusEl) {
+      if (json && json.status === "sukses") {
+        if (feedbackEl) feedbackEl.value = "";
+        statusEl.textContent = `Terima kasih! Survei pelayanan publik Anda (NRR ${avgUnsur}/4 • IKM ${ikmKonversi}) telah terkirim ke Google Sheets.`;
+        statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-emerald-50 text-emerald-800 border border-emerald-200";
+      } else {
+        statusEl.textContent = "Survei belum terkirim: " + ((json && json.pesan) || "coba lagi.");
+        statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-rose-50 text-rose-700 border border-rose-200";
+      }
+      statusEl.classList.remove("hidden");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "Gagal mengirim survei. Periksa koneksi internet Anda.";
+      statusEl.className = "text-xs font-semibold rounded-xl p-3 bg-rose-50 text-rose-700 border border-rose-200";
+      statusEl.classList.remove("hidden");
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Kirim Survei";
+    }
+  }
+}
