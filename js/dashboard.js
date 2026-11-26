@@ -772,7 +772,26 @@ function renderUserScoreTrendChart() {
 }
 
 function getRecordEducation(rec) {
-  return String(rec?.pendidikan_terakhir || rec?.pendidikan || "").trim();
+  const direct = String(rec?.pendidikan_terakhir || rec?.pendidikan || "").trim();
+  if (direct && direct !== "-") return direct;
+
+  try {
+    if (typeof USERS_STORAGE_KEY !== "undefined") {
+      const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || "[]");
+      if (Array.isArray(users) && users.length > 0) {
+        const recName = safeAccountKey(rec?.nama || "");
+        const recUser = String(rec?.username || "").trim().toLowerCase();
+        const found = users.find(u =>
+          (recUser && String(u.username || "").trim().toLowerCase() === recUser) ||
+          (recName && safeAccountKey(u.nama || "") === recName)
+        );
+        const foundEdu = String(found?.pendidikan_terakhir || found?.pendidikan || "").trim();
+        if (foundEdu && foundEdu !== "-") return foundEdu;
+      }
+    }
+  } catch (err) {}
+
+  return direct;
 }
 
 function populateDashboardEducationFilter() {
