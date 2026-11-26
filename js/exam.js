@@ -110,7 +110,6 @@ function buildExamQuestionSet(focusMode, orderMode) {
   ];
 }
 
-
 function startTimerLoop() {
   if (timerInterval) {
     clearInterval(timerInterval);
