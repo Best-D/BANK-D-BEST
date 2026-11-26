@@ -5,73 +5,153 @@ function buildDefaultQuestionBank() {
   const twkTopics = [
     {
       category: "Nasionalisme",
-      question: "Semangat kebangsaan yang menempatkan kepentingan bangsa dan negara di atas kepentingan pribadi maupun golongan merupakan wujud pengamalan nilai...",
-      options: ["Sila Pertama Pancasila", "Sila Kedua Pancasila", "Sila Ketiga Pancasila", "Sila Keempat Pancasila", "Sila Kelima Pancasila"],
+      question:
+        "Semangat kebangsaan yang menempatkan kepentingan bangsa dan negara di atas kepentingan pribadi maupun golongan merupakan wujud pengamalan nilai...",
+      options: [
+        "Sila Pertama Pancasila",
+        "Sila Kedua Pancasila",
+        "Sila Ketiga Pancasila",
+        "Sila Keempat Pancasila",
+        "Sila Kelima Pancasila"
+      ],
       answer: 2,
-      explanation: "Persatuan Indonesia (Sila Ketiga) menegaskan penempatan persatuan, kesatuan, serta kepentingan bangsa dan negara di atas kepentingan pribadi atau golongan."
+      explanation:
+        "Sila Ketiga Pancasila (Persatuan Indonesia) menekankan persatuan, kesatuan, serta kepentingan bangsa dan negara di atas kepentingan pribadi atau golongan."
     },
     {
       category: "Integritas",
-      question: "Seorang ASN menolak pemberian bingkisan hari raya dari rekanan pengadaan barang dan jasa meskipun proses lelang telah selesai dilaksanakan. Sikap ASN tersebut mencerminkan nilai integritas...",
-      options: ["Tanggung jawab dan kerja keras", "Kejujuran dan kemandirian", "Keadilan dan keberanian", "Kesederhanaan dan kepedulian", "Kedisiplinan dan ketekunan"],
+      question:
+        "Seorang ASN menolak pemberian bingkisan hari raya dari rekanan pengadaan barang dan jasa meskipun proses lelang telah selesai dilaksanakan. Sikap ASN tersebut mencerminkan nilai integritas...",
+      options: [
+        "Tanggung jawab dan kerja keras",
+        "Kejujuran dan kemandirian",
+        "Keadilan dan keberanian",
+        "Kesederhanaan dan kepedulian",
+        "Kedisiplinan dan ketekunan"
+      ],
       answer: 1,
-      explanation: "Menolak gratifikasi yang berpotensi menimbulkan konflik kepentingan adalah wujud kejujuran dan kemandirian menjaga integritas jabatan."
+      explanation:
+        "Menolak gratifikasi yang berpotensi menimbulkan konflik kepentingan merupakan wujud kejujuran dan kemandirian dalam menjaga integritas jabatan."
     },
     {
       category: "Bela Negara",
-      question: "Berdasarkan Pasal 27 ayat (3) UUD NRI Tahun 1945, setiap warga negara berhak dan wajib ikut serta dalam upaya...",
-      options: ["Pertahanan dan keamanan negara", "Pembelaan negara", "Pembangunan nasional", "Pendidikan dasar", "Perekonomian nasional"],
+      question:
+        "Berdasarkan Pasal 27 ayat (3) UUD NRI Tahun 1945, setiap warga negara berhak dan wajib ikut serta dalam upaya...",
+      options: [
+        "Pertahanan dan keamanan negara",
+        "Pembelaan negara",
+        "Pembangunan nasional",
+        "Pendidikan dasar",
+        "Perekonomian nasional"
+      ],
       answer: 1,
-      explanation: "Pasal 27 ayat (3) UUD 1945 menyatakan setiap warga negara berhak dan wajib ikut serta dalam upaya pembelaan negara."
+      explanation:
+        "Pasal 27 ayat (3) UUD NRI Tahun 1945 mengatur hak dan kewajiban setiap warga negara untuk ikut serta dalam upaya pembelaan negara."
     },
     {
       category: "Pilar Negara",
-      question: "Lembaga negara yang berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD NRI Tahun 1945 adalah...",
-      options: ["Mahkamah Agung", "Mahkamah Konstitusi", "Komisi Yudisial", "Majelis Permusyawaratan Rakyat", "Dewan Perwakilan Rakyat"],
+      question:
+        "Lembaga negara yang berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD NRI Tahun 1945 adalah...",
+      options: [
+        "Mahkamah Agung",
+        "Mahkamah Konstitusi",
+        "Komisi Yudisial",
+        "Majelis Permusyawaratan Rakyat",
+        "Dewan Perwakilan Rakyat"
+      ],
       answer: 1,
-      explanation: "Sesuai Pasal 24C ayat (1) UUD 1945, Mahkamah Konstitusi berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD."
+      explanation:
+        "Berdasarkan Pasal 24C ayat (1) UUD NRI Tahun 1945, Mahkamah Konstitusi berwenang memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD."
     },
     {
       category: "Bahasa Negara",
-      question: "Penulisan gabungan kata di bawah ini yang sesuai dengan kaidah Ejaan Bahasa Indonesia yang Disempurnakan (EYD V) adalah...",
-      options: ["Bertanggungjawab", "Menyebar luaskan", "Diberitahukan", "Penghancur leburan", "Ketidak adilan"],
+      question:
+        "Penulisan gabungan kata di bawah ini yang sesuai dengan kaidah ejaan bahasa Indonesia yang berlaku adalah...",
+      options: [
+        "Bertanggungjawab",
+        "Menyebar luaskan",
+        "Diberitahukan",
+        "Penghancur leburan",
+        "Ketidak adilan"
+      ],
       answer: 2,
-      explanation: "Gabungan kata yang mendapat awalan dan akhiran sekaligus (konfiks) ditulis serangkai, seperti 'diberitahukan' dan 'menyebarluaskan'."
+      explanation:
+        "Gabungan kata yang mendapat awalan dan akhiran sekaligus (konfiks) ditulis serangkai, seperti 'diberitahukan' dan 'menyebarluaskan'."
     },
     {
       category: "Nasionalisme",
-      question: "Penggunaan produk dalam negeri oleh aparatur negara dan masyarakat dalam kegiatan resmi instansi merupakan langkah konkret memperkuat...",
-      options: ["Kemandirian ekonomi nasional", "Kewenangan daerah otonom", "Eksklusivitas budaya lokal", "Liberalisasi perdagangan", "Sentralisasi anggaran"],
+      question:
+        "Penggunaan produk dalam negeri oleh aparatur negara dan masyarakat dalam kegiatan resmi instansi merupakan langkah konkret memperkuat...",
+      options: [
+        "Kemandirian ekonomi nasional",
+        "Kewenangan daerah otonom",
+        "Eksklusivitas budaya lokal",
+        "Liberalisasi perdagangan",
+        "Sentralisasi anggaran"
+      ],
       answer: 0,
-      explanation: "Mengutamakan produk dalam negeri mendukung kemandirian industri nasional, penyerapan tenaga kerja lokal, dan ketahanan ekonomi."
+      explanation:
+        "Mengutamakan produk dalam negeri mendukung kemandirian industri nasional, penyerapan tenaga kerja lokal, dan ketahanan ekonomi."
     },
     {
       category: "Integritas",
-      question: "Ketika menemukan kesalahan pencatatan anggaran pada laporan unit kerja sebelum ditandatangani pimpinan, tindakan paling berintegritas yang dilakukan staf adalah...",
-      options: ["Membiarkannya karena tanggung jawab ada pada penandatangan", "Menyampaikan temuan secara objektif disertai bukti dan usulan perbaikan sebelum laporan disahkan", "Menghapus data lama tanpa membuat catatan koreksi", "Menunggu audit eksternal menemukan kesalahan tersebut", "Mengalihkan dokumen ke staf lain agar tidak terlacak"],
+      question:
+        "Ketika menemukan kesalahan pencatatan anggaran pada laporan unit kerja sebelum ditandatangani pimpinan, tindakan paling berintegritas yang dilakukan staf adalah...",
+      options: [
+        "Membiarkannya karena tanggung jawab ada pada penandatangan",
+        "Menyampaikan temuan secara objektif disertai bukti dan usulan perbaikan sebelum laporan disahkan",
+        "Menghapus data lama tanpa membuat catatan koreksi",
+        "Menunggu audit eksternal menemukan kesalahan tersebut",
+        "Mengalihkan dokumen ke staf lain agar tidak terlacak"
+      ],
       answer: 1,
-      explanation: "Integritas menuntut kejujuran, transparansi, dan keberanian mengoreksi kekeliruan secara prosedural sebelum merugikan organisasi."
+      explanation:
+        "Integritas menuntut kejujuran, transparansi, dan keberanian mengoreksi kekeliruan secara prosedural sebelum merugikan organisasi."
     },
     {
       category: "Bela Negara",
-      question: "Dalam konteks ancaman nonmiliter di ruang digital, peran warga negara dalam menjaga ketahanan informasi nasional dapat diwujudkan melalui...",
-      options: ["Menyebarkan ulang informasi viral agar cepat diketahui publik", "Memverifikasi kredibilitas sumber berita sebelum membagikan dan menjaga etika bermedia digital", "Menonaktifkan seluruh akses informasi publik", "Menggunakan identitas palsu untuk menyerang akun tertentu", "Mengabaikan keamanan akun resmi instansi"],
+      question:
+        "Dalam konteks ancaman nonmiliter di ruang digital, peran warga negara dalam menjaga ketahanan informasi nasional dapat diwujudkan melalui...",
+      options: [
+        "Menyebarkan ulang informasi viral agar cepat diketahui publik",
+        "Memverifikasi kredibilitas sumber berita sebelum membagikan dan menjaga etika bermedia digital",
+        "Menonaktifkan seluruh akses informasi publik",
+        "Menggunakan identitas palsu untuk menyerang akun tertentu",
+        "Mengabaikan keamanan akun resmi instansi"
+      ],
       answer: 1,
-      explanation: "Literasi digital, pengecekan fakta, dan kepatuhan etika ruang siber merupakan bagian dari kesadaran bela negara di era modern."
+      explanation:
+        "Literasi digital, pengecekan fakta, dan kepatuhan etika ruang siber merupakan bagian dari kesadaran bela negara di era modern."
     },
     {
       category: "Pilar Negara",
-      question: "Prinsip negara hukum Indonesia ditegaskan dalam UUD NRI Tahun 1945 bahwa kekuasaan kehakiman merupakan kekuasaan yang merdeka untuk menyelenggarakan peradilan guna...",
-      options: ["Membantu kebijakan kementerian teknis", "Menegakkan hukum dan keadilan", "Menetapkan APBN bersama pemerintah", "Mengawasi pemilihan kepala desa", "Menyusun kurikulum nasional"],
+      question:
+        "Prinsip negara hukum Indonesia ditegaskan dalam UUD NRI Tahun 1945 bahwa kekuasaan kehakiman merupakan kekuasaan yang merdeka untuk menyelenggarakan peradilan guna...",
+      options: [
+        "Membantu kebijakan kementerian teknis",
+        "Menegakkan hukum dan keadilan",
+        "Menetapkan APBN bersama pemerintah",
+        "Mengawasi pemilihan kepala desa",
+        "Menyusun kurikulum nasional"
+      ],
       answer: 1,
-      explanation: "Pasal 24 ayat (1) UUD NRI Tahun 1945 menegaskan kekuasaan kehakiman yang merdeka untuk menegakkan hukum dan keadilan."
+      explanation:
+        "Pasal 24 ayat (1) UUD NRI Tahun 1945 menegaskan kekuasaan kehakiman yang merdeka untuk menyelenggarakan peradilan guna menegakkan hukum dan keadilan."
     },
     {
       category: "Bahasa Negara",
-      question: "Kalimat berikut yang menggunakan kata baku dan struktur efektif sesuai kaidah bahasa Indonesia adalah...",
-      options: ["Para peserta diharap untuk hadir tepat waktu.", "Kami mohon maaf atas ketidaknyamanannya.", "Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin.", "Dia membicarakan tentang rencana kerja tahun depan.", "Semua pegawai-pegawai mengikuti apel pagi."],
+      question:
+        "Kalimat berikut yang menggunakan kata baku dan struktur efektif sesuai kaidah bahasa Indonesia adalah...",
+      options: [
+        "Para peserta diharap untuk hadir tepat waktu.",
+        "Kami mohon maaf atas ketidaknyamanannya.",
+        "Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin.",
+        "Dia membicarakan tentang rencana kerja tahun depan.",
+        "Semua pegawai-pegawai mengikuti apel pagi."
+      ],
       answer: 2,
-      explanation: "Kalimat 'Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin' tepat secara ejaan, bentuk kata, dan keefektifan kalimat."
+      explanation:
+        "Kalimat 'Kegiatan sosialisasi tersebut telah dilaksanakan pada hari Senin' tepat secara ejaan, bentuk kata, dan keefektifan kalimat."
     }
   ];
 
@@ -82,9 +162,10 @@ function buildDefaultQuestionBank() {
       id: qId++,
       subtest: "TWK",
       category: base.category,
-      question: variantNum === 1
-        ? base.question
-        : `[Kasus ${base.category} Seri ${variantNum}] ${base.question}`,
+      question:
+        variantNum === 1
+          ? base.question
+          : `[Kasus ${base.category} Seri ${variantNum}] ${base.question}`,
       options: [...base.options],
       answer: base.answer,
       explanation: base.explanation
@@ -100,30 +181,151 @@ function buildDefaultQuestionBank() {
   ];
 
   const tiuAnalogies = [
-    ["KONSTITUSI : NEGARA", "Anggaran Dasar : Organisasi", ["Pasal : Undang-Undang", "Anggaran Dasar : Organisasi", "Hakim : Pengadilan", "Peraturan : Sanksi", "Rakyat : Wilayah"], 1, "Konstitusi menjadi landasan dasar negara sebagaimana Anggaran Dasar menjadi landasan dasar organisasi."],
-    ["KOMPAS : ARAH", "Termometer : Suhu", ["Jam : Detik", "Termometer : Suhu", "Peta : Pulau", "Jarum : Kompor", "Lensa : Kacamata"], 1, "Kompas berfungsi mengukur/menunjukkan arah sebagaimana termometer berfungsi mengukur suhu."],
-    ["BENIH : PANEN", "Belajar : Kompetensi", ["Hujan : Payung", "Belajar : Kompetensi", "Ujian : Nilai", "Buku : Rak", "Lampu : Gelap"], 1, "Benih yang dirawat menghasilkan panen sebagaimana proses belajar menghasilkan kompetensi."],
-    ["ARSITEK : DENAH", "Programmer : Flowchart", ["Dokter : Resep", "Programmer : Flowchart", "Petani : Cangkul", "Koki : Piring", "Pilot : Bandara"], 1, "Arsitek merancang denah sebelum membangun sebagaimana programmer menyusun flowchart sebelum membuat program."],
-    ["PENULIS : NASKAH", "Sutradara : Skenario", ["Penyanyi : Mikrofon", "Sutradara : Skenario", "Pelukis : Kanvas", "Guru : Papan Tulis", "Nelayan : Jaring"], 1, "Naskah/skenario diarahkan oleh sutradara dalam produksi film sebagaimana tulisan diolah oleh penulis."]
+    [
+      "KONSTITUSI : NEGARA",
+      "Anggaran Dasar : Organisasi",
+      [
+        "Pasal : Undang-Undang",
+        "Anggaran Dasar : Organisasi",
+        "Hakim : Pengadilan",
+        "Peraturan : Sanksi",
+        "Rakyat : Wilayah"
+      ],
+      1,
+      "Konstitusi menjadi landasan dasar negara sebagaimana Anggaran Dasar menjadi landasan dasar organisasi."
+    ],
+    [
+      "KOMPAS : ARAH",
+      "Termometer : Suhu",
+      [
+        "Jam : Detik",
+        "Termometer : Suhu",
+        "Peta : Pulau",
+        "Jarum : Kompor",
+        "Lensa : Kacamata"
+      ],
+      1,
+      "Kompas berfungsi menunjukkan arah sebagaimana termometer berfungsi mengukur suhu."
+    ],
+    [
+      "BENIH : PANEN",
+      "Belajar : Kompetensi",
+      [
+        "Hujan : Payung",
+        "Belajar : Kompetensi",
+        "Ujian : Nilai",
+        "Buku : Rak",
+        "Lampu : Gelap"
+      ],
+      1,
+      "Benih yang dirawat menghasilkan panen sebagaimana proses belajar menghasilkan kompetensi."
+    ],
+    [
+      "ARSITEK : DENAH",
+      "Programmer : Flowchart",
+      [
+        "Dokter : Resep",
+        "Programmer : Flowchart",
+        "Petani : Cangkul",
+        "Koki : Piring",
+        "Pilot : Bandara"
+      ],
+      1,
+      "Arsitek merancang denah sebelum membangun sebagaimana programmer menyusun flowchart sebelum membuat program."
+    ],
+    [
+      "PENULIS : NASKAH",
+      "Sutradara : Skenario",
+      [
+        "Penyanyi : Mikrofon",
+        "Sutradara : Skenario",
+        "Pelukis : Kanvas",
+        "Guru : Papan Tulis",
+        "Nelayan : Jaring"
+      ],
+      1,
+      "Skenario diarahkan oleh sutradara sebagaimana naskah disusun oleh penulis."
+    ]
   ];
 
   const tiuSyllogisms = [
-    ["Semua peserta seleksi CPNS wajib mengikuti tes SKD. Sebagian peserta tes SKD berasal dari luar daerah.", "Sebagian peserta seleksi CPNS berasal dari luar daerah.", ["Semua peserta seleksi CPNS berasal dari luar daerah.", "Sebagian peserta seleksi CPNS berasal dari luar daerah.", "Tidak ada peserta SKD yang berasal dari dalam daerah.", "Semua yang berasal dari luar daerah adalah peserta CPNS.", "Sebagian peserta seleksi CPNS tidak mengikuti tes SKD."], 1, "Karena seluruh peserta CPNS mengikuti SKD dan sebagian peserta SKD berasal dari luar daerah, maka sebagian peserta seleksi CPNS berasal dari luar daerah."],
-    ["Semua pegawai yang hadir tepat waktu mendapat poin kedisiplinan. Budi hadir tepat waktu.", "Budi mendapat poin kedisiplinan.", ["Budi tidak mendapat poin kedisiplinan.", "Budi mendapat poin kedisiplinan.", "Semua pegawai pasti Budi.", "Hanya Budi yang hadir tepat waktu.", "Budi belum tentu disiplin."], 1, "Premis mayor dan minor bersifat afirmatif langsung sehingga Budi pasti mendapat poin kedisiplinan."],
-    ["Tidak ada dokumen rahasia yang boleh diunggah ke penyimpanan publik. Dokumen A adalah dokumen rahasia.", "Dokumen A tidak boleh diunggah ke penyimpanan publik.", ["Dokumen A boleh diunggah ke penyimpanan publik.", "Dokumen A tidak boleh diunggah ke penyimpanan publik.", "Semua dokumen di penyimpanan publik adalah rahasia.", "Dokumen A bukan dokumen resmi.", "Dokumen A boleh disalin bebas."], 1, "Karena tidak ada dokumen rahasia yang boleh diunggah ke publik dan Dokumen A bersifat rahasia, maka Dokumen A tidak boleh diunggah ke publik."],
-    ["Jika hujan deras turun, jalan menuju kantor tergenang. Hari ini jalan menuju kantor tidak tergenang.", "Hujan deras tidak turun.", ["Hujan deras pasti turun.", "Hujan deras tidak turun.", "Kantor diliburkan.", "Jalan sedang diperbaiki.", "Tidak dapat disimpulkan."], 1, "Dengan kaidah modus tollens (jika P maka Q; negasi Q; maka negasi P), hujan deras tidak turun."],
-    ["Setiap peserta pelatihan wajib menyelesaikan tugas akhir. Rina adalah peserta pelatihan.", "Rina wajib menyelesaikan tugas akhir.", ["Rina tidak wajib menyelesaikan tugas akhir.", "Rina wajib menyelesaikan tugas akhir.", "Rina sudah lulus pelatihan.", "Tugas akhir Rina dibatalkan.", "Sebagian peserta tidak mengerjakan tugas."], 1, "Rina termasuk anggota himpunan peserta pelatihan sehingga terikat kewajiban menyelesaikan tugas akhir."]
+    [
+      "Semua peserta seleksi CPNS wajib mengikuti tes SKD. Sebagian peserta tes SKD berasal dari luar daerah.",
+      "Sebagian peserta seleksi CPNS berasal dari luar daerah.",
+      [
+        "Semua peserta seleksi CPNS berasal dari luar daerah.",
+        "Sebagian peserta seleksi CPNS berasal dari luar daerah.",
+        "Tidak ada peserta SKD yang berasal dari dalam daerah.",
+        "Semua yang berasal dari luar daerah adalah peserta CPNS.",
+        "Sebagian peserta seleksi CPNS tidak mengikuti tes SKD."
+      ],
+      1,
+      "Karena seluruh peserta CPNS mengikuti SKD dan sebagian peserta SKD berasal dari luar daerah, maka sebagian peserta seleksi CPNS berasal dari luar daerah."
+    ],
+    [
+      "Semua pegawai yang hadir tepat waktu mendapat poin kedisiplinan. Budi hadir tepat waktu.",
+      "Budi mendapat poin kedisiplinan.",
+      [
+        "Budi tidak mendapat poin kedisiplinan.",
+        "Budi mendapat poin kedisiplinan.",
+        "Semua pegawai pasti Budi.",
+        "Hanya Budi yang hadir tepat waktu.",
+        "Budi belum tentu disiplin."
+      ],
+      1,
+      "Premis mayor dan minor bersifat afirmatif langsung sehingga Budi pasti mendapat poin kedisiplinan."
+    ],
+    [
+      "Tidak ada dokumen rahasia yang boleh diunggah ke penyimpanan publik. Dokumen A adalah dokumen rahasia.",
+      "Dokumen A tidak boleh diunggah ke penyimpanan publik.",
+      [
+        "Dokumen A boleh diunggah ke penyimpanan publik.",
+        "Dokumen A tidak boleh diunggah ke penyimpanan publik.",
+        "Semua dokumen di penyimpanan publik adalah rahasia.",
+        "Dokumen A bukan dokumen resmi.",
+        "Dokumen A boleh disalin bebas."
+      ],
+      1,
+      "Karena tidak ada dokumen rahasia yang boleh diunggah ke publik dan Dokumen A bersifat rahasia, maka Dokumen A tidak boleh diunggah ke publik."
+    ],
+    [
+      "Jika hujan deras turun, jalan menuju kantor tergenang. Hari ini jalan menuju kantor tidak tergenang.",
+      "Hujan deras tidak turun.",
+      [
+        "Hujan deras pasti turun.",
+        "Hujan deras tidak turun.",
+        "Kantor diliburkan.",
+        "Jalan sedang diperbaiki.",
+        "Tidak dapat disimpulkan."
+      ],
+      1,
+      "Dengan kaidah modus tollens (jika P maka Q; negasi Q; maka negasi P), hujan deras tidak turun."
+    ],
+    [
+      "Setiap peserta pelatihan wajib menyelesaikan tugas akhir. Rina adalah peserta pelatihan.",
+      "Rina wajib menyelesaikan tugas akhir.",
+      [
+        "Rina tidak wajib menyelesaikan tugas akhir.",
+        "Rina wajib menyelesaikan tugas akhir.",
+        "Rina sudah lulus pelatihan.",
+        "Tugas akhir Rina dibatalkan.",
+        "Sebagian peserta tidak mengerjakan tugas."
+      ],
+      1,
+      "Rina termasuk anggota himpunan peserta pelatihan sehingga terikat kewajiban menyelesaikan tugas akhir."
+    ]
   ];
 
   for (let i = 0; i < 35; i++) {
     const modType = i % 5;
     if (modType === 0) {
       const ana = tiuAnalogies[Math.floor(i / 5) % tiuAnalogies.length];
+      const pairParts = ana[0].split(" : ");
       bank.push({
         id: qId++,
         subtest: "TIU",
         category: "Verbal - Analogi",
-        question: `${ana[0].split(" : ")[0]} : ${ana[0].split(" : ")[1]} = ... : ...`,
+        question: `${pairParts[0]} : ${pairParts[1]} = ... : ...`,
         options: [...ana[2]],
         answer: ana[3],
         explanation: ana[4]
@@ -146,7 +348,7 @@ function buildDefaultQuestionBank() {
       let nextVal = 0;
 
       if (rule.stepAdd) {
-        let cur = rule.start + (i * 2);
+        let cur = rule.start + i * 2;
         let step = rule.stepAdd;
         for (let k = 0; k < 5; k++) {
           seq.push(cur);
@@ -162,7 +364,7 @@ function buildDefaultQuestionBank() {
         }
         nextVal = cur;
       } else if (rule.stepSub) {
-        let cur = rule.start + (i * 3);
+        let cur = rule.start + i * 3;
         for (let k = 0; k < 5; k++) {
           seq.push(cur);
           cur -= rule.stepSub;
@@ -176,12 +378,11 @@ function buildDefaultQuestionBank() {
         }
         nextVal = cur;
       } else {
-        let a = 1 + (i % 3);
-        let b = 2 + (i % 2);
+        const a = 1 + (i % 3);
+        const b = 2 + (i % 2);
         seq = [a, b];
         for (let k = 2; k < 5; k++) {
-          const nxt = seq[k - 1] + seq[k - 2];
-          seq.push(nxt);
+          seq.push(seq[k - 1] + seq[k - 2]);
         }
         nextVal = seq[4] + seq[3];
       }
@@ -190,7 +391,9 @@ function buildDefaultQuestionBank() {
       for (const delta of [-4, -2, 2, 4, 6]) {
         if (distractors.size < 5) distractors.add(nextVal + delta);
       }
-      const opts = Array.from(distractors).sort((a, b) => a - b).map(String);
+      const opts = Array.from(distractors)
+        .sort((a, b) => a - b)
+        .map(String);
       const ansIdx = opts.indexOf(String(nextVal));
 
       bank.push({
@@ -203,8 +406,8 @@ function buildDefaultQuestionBank() {
         explanation: `Deret: ${seq.join(", ")}, ${nextVal}. ${rule.label}.`
       });
     } else if (modType === 3) {
-      const pct = 20 + ((i % 4) * 5);
-      const baseX = 200 + ((i % 5) * 40);
+      const pct = 20 + (i % 4) * 5;
+      const baseX = 200 + (i % 5) * 40;
       const xVal = (pct / 100) * baseX;
       const yVal = xVal + ((i % 3) - 1) * 5;
       let relSymbol = "=";
@@ -221,7 +424,13 @@ function buildDefaultQuestionBank() {
         subtest: "TIU",
         category: "Numerik - Perbandingan",
         question: `Jika x = ${pct}% dari ${baseX} dan y = ${yVal}, maka hubungan yang tepat antara x dan y adalah...`,
-        options: ["x > y", "x < y", "x = y", `x + y = ${xVal + yVal}`, "Hubungan tidak dapat ditentukan"],
+        options: [
+          "x > y",
+          "x < y",
+          "x = y",
+          `x + y = ${xVal + yVal}`,
+          "Hubungan tidak dapat ditentukan"
+        ],
         answer: ansIdx,
         explanation: `Nilai x = (${pct}/100) × ${baseX} = ${xVal}, sedangkan y = ${yVal}, sehingga berlaku x ${relSymbol} y.`
       });
@@ -255,7 +464,8 @@ function buildDefaultQuestionBank() {
   const tkpTemplates = [
     {
       category: "Pelayanan Publik",
-      question: "Saat jam pelayanan hampir berakhir, datang seorang warga lansia dari desa terpencil yang berkas permohonannya belum lengkap. Sikap Anda sebagai petugas pelayanan adalah...",
+      question:
+        "Saat jam pelayanan hampir berakhir, datang seorang warga lansia dari desa terpencil yang berkas permohonannya belum lengkap. Sikap Anda sebagai petugas pelayanan adalah...",
       options: [
         "Meminta warga tersebut kembali esok hari karena loket segera tutup.",
         "Menjelaskan kekurangan berkas dengan ramah, membantu mencatat rincian yang perlu dilengkapi, dan memprioritaskan pelayanannya saat berkas siap.",
@@ -264,11 +474,13 @@ function buildDefaultQuestionBank() {
         "Menutup loket sesuai jam operasional tanpa memberikan penjelasan panjang."
       ],
       scores: [2, 5, 3, 1, 2],
-      explanation: "Pelayanan publik menuntut empati, kejelasan informasi, dan solusi prosedural tanpa melanggar aturan."
+      explanation:
+        "Pelayanan publik menuntut empati, kejelasan informasi, dan solusi prosedural tanpa melanggar aturan."
     },
     {
       category: "Jejaring Kerja",
-      question: "Tim kerja Anda mendapat tugas lintas bidang yang membutuhkan koordinasi cepat dengan unit lain yang memiliki gaya kerja berbeda. Langkah pertama yang Anda lakukan adalah...",
+      question:
+        "Tim kerja Anda mendapat tugas lintas bidang yang membutuhkan koordinasi cepat dengan unit lain yang memiliki gaya kerja berbeda. Langkah pertama yang Anda lakukan adalah...",
       options: [
         "Mengerjakan bagian tim sendiri terlebih dahulu tanpa menunggu unit lain.",
         "Menginisiasi rapat koordinasi singkat untuk menyepakati pembagian peran, jadwal, dan kanal komunikasi bersama.",
@@ -277,11 +489,13 @@ function buildDefaultQuestionBank() {
         "Mengambil alih seluruh pekerjaan agar tidak terjadi perbedaan pendapat."
       ],
       scores: [3, 5, 1, 2, 2],
-      explanation: "Membangun komunikasi aktif dan menyepakati alur kerja bersama adalah kunci efektivitas jejaring kerja."
+      explanation:
+        "Membangun komunikasi aktif dan menyepakati alur kerja bersama adalah kunci efektivitas jejaring kerja."
     },
     {
       category: "Sosial Budaya",
-      question: "Anda ditempatkan di daerah dengan adat istiadat dan bahasa daerah yang berbeda dari daerah asal Anda. Agar dapat beradaptasi dengan baik di lingkungan kerja dan masyarakat, Anda akan...",
+      question:
+        "Anda ditempatkan di daerah dengan adat istiadat dan bahasa daerah yang berbeda dari daerah asal Anda. Agar dapat beradaptasi dengan baik di lingkungan kerja dan masyarakat, Anda akan...",
       options: [
         "Tetap menggunakan kebiasaan daerah asal karena merasa paling nyaman.",
         "Mempelajari nilai budaya setempat, menghormati tradisi lokal, serta menggunakan bahasa Indonesia yang santun sambil belajar kosakata dasar daerah.",
@@ -290,11 +504,13 @@ function buildDefaultQuestionBank() {
         "Menghindari kegiatan kemasyarakatan agar tidak salah bersikap."
       ],
       scores: [2, 5, 3, 1, 2],
-      explanation: "Sikap adaptif, terbuka, dan menghormati kearifan lokal mencerminkan kompetensi sosial budaya ASN."
+      explanation:
+        "Sikap adaptif, terbuka, dan menghormati kearifan lokal mencerminkan kompetensi sosial budaya ASN."
     },
     {
       category: "Teknologi Informasi & Komunikasi",
-      question: "Instansi Anda meluncurkan aplikasi persuratan digital baru untuk menggantikan proses manual, namun beberapa rekan senior kesulitan menggunakannya. Sikap Anda adalah...",
+      question:
+        "Instansi Anda meluncurkan aplikasi persuratan digital baru untuk menggantikan proses manual, namun beberapa rekan senior kesulitan menggunakannya. Sikap Anda adalah...",
       options: [
         "Menggunakan aplikasi hanya untuk diri sendiri karena bukan tugas Anda mengajari orang lain.",
         "Membuat panduan ringkas bergambar dan meluangkan waktu mendampingi rekan senior hingga terbiasa mengoperasikannya.",
@@ -303,11 +519,13 @@ function buildDefaultQuestionBank() {
         "Mengkritik rekan senior yang lambat beradaptasi dengan teknologi."
       ],
       scores: [2, 5, 1, 3, 1],
-      explanation: "Pemanfaatan TIK optimal tercapai ketika ASN mampu mengoperasikan sistem sekaligus mendorong kolaborasi literasi digital di unit kerjanya."
+      explanation:
+        "Pemanfaatan TIK optimal tercapai ketika ASN mampu mengoperasikan sistem sekaligus mendorong kolaborasi literasi digital di unit kerjanya."
     },
     {
       category: "Profesionalisme",
-      question: "Anda diberikan dua tugas penting dengan tenggat waktu bersamaan oleh atasan. Tindakan yang paling profesional adalah...",
+      question:
+        "Anda diberikan dua tugas penting dengan tenggat waktu bersamaan oleh atasan. Tindakan yang paling profesional adalah...",
       options: [
         "Mengerjakan tugas yang paling mudah dan menunda tugas lainnya melewati tenggat.",
         "Memetakan skala prioritas dan estimasi waktu pengerjaan, mengomunikasikan rencana penyelesaian kepada atasan, lalu mengeksekusi secara fokus.",
@@ -316,11 +534,13 @@ function buildDefaultQuestionBank() {
         "Menolak salah satu tugas secara sepihak tanpa diskusi."
       ],
       scores: [2, 5, 1, 3, 1],
-      explanation: "Profesionalisme ditunjukkan melalui manajemen prioritas, komunikasi asertif dengan pimpinan, dan komitmen terhadap kualitas hasil."
+      explanation:
+        "Profesionalisme ditunjukkan melalui manajemen prioritas, komunikasi asertif dengan pimpinan, dan komitmen terhadap kualitas hasil."
     },
     {
       category: "Anti Radikalisme",
-      question: "Di grup percakapan lingkungan tempat tinggal, beredar pesan provokatif yang mengajak warga menolak keberadaan rumah ibadah kelompok lain. Sikap Anda adalah...",
+      question:
+        "Di grup percakapan lingkungan tempat tinggal, beredar pesan provokatif yang mengajak warga menolak keberadaan rumah ibadah kelompok lain. Sikap Anda adalah...",
       options: [
         "Ikut meneruskan pesan tersebut agar warga lain mengetahui isinya.",
         "Mengingatkan warga dengan santun untuk menahan diri, mengklarifikasi informasi berdasarkan aturan kerukunan umat beragama, dan mengajak berdialog damai.",
@@ -329,7 +549,8 @@ function buildDefaultQuestionBank() {
         "Membiarkan perdebatan memanas karena bukan urusan pribadi Anda."
       ],
       scores: [1, 5, 3, 1, 2],
-      explanation: "ASN berperan aktif menjaga persatuan, toleransi, dan meredam potensi intoleransi maupun radikalisme di masyarakat."
+      explanation:
+        "ASN berperan aktif menjaga persatuan, toleransi, dan meredam potensi intoleransi maupun radikalisme di masyarakat."
     }
   ];
 
@@ -340,9 +561,10 @@ function buildDefaultQuestionBank() {
       id: qId++,
       subtest: "TKP",
       category: tpl.category,
-      question: cycle === 1
-        ? tpl.question
-        : `[Situasi ${tpl.category} #${cycle}] ${tpl.question}`,
+      question:
+        cycle === 1
+          ? tpl.question
+          : `[Situasi ${tpl.category} #${cycle}] ${tpl.question}`,
       options: [...tpl.options],
       scores: [...tpl.scores],
       explanation: tpl.explanation
@@ -352,7 +574,11 @@ function buildDefaultQuestionBank() {
   return bank;
 }
 
-questionBank = buildDefaultQuestionBank();
+if (typeof questionBank === "undefined") {
+  var questionBank = buildDefaultQuestionBank();
+} else {
+  questionBank = buildDefaultQuestionBank();
+}
 
 function sanitizeQuestionMedia(rawMarkup) {
   if (typeof rawMarkup !== "string" || !rawMarkup.trim()) return "";
@@ -425,7 +651,7 @@ async function muatBankSoalDariSheet() {
   const badge = document.getElementById("scriptConfigBadge");
   const statusEl = document.getElementById("bankLoadStatus");
 
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
+  if (typeof GOOGLE_SCRIPT_URL === "undefined" || !GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("TEMPEL_URL")) {
     if (badge) {
       badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
       badge.className = "font-semibold text-amber-700";
@@ -466,7 +692,9 @@ async function muatBankSoalDariSheet() {
           if (Array.isArray(item.scores) && item.scores.length >= 5) {
             normalized.scores = item.scores.map(Number);
           } else if (item.keyRaw) {
-            const parsedScores = String(item.keyRaw).split(",").map(s => Number(s.trim()) || 0);
+            const parsedScores = String(item.keyRaw)
+              .split(",")
+              .map(s => Number(s.trim()) || 0);
             normalized.scores = parsedScores.length >= 5 ? parsedScores : [1, 2, 3, 4, 5];
           } else {
             normalized.scores = [1, 2, 3, 4, 5];
