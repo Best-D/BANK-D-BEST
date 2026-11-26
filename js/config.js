@@ -66,7 +66,15 @@ function shuffleArray(arr) {
 }
 
 function showScreen(screenName) {
-  if (isExamActive && screenName !== "exam") {
+  if (isExamActive && screenName !== "exam") const onResultScreen = !document.getElementById("resultScreen")?.classList.contains("hidden");
+if (
+  onResultScreen &&
+  screenName !== "result" &&
+  typeof requireSurveyBeforeAction === "function" &&
+  !requireSurveyBeforeAction("keluar dari halaman hasil ujian")
+) {
+  return;
+} {
     alert("Ujian sedang berlangsung. Selesaikan ujian terlebih dahulu.");
     return;
   }
