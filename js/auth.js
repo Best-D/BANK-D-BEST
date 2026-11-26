@@ -570,8 +570,11 @@ function applyLoggedUserToUI() {
     if (nameInput) {
       nameInput.value = loggedUser.nama;
     }
-    if (eduSelect && loggedUser.pendidikan && !eduSelect.value) {
-      eduSelect.value = loggedUser.pendidikan;
+    if (eduSelect) {
+      const resolvedEdu = loggedUser.pendidikan || participantEducation || "";
+      if (resolvedEdu) {
+        eduSelect.value = resolvedEdu;
+      }
     }
     if (loginName) {
       loginName.value = loggedUser.username || loggedUser.nama;
@@ -758,7 +761,8 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
       users[idx] = {
         ...users[idx],
         nama: fullName,
-        pendidikan: educationVal
+        pendidikan: educationVal,
+        pendidikan_terakhir: educationVal
       };
       saveRegisteredUsers(users);
     }
