@@ -1242,95 +1242,78 @@
     Simulasi CAT SKD CPNS BKN • Dibuat oleh <strong class="text-slate-700">Best D Pamungkas</strong>
   </footer>
 
-  <!-- MODAL DONASI SEIKHLASNYA -->
-  <div id="donationModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden">
-      <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 p-5 text-white flex items-center justify-between gap-3">
+ HTML
+  <!-- MODAL DONASI SEIKHLASNYA (SIMPEL) -->
+  <div id="donationModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+      <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 px-4 py-3 text-white flex items-center justify-between gap-2">
         <div>
-          <span class="inline-block bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full mb-1">
-            Dukungan Pengembangan Aplikasi
-          </span>
-          <h3 class="text-lg font-extrabold">Donasi Seikhlasnya</h3>
-          <p class="text-xs text-amber-50 mt-0.5">Bantu pembaruan bank soal, server, dan fitur simulasi CAT SKD CPNS.</p>
+          <h3 class="text-base font-extrabold leading-tight">Donasi Seikhlasnya</h3>
+          <p class="text-[11px] text-amber-50">Dukung pembaruan soal &amp; server CAT SKD.</p>
         </div>
-        <button type="button" onclick="closeDonationModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+        <button type="button" onclick="closeDonationModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
           Tutup
         </button>
       </div>
 
-      <div class="p-5 space-y-4 text-xs sm:text-sm max-h-[82vh] overflow-y-auto custom-scroll">
-        <div>
-          <div class="text-xs font-bold text-slate-700 mb-2">Pilihan Nominal Cepat (Opsional)</div>
-          <div class="flex flex-wrap gap-2">
-            <button type="button" data-amount="Rp10.000" onclick="selectDonationPreset('Rp10.000')" class="donation-preset-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp10.000</button>
-            <button type="button" data-amount="Rp25.000" onclick="selectDonationPreset('Rp25.000')" class="donation-preset-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp25.000</button>
-            <button type="button" data-amount="Rp50.000" onclick="selectDonationPreset('Rp50.000')" class="donation-preset-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp50.000</button>
-            <button type="button" data-amount="Seikhlasnya" onclick="selectDonationPreset('Seikhlasnya')" class="donation-preset-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white">Seikhlasnya</button>
-          </div>
+      <div class="p-4 space-y-3 text-xs max-h-[85vh] overflow-y-auto custom-scroll">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" data-amount="Rp10.000" onclick="selectDonationPreset('Rp10.000')" class="donation-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp10.000</button>
+          <button type="button" data-amount="Rp25.000" onclick="selectDonationPreset('Rp25.000')" class="donation-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp25.000</button>
+          <button type="button" data-amount="Rp50.000" onclick="selectDonationPreset('Rp50.000')" class="donation-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">Rp50.000</button>
+          <button type="button" data-amount="Seikhlasnya" onclick="selectDonationPreset('Seikhlasnya')" class="donation-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-600 text-white">Seikhlasnya</button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div>
-            <label for="donationSenderInput" class="block text-xs font-bold text-slate-700 mb-1">Nama / Inisial (Opsional)</label>
-            <input type="text" id="donationSenderInput" placeholder="Contoh: Peserta CPNS"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+            <label for="donationSenderInput" class="block text-[11px] font-bold text-slate-700 mb-1">Nama / Inisial</label>
+            <input type="text" id="donationSenderInput" placeholder="Opsional"
+              class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 outline-none" />
           </div>
           <div>
-            <label for="donationAmountInput" class="block text-xs font-bold text-slate-700 mb-1">Nominal / Catatan</label>
+            <label for="donationAmountInput" class="block text-[11px] font-bold text-slate-700 mb-1">Nominal</label>
             <input type="text" id="donationAmountInput" value="Seikhlasnya"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+              class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 outline-none" />
           </div>
         </div>
 
-        <!-- QRIS SHOPEEPAY -->
-        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 text-center space-y-2">
-          <div class="text-xs font-extrabold text-amber-950">Scan QRIS ShopeePay</div>
+        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 flex items-center gap-3">
           <img
             src="Qris-Shoope.jpeg"
             alt="QRIS ShopeePay a.n. Budiman Putra"
-            class="w-48 h-48 mx-auto object-contain rounded-lg bg-white p-2 border border-amber-200"
+            class="w-28 h-28 object-contain rounded-lg bg-white p-1 border border-amber-200 shrink-0"
           />
-          <p class="text-[11px] text-slate-600">
-            Scan kode QR menggunakan ShopeePay atau aplikasi mobile banking pendukung QRIS.
-          </p>
+          <div class="space-y-1.5 min-w-0 flex-1">
+            <div class="text-[11px] font-extrabold text-amber-950">QRIS ShopeePay / E-Wallet / BSI</div>
+            <div class="flex items-center justify-between gap-1.5 text-[11px]">
+              <span class="font-bold text-slate-800 truncate">082388494114 (Budiman Putra)</span>
+              <button type="button" onclick="copyDonationText('082388494114', 'donationCopyFeedback')" class="px-2 py-1 rounded bg-slate-900 text-white text-[10px] font-bold shrink-0">
+                Salin
+              </button>
+            </div>
+            <div class="flex items-center justify-between gap-1.5 text-[11px]">
+              <span class="font-bold text-slate-800 truncate">BSI 1149630924 (Budiman Putra)</span>
+              <button type="button" onclick="copyDonationText('1149630924', 'donationCopyFeedback')" class="px-2 py-1 rounded bg-blue-600 text-white text-[10px] font-bold shrink-0">
+                Salin
+              </button>
+            </div>
+            <p id="donationCopyFeedback" class="hidden text-[10px] font-bold text-emerald-700"></p>
+          </div>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <div class="text-[11px] font-bold text-slate-500">E-Wallet / Shopee Pay</div>
-              <div class="text-xs font-extrabold text-slate-800">082388494114 • a.n. Budiman Putra</div>
-            </div>
-            <button type="button" onclick="copyDonationText('082388494114', 'donationCopyFeedback')" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0">
-              Salin Nomor
-            </button>
-          </div>
-          <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
-            <div>
-              <div class="text-[11px] font-bold text-slate-500">Rekening Bank</div>
-              <div class="text-xs font-extrabold text-slate-800">Bank BSI: 1149630924 - a.n. Budiman Putra</div>
-            </div>
-            <button type="button" onclick="copyDonationText('1149630924', 'donationCopyFeedback')" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0">
-              Salin Rekening
-            </button>
-          </div>
-          <p id="donationCopyFeedback" class="hidden text-[11px] font-bold text-emerald-700"></p>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div class="flex items-center justify-between gap-2 pt-0.5">
           <button type="button" onclick="confirmDonationNote()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold">
             Kirim Ucapan Dukungan
           </button>
-          <button type="button" onclick="closeDonationModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
-            Selesai
+          <button type="button" onclick="closeDonationModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+            Tutup
           </button>
         </div>
 
-        <p id="donationThankYouNote" class="hidden text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-3"></p>
+        <p id="donationThankYouNote" class="hidden text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5"></p>
       </div>
     </div>
   </div>
-
   <!-- MODAL SURVEI SKM (9 UNSUR) DARI DASHBOARD -->
   <div id="dashboardSurveyModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4 no-print">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full overflow-hidden">
