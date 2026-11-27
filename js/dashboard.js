@@ -2783,17 +2783,18 @@ function switchDeskMode(mode) {
   if (peerSelectorBlock) {
     peerSelectorBlock.classList.toggle("hidden", activeDeskMode !== "PEER");
   }
-  if (adminPortalBox) {
-    adminPortalBox.classList.toggle("hidden", activeDeskMode !== "CONSULT");
-  }
   if (captionEl) {
     captionEl.textContent = activeDeskMode === "CONSULT"
-      ? "Konsultasi khusus ditujukan ke Admin D-BEST DESK"
+      ? "Konsultasi peserta ditujukan khusus ke Admin D-BEST DESK"
       : "Mode: Kirim pesan langsung ke peserta lain";
   }
   if (activeDeskMode === "CONSULT") {
     deskAdminReplyTargetKey = "";
     deskAdminReplyTargetName = "";
+    if (adminPortalBox) {
+      const wantsAdminBox = deskAdminLoggedIn || adminPortalBox.dataset.userToggled === "1";
+      adminPortalBox.classList.toggle("hidden", !wantsAdminBox);
+    }
     updateDeskAdminPortalUI_();
     if (inputEl && !deskAdminLoggedIn && !inputEl.value.trim()) {
       handleConsultationTopicChange();
@@ -2801,6 +2802,9 @@ function switchDeskMode(mode) {
   } else {
     deskAdminReplyTargetKey = "";
     deskAdminReplyTargetName = "";
+    if (adminPortalBox) {
+      adminPortalBox.classList.add("hidden");
+    }
   }
   renderFilteredChatMessages();
 }
@@ -3047,4 +3051,16 @@ function renderDeskAdminConsultationQueue_() {
 
     queueEl.appendChild(card);
   });
+}
+
+
+function toggleDeskAdminPortalBox() {
+  const adminPortalBox = document.getElementById("deskAdminPortalBox");
+  if (!adminPortalBox) return;
+  const isNowHidden = adminPortalBox.classList.contains("hidden");
+  adminPortalBox.dataset.userToggled = isNowHidden ? "1" : "0";
+  adminPortalBox.classList.toggle("hidden", !isNowHidden);
+  if (isNowHidden) {
+    updateDeskAdminPortalUI_();
+  }
 }
