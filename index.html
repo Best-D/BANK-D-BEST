@@ -1350,10 +1350,15 @@
               </label>
               <select id="consultSubIssueSelect" onchange="handleConsultationTopicChange()"
                 class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
+                <option value="kualifikasi_formasi">Kesesuaian Kualifikasi Pendidikan &amp; Jabatan/Formasi</option>
+                <option value="identitas_kependudukan">Dokumen Identitas &amp; Kependudukan (KTP, KK, Akta)</option>
                 <option value="perbedaan_nama_data">Perbedaan Nama / Tanggal Lahir / Gelar pada Dokumen</option>
                 <option value="legalisir_ijazah_transkrip">Legalisir Ijazah, Transkrip, atau Penyetaraan Dokumen</option>
                 <option value="dokumen_kesehatan_skck">Surat Keterangan Sehat, Bebas NAPZA &amp; SKCK</option>
-                <option value="alur_daftar_ulang">Alur, Kelengkapan &amp; Ketepatan Waktu Daftar Ulang</option>
+                <option value="format_ejaan_dokumen">Penulisan, Tanda Apostrof (') &amp; Format Dokumen Resmi</option>
+                <option value="checklist_pra_daftar_ulang">Checklist Pra-Daftar Ulang (H-3 s.d. Hari-H)</option>
+                <option value="alur_daftar_ulang">Alur, Konfirmasi Kehadiran &amp; Jadwal Daftar Ulang</option>
+                <option value="kendala_teknis_deadline">Antisipasi Kendala Teknis &amp; Batas Waktu Daftar Ulang</option>
               </select>
             </div>
           </div>
@@ -1379,7 +1384,7 @@
           </div>
         </div>
 
-        <!-- PILIH PESERTA TUJUAN (UNTUK CHAT ANTAR PESERTA MAUPUN KONSULTASI) -->
+        <!-- PILIH PESERTA TUJUAN (KHUSUS CHAT ANTAR PESERTA) -->
         <div id="deskPeerSelectorBlock" class="space-y-2.5">
           <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
             <div class="text-[11px] font-bold text-slate-600">Peserta Online Saat Ini (Klik untuk Pilih Tujuan)</div>
@@ -1390,12 +1395,69 @@
 
           <div>
             <label for="chatRecipientSelect" class="block text-[11px] font-bold text-slate-600 mb-1">
-              Kirim Pesan / Konsultasi Ke Peserta Tujuan
+              Kirim Pesan Ke Peserta Tujuan
             </label>
             <select id="chatRecipientSelect"
               class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
               <option value="">-- Pilih Peserta Tujuan --</option>
             </select>
+          </div>
+        </div>
+
+        <!-- PANEL LOGIN & INBOX ADMIN D-BEST DESK (UNTUK MELIHAT & MEMBALAS KONSULTASI) -->
+        <div id="deskAdminPortalBox" class="hidden border border-slate-200 bg-slate-50 rounded-xl p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="text-xs font-extrabold text-slate-800">Portal Login Admin D-BEST DESK</div>
+              <p class="text-[11px] text-slate-500">
+                Masuk sebagai Admin untuk membuka antrean konsultasi pemberkasan &amp; daftar ulang serta membalas peserta.
+              </p>
+            </div>
+            <span id="deskAdminSessionBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900">
+              Belum Login Admin
+            </span>
+          </div>
+
+          <div id="deskAdminLoginForm" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end text-xs">
+            <div>
+              <label for="deskAdminUserInput" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Username Admin
+              </label>
+              <input type="text" id="deskAdminUserInput" autocomplete="username" placeholder="Username admin..."
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-teal-600 outline-none" />
+            </div>
+            <div>
+              <label for="deskAdminPassInput" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Password Admin
+              </label>
+              <input type="password" id="deskAdminPassInput" autocomplete="current-password" placeholder="Password admin..."
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-teal-600 outline-none" />
+            </div>
+            <button type="button" onclick="handleDeskAdminLogin()"
+              class="w-full px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+              Login Admin DESK
+            </button>
+          </div>
+
+          <div id="deskAdminActiveBar" class="hidden flex flex-wrap items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs">
+            <span id="deskAdminActiveLabel" class="font-bold text-emerald-900">Login Admin Aktif</span>
+            <button type="button" onclick="handleDeskAdminLogout()"
+              class="px-3 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold transition">
+              Logout Admin
+            </button>
+          </div>
+
+          <p id="deskAdminFeedbackText" class="hidden text-xs font-semibold"></p>
+
+          <div id="deskAdminQueueWrapper" class="hidden space-y-2 pt-2 border-t border-slate-200">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-extrabold text-slate-800">Daftar Masuk Konsultasi (Klik "Balas Peserta" untuk Menjawab)</span>
+              <button type="button" onclick="loadChatMessages(true, false)"
+                class="text-[11px] font-bold text-teal-700 hover:underline">
+                Segarkan Antrean
+              </button>
+            </div>
+            <div id="deskAdminConsultationQueue" class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1 text-xs"></div>
           </div>
         </div>
 
@@ -1680,12 +1742,12 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=40"></script>
-  <script src="js/questions.js?v=40"></script>
-  <script src="js/questions-tambahan-5soal.js?v=40"></script>
-  <script src="js/questions-aturan-2026.js?v=40"></script>
-  <script src="js/auth.js?v=40"></script>
-  <script src="js/dashboard.js?v=40"></script>
-  <script src="js/exam.js?v=40"></script>
+  <script src="js/config.js?v=42"></script>
+  <script src="js/questions.js?v=42"></script>
+  <script src="js/questions-tambahan-5soal.js?v=42"></script>
+  <script src="js/questions-aturan-2026.js?v=42"></script>
+  <script src="js/auth.js?v=42"></script>
+  <script src="js/dashboard.js?v=42"></script>
+  <script src="js/exam.js?v=42"></script>
 </body>
 </html>
