@@ -581,6 +581,14 @@ function startExam() {
     alert("Silakan login atau daftar akun peserta terlebih dahulu sebelum memulai ujian.");
     return;
   }
+  if (typeof hasDigitInParticipantName === "function" && hasDigitInParticipantName(nameVal)) {
+    alert("Nama peserta tidak boleh mengandung angka. Gunakan huruf saja.");
+    return;
+  }
+  if (nameVal.length < 4) {
+    alert("Nama lengkap peserta minimal 4 karakter.");
+    return;
+  }
   if (typeof findProfanityInName === "function" && findProfanityInName(nameVal).length > 0) {
     alert("Nama peserta mengandung kata yang tidak sopan.");
     return;
