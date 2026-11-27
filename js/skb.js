@@ -1,6 +1,6 @@
 const SKB_SHEET_NAME = "BankSoalSKB";
 const SKB_SPREADSHEET_ID = "1rQlxl3rJ56xv_Z3282ic8KoNYFMN-PAtkRT-FKAvE4s";
-const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVK0DYQofyHv6RIAtnv7NMEBEzDSuHnLRPc_wl9Nvx8wLlxkGSg4V35mjGMWJBLPrV5g/exec";
+const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMbR9Hn8OthYXCeJceRIh2pTFpvjQT_QJB7r12cbDrNZWpCRHT0OJ_Ikxq7eIVch1GJw/exec";
 const SKB_AUTO_REFRESH_MS = 30000;
 
 const SKB_TRACK_LABELS = {
@@ -325,6 +325,94 @@ function normalizeSkbCellKey_(rawKey) {
     .replace(/^_+|_+$/g, "");
 }
 
+function parseGvizPayloadToRows_(parsed) {
+  const cols = (parsed?.table?.cols || []).map(c => normalizeSkbCellKey_(c?.label || c?.id || ""));
+  const rows = parsed?.table?.rows || [];
+  if (!cols.length || !rows.length) return [];
+
+  return rows.map(r => {
+    const cells = r?.c || [];
+    const obj = {};
+    cols.forEach((colName, idx) => {
+      if (colName) {
+        const cell = cells[idx];
+        obj[colName] = cell && cell.v !== null && cell.v !== undefined ? cell.v : "";
+      }
+    });
+    return obj;
+  });
+}
+
+function fetchSkbFromGvizJsonp_(spreadsheetId, sheetName) {
+  return new Promise(resolve => {
+    if (!spreadsheetId || !sheetName) {
+      resolve(null);
+      return;
+    }
+
+    const cbName = `__skbGvizCb_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+    const scriptEl = document.createElement("script");
+    let settled = false;
+
+    const cleanup = () => {
+      if (scriptEl && scriptEl.parentNode) {
+        scriptEl.parentNode.removeChild(scriptEl);
+      }
+      try {
+        delete window[cbName];
+      } catch (e) {
+        window[cbName] = undefined;
+      }
+    };
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        cleanup();
+        resolve(null);
+      }
+    }, 6000);
+
+    window[cbName] = payload => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      cleanup();
+      resolve(parseGvizPayloadToRows_(payload));
+    };
+
+    scriptEl.async = true;
+    scriptEl.onerror = () => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        cleanup();
+        resolve(null);
+      }
+    };
+    scriptEl.src = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:json;responseHandler:${encodeURIComponent(cbName)}&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
+    (document.head || document.documentElement).appendChild(scriptEl);
+  });
+}
+
+async function fetchSkbFromGvizSheet_(spreadsheetId, sheetName) {
+  if (!spreadsheetId || !sheetName) return null;
+  try {
+    const cacheBust = Date.now();
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&_=${cacheBust}`;
+    const res = await fetch(gvizUrl, { cache: "no-store" });
+    const raw = await res.text();
+    const match = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/);
+    if (match && match[1]) {
+      const parsed = JSON.parse(match[1]);
+      const rows = parseGvizPayloadToRows_(parsed);
+      if (rows.length > 0) return rows;
+    }
+  } catch (err) {}
+
+  return await fetchSkbFromGvizJsonp_(spreadsheetId, sheetName);
+}
+
 function applySkbRowsToBank_(rowsArray) {
   if (!Array.isArray(rowsArray) || rowsArray.length === 0) return false;
   const grouped = {};
@@ -370,38 +458,21 @@ function applySkbRowsToBank_(rowsArray) {
   return applied;
 }
 
-async function fetchSkbFromGvizSheet_(spreadsheetId, sheetName) {
-  if (!spreadsheetId || !sheetName) return null;
-  try {
-    const cacheBust = Date.now();
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&_=${cacheBust}`;
-    const res = await fetch(gvizUrl, { cache: "no-store" });
-    const raw = await res.text();
-    const match = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/);
-    if (!match || !match[1]) return null;
-    const parsed = JSON.parse(match[1]);
-    const cols = (parsed?.table?.cols || []).map(c => normalizeSkbCellKey_(c?.label || c?.id || ""));
-    const rows = parsed?.table?.rows || [];
-    if (!cols.length || !rows.length) return null;
-
-    return rows.map(r => {
-      const cells = r?.c || [];
-      const obj = {};
-      cols.forEach((colName, idx) => {
-        if (colName) {
-          obj[colName] = cells[idx] && cells[idx].v !== null && cells[idx].v !== undefined ? cells[idx].v : "";
-        }
-      });
-      return obj;
-    });
-  } catch (err) {
-    return null;
-  }
-}
-
 async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = SKB_SHEET_NAME) {
   const targetSheet = String(sheetName || SKB_SHEET_NAME).trim();
-  const cleanUrl = String(endpointUrl || "").trim();
+
+  const gvizRows = await fetchSkbFromGvizSheet_(SKB_SPREADSHEET_ID, targetSheet);
+  if (gvizRows && applySkbRowsToBank_(gvizRows)) {
+    skbSheetConnected = true;
+    syncSkbTrackDropdownOptions_();
+    renderSkbPracticeQuestions();
+    updateSkbConnectionIndicator_();
+    return true;
+  }
+
+  const directGs = typeof SKB_APPS_SCRIPT_URL !== "undefined" ? String(SKB_APPS_SCRIPT_URL || "").trim() : "";
+  const cfgGs = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  const cleanUrl = String(endpointUrl || directGs || cfgGs || "").trim();
 
   if (cleanUrl && !cleanUrl.includes("TEMPEL_URL")) {
     try {
@@ -422,15 +493,6 @@ async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = SKB_SHEET_NA
         }
       }
     } catch (err) {}
-  }
-
-  const gvizRows = await fetchSkbFromGvizSheet_(SKB_SPREADSHEET_ID, targetSheet);
-  if (gvizRows && applySkbRowsToBank_(gvizRows)) {
-    skbSheetConnected = true;
-    syncSkbTrackDropdownOptions_();
-    renderSkbPracticeQuestions();
-    updateSkbConnectionIndicator_();
-    return true;
   }
 
   skbSheetConnected = false;
@@ -471,7 +533,7 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
       const jam = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
       statusEl.textContent = loaded
         ? `Terhubung ke ${SKB_SHEET_NAME} • ${totalSoal} soal termuat • Diperbarui ${jam}`
-        : `Cadangan lokal aktif • ${totalSoal} soal siap dipakai (cek koneksi/sheet ${SKB_SHEET_NAME}).`;
+        : `Cadangan lokal aktif • ${totalSoal} soal siap dipakai (pastikan tab ${SKB_SHEET_NAME} dapat dibaca).`;
     }
   } else {
     updateSkbConnectionIndicator_();
