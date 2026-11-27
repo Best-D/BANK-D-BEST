@@ -1797,7 +1797,11 @@ function renderFilteredChatMessages() {
     return;
   }
 
+  const clearedSet = getClearedChatMessageIdSet_();
   const visibleMsgs = allMsgs.filter(msg => {
+    if (clearedSet.has(getChatMessageFingerprint_(msg))) {
+      return false;
+    }
     const recKey = normalizeChatUserKey(msg.penerima_key || "");
     const sndKey = normalizeChatUserKey(msg.pengirim_key || "");
     const isConsultMsg = isConsultationMessage_(msg);
@@ -3170,4 +3174,74 @@ function mergeServerAndLocalChatMessages_(serverList) {
     }
   });
   return merged;
+}
+
+
+const CLEARED_CHAT_IDS_KEY = "dbest_desk_cleared_chat_ids_v1";
+
+function getClearedChatMessageIdSet_() {
+  try {
+    const raw = localStorage.getItem(CLEARED_CHAT_IDS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr.map(String) : []);
+  } catch (err) {
+    return new Set();
+  }
+}
+
+function getChatMessageFingerprint_(msg) {
+  return String(
+    msg?.id ||
+    `${normalizeChatUserKey(msg?.pengirim_key)}|${normalizeChatUserKey(msg?.penerima_key)}|${String(msg?.waktu || "")}|${String(msg?.pesan || "").trim()}`
+  );
+}
+
+function clearVisibleChatMessages() {
+  const modeLabel = activeDeskMode === "CONSULT"
+    ? "riwayat konsultasi yang tampil di layar ini"
+    : "riwayat chat yang tampil di layar ini";
+
+  if (!confirm(`Bersihkan ${modeLabel}?`)) {
+    return;
+  }
+
+  const clearedSet = getClearedChatMessageIdSet_();
+  const allMsgs = Array.isArray(cachedChatMessages) ? cachedChatMessages : [];
+  const myKey = getCurrentChatUserKey();
+
+  const visibleToClear = allMsgs.filter(msg => {
+    const recKey = normalizeChatUserKey(msg.penerima_key || "");
+    const sndKey = normalizeChatUserKey(msg.pengirim_key || "");
+    const isConsultMsg = typeof isConsultationMessage_ === "function"
+      ? isConsultationMessage_(msg)
+      : (recKey === "admin_dbest" || sndKey === "admin_dbest");
+
+    if (activeDeskMode === "CONSULT") {
+      return isConsultMsg && (deskAdminLoggedIn || sndKey === myKey || recKey === myKey);
+    }
+    return !isConsultMsg;
+  });
+
+  visibleToClear.forEach(msg => {
+    clearedSet.add(getChatMessageFingerprint_(msg));
+  });
+
+  try {
+    localStorage.setItem(CLEARED_CHAT_IDS_KEY, JSON.stringify(Array.from(clearedSet).slice(-500)));
+    if (activeDeskMode === "CONSULT" && typeof DESK_CONSULT_LOCAL_KEY !== "undefined") {
+      localStorage.removeItem(DESK_CONSULT_LOCAL_KEY);
+    }
+  } catch (err) {}
+
+  renderFilteredChatMessages();
+  if (typeof deskAdminLoggedIn !== "undefined" && deskAdminLoggedIn && typeof renderDeskAdminConsultationQueue_ === "function") {
+    renderDeskAdminConsultationQueue_();
+  }
+
+  const fbEl = document.getElementById("chatFeedbackText");
+  if (fbEl) {
+    fbEl.textContent = "Tampilan chat berhasil dibersihkan.";
+    fbEl.className = "text-xs font-semibold text-emerald-700";
+    fbEl.classList.remove("hidden");
+  }
 }
