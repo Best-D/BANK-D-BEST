@@ -1046,7 +1046,6 @@ async function refreshDashboardData() {
   renderDashboardTable();
   loadVerifiedDonationsForDashboard();
   renderDashboardSurveySummary();
-  pingAndRefreshVisitorStats_();
 }
 
 function renderTimeAnalysisOnResult() {
