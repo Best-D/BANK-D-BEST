@@ -85,7 +85,7 @@
           Dashboard Skor
         </button>
         <button type="button" id="openChatBtn" onclick="toggleChatPanel()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
-          Diskusi Chat
+          D-BEST DESK
         </button>
         <button type="button" onclick="openDonationModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-lg transition">
           Traktir Kopi
@@ -115,8 +115,7 @@
   <main id="setupScreen" class="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-slate-900 p-6 sm:p-8 text-white">
-        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Bank D-BEST </h2>
-          <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Bank Digital Bimbingan, Evaluasi &amp; Simulasi Tes</h2>
+        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Bank D-BEST (Bank Digital Bimbingan, Evaluasi &amp; Simulasi Tes)</h2>
         <p class="text-sm text-blue-100 max-w-2xl">
           Soal-Soal akan selalu diupdate Sesuai dengan Peraturan Kemenpan RB dan BKN Terbaru.
         </p>
@@ -418,7 +417,7 @@
         </div>
 
         <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4">
-          <h3 class="font-bold text-sm text-slate-800 border-b border-slate-200 pb-2">Bank Soal D-BEST</h3>
+          <h3 class="font-bold text-sm text-slate-800 border-b border-slate-200 pb-2">Bank Soal yang Ready dari Google Spreadsheet</h3>
           <div class="space-y-2.5 text-xs">
             <div class="bg-white p-3 rounded-lg border border-slate-200">
               <div class="font-bold text-slate-800">1. TWK (198 Soal)</div>
@@ -1276,17 +1275,22 @@
     </div>
   </section>
 
-  <!-- PANEL CHAT LANGSUNG KE PESERTA TERTENTU -->
+  <!-- PANEL RUANG CHAT & KONSULTASI: D-BEST DESK -->
   <section id="chatPanel" class="hidden max-w-4xl w-full mx-auto px-4 pb-8 no-print">
     <div class="bg-white rounded-2xl shadow-sm border border-teal-200 overflow-hidden">
-      <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 px-5 py-4 text-white flex items-center justify-between gap-3">
+      <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 px-5 py-4 text-white flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div class="flex items-center gap-2">
-            <h3 class="text-base font-extrabold">Chat Langsung Antar Peserta</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 class="text-base font-extrabold">D-BEST DESK</h3>
+            <span class="text-[10px] font-bold bg-emerald-400/20 border border-emerald-300/30 text-emerald-100 px-2 py-0.5 rounded-full">
+              Dukungan Efektif &amp; Solusi Komprehensif
+            </span>
             <span id="unreadChatBadge" class="hidden text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">0 Baru</span>
             <span id="liveChatSyncBadge" class="text-[10px] font-semibold bg-white/15 text-teal-100 px-2 py-0.5 rounded-full">Auto-cek 15 dtk</span>
           </div>
-          <p class="text-[11px] text-teal-100">Kirim teks atau gambar langsung ke peserta tujuan kapan saja; penerima melihat &amp; membalas saat aktif.</p>
+          <p class="text-[11px] text-teal-100 mt-0.5">
+            Ruang chat peserta serta konsultasi pemberkasan administrasi &amp; daftar ulang (teks atau lampiran gambar).
+          </p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" onclick="loadChatMessages(true, true)" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
@@ -1299,19 +1303,100 @@
       </div>
 
       <div class="p-5 space-y-3">
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
-          <div class="text-[11px] font-bold text-slate-600">Peserta Online Saat Ini (Klik untuk Pilih Tujuan)</div>
-          <div id="onlineRecipientsBar" class="flex flex-wrap gap-1.5 text-xs">
-            <span class="text-[11px] text-slate-400">Memuat status online...</span>
+        <!-- PILIH MODE RUANG: CHAT ANTAR PESERTA VS KONSULTASI PEMBERKASAN & DAFTAR ULANG -->
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+          <div class="inline-flex flex-wrap gap-1.5">
+            <button type="button" id="deskTabPeerBtn" onclick="switchDeskMode('PEER')"
+              class="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition">
+              Chat Antar Peserta
+            </button>
+            <button type="button" id="deskTabConsultBtn" onclick="switchDeskMode('CONSULT')"
+              class="px-3.5 py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition">
+              Konsultasi Pemberkasan &amp; Daftar Ulang
+            </button>
+          </div>
+          <span id="deskModeCaption" class="text-[11px] font-semibold text-slate-600 px-2">
+            Mode: Kirim pesan langsung ke peserta lain
+          </span>
+        </div>
+
+        <!-- BLOK KONSULTASI PEMBERKASAN ADMINISTRASI & DAFTAR ULANG -->
+        <div id="deskConsultationBox" class="hidden border border-teal-200 bg-teal-50/50 rounded-xl p-4 space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <div class="text-xs font-extrabold text-teal-950">
+                Layanan Konsultasi Pemberkasan Administrasi &amp; Daftar Ulang — D-BEST DESK
+              </div>
+              <p class="text-[11px] text-slate-600 mt-0.5">
+                Pilih topik kendala pemberkasan atau daftar ulang untuk panduan cepat maupun pengiriman pertanyaan/lampiran dokumen ke meja konsultasi.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label for="consultTopicSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Topik Konsultasi
+              </label>
+              <select id="consultTopicSelect" onchange="handleConsultationTopicChange()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
+                <option value="Pemberkasan Administrasi">Pemberkasan Administrasi (Ijazah, Transkrip, KTP/KK, SKCK, Sehat, Bebas NAPZA)</option>
+                <option value="Daftar Ulang">Daftar Ulang (Jadwal, Verifikasi Akun/Data, Penyesuaian Formasi &amp; Dokumen Akhir)</option>
+              </select>
+            </div>
+            <div>
+              <label for="consultSubIssueSelect" class="block text-[11px] font-bold text-slate-700 mb-1">
+                Kendala Spesifik
+              </label>
+              <select id="consultSubIssueSelect" onchange="handleConsultationTopicChange()"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
+                <option value="perbedaan_nama_data">Perbedaan Nama / Tanggal Lahir / Gelar pada Dokumen</option>
+                <option value="legalisir_ijazah_transkrip">Legalisir Ijazah, Transkrip, atau Penyetaraan Dokumen</option>
+                <option value="dokumen_kesehatan_skck">Surat Keterangan Sehat, Bebas NAPZA &amp; SKCK</option>
+                <option value="alur_daftar_ulang">Alur, Kelengkapan &amp; Ketepatan Waktu Daftar Ulang</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="consultGuidanceCard" class="bg-white border border-teal-200 rounded-xl p-3.5 text-xs space-y-2">
+            <div id="consultGuidanceTitle" class="font-extrabold text-teal-900">
+              Panduan Pemberkasan Administrasi — Perbedaan Nama / Tanggal Lahir / Gelar
+            </div>
+            <ul id="consultGuidanceSteps" class="list-disc pl-4 text-slate-700 space-y-1 text-[11px]">
+              <li>Samakan penulisan nama, gelar, dan tanggal lahir antar dokumen identitas utama (KTP, KK, akta/ijazah) sesuai ketentuan instansi.</li>
+              <li>Siapkan dokumen pendukung/keterangan resmi bila terdapat penyesuaian penulisan sebelum proses pemberkasan ditutup.</li>
+              <li>Unggah foto/tangkapan layar bagian kendala melalui tombol <strong>📷 Gambar</strong> bila ingin dikonsultasikan lebih rinci.</li>
+            </ul>
+            <div class="pt-1 flex flex-wrap items-center gap-2">
+              <button type="button" onclick="applyConsultPromptTemplate()"
+                class="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold transition">
+                Gunakan Template Pertanyaan Ini
+              </button>
+              <span class="text-[10px] text-slate-500">
+                Pesan konsultasi akan dikirim dengan tag topik otomatis ke penerima/meja tujuan yang dipilih.
+              </span>
+            </div>
           </div>
         </div>
 
-        <div>
-          <label for="chatRecipientSelect" class="block text-[11px] font-bold text-slate-600 mb-1">Kirim Pesan Ke Peserta</label>
-          <select id="chatRecipientSelect"
-            class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
-            <option value="">-- Pilih Peserta Tujuan --</option>
-          </select>
+        <!-- PILIH PESERTA TUJUAN (UNTUK CHAT ANTAR PESERTA MAUPUN KONSULTASI) -->
+        <div id="deskPeerSelectorBlock" class="space-y-2.5">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+            <div class="text-[11px] font-bold text-slate-600">Peserta Online Saat Ini (Klik untuk Pilih Tujuan)</div>
+            <div id="onlineRecipientsBar" class="flex flex-wrap gap-1.5 text-xs">
+              <span class="text-[11px] text-slate-400">Memuat status online...</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="chatRecipientSelect" class="block text-[11px] font-bold text-slate-600 mb-1">
+              Kirim Pesan / Konsultasi Ke Peserta Tujuan
+            </label>
+            <select id="chatRecipientSelect"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-teal-600 outline-none">
+              <option value="">-- Pilih Peserta Tujuan --</option>
+            </select>
+          </div>
         </div>
 
         <div id="chatMessagesList" class="space-y-2 max-h-80 overflow-y-auto custom-scroll bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
@@ -1337,7 +1422,7 @@
             class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold shrink-0 transition">
             📷 Gambar
           </button>
-          <input type="text" id="chatMessageInput" maxlength="400" placeholder="Tulis pesan atau keterangan gambar..."
+          <input type="text" id="chatMessageInput" maxlength="400" placeholder="Tulis pesan, pertanyaan pemberkasan/daftar ulang, atau keterangan gambar..."
             class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-teal-600 outline-none" />
           <button type="submit" id="sendChatBtn" class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shrink-0 transition">
             Kirim Pesan
@@ -1595,12 +1680,12 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=39"></script>
-  <script src="js/questions.js?v=39"></script>
-  <script src="js/questions-tambahan-5soal.js?v=39"></script>
-  <script src="js/questions-aturan-2026.js?v=39"></script>
-  <script src="js/auth.js?v=39"></script>
-  <script src="js/dashboard.js?v=39"></script>
-  <script src="js/exam.js?v=39"></script>
+  <script src="js/config.js?v=40"></script>
+  <script src="js/questions.js?v=40"></script>
+  <script src="js/questions-tambahan-5soal.js?v=40"></script>
+  <script src="js/questions-aturan-2026.js?v=40"></script>
+  <script src="js/auth.js?v=40"></script>
+  <script src="js/dashboard.js?v=40"></script>
+  <script src="js/exam.js?v=40"></script>
 </body>
 </html>
