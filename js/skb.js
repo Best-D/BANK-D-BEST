@@ -1,6 +1,8 @@
 const SKB_SHEET_NAME = "BankSoalSKB";
 const SKB_SPREADSHEET_ID = "1rQlxl3rJ56xv_Z3282ic8KoNYFMN-PAtkRT-FKAvE4s";
-const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwhdg1O3ut0U86xaPdSrHcE4nJoleLppWrbeiwo6C-RNsaAjY28CN9fDiv8V2mnGHDFg/exec";
+const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZpO9q1U1wtlRcL_JjksU_Jr55n3rgAQCg-vr-Ko8fjrFDYb1bbudqNCwwvWdp-S5Qnw/exec";
+const SKB_AUTO_REFRESH_MS = 30000;
+
 const SKB_TRACK_LABELS = {
   PRANATA_KOMPUTER: "Pranata Komputer / TI & Data",
   PENATA_LAYANAN_TI: "Penata Layanan Operasional / Layanan TI",
@@ -197,6 +199,42 @@ const SKB_QUESTION_BANK = {
 };
 
 let skbSelectedAnswers = {};
+let skbAutoRefreshTimer = null;
+let skbSheetConnected = false;
+
+function getTotalSkbQuestionsCount_() {
+  return Object.values(SKB_QUESTION_BANK).reduce(
+    (sum, list) => sum + (Array.isArray(list) ? list.length : 0),
+    0
+  );
+}
+
+function getActiveTrackQuestionsCount_() {
+  const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
+  const list = SKB_QUESTION_BANK[track] || [];
+  return { track, count: list.length };
+}
+
+function updateSkbConnectionIndicator_() {
+  ensureSkbUiMount_();
+  const badgeEl = document.getElementById("skbSheetConnectionBadge");
+  const countEl = document.getElementById("skbQuestionCountIndicator");
+  const { count: activeCount } = getActiveTrackQuestionsCount_();
+  const totalCount = getTotalSkbQuestionsCount_();
+
+  if (badgeEl) {
+    badgeEl.textContent = skbSheetConnected
+      ? `Terhubung Spreadsheet (${SKB_SHEET_NAME})`
+      : "Mode Cadangan Lokal";
+    badgeEl.className = skbSheetConnected
+      ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200"
+      : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200";
+  }
+
+  if (countEl) {
+    countEl.textContent = `Soal Bidang Ini: ${activeCount} • Total Bank SKB: ${totalCount} Soal`;
+  }
+}
 
 function ensureSkbUiMount_() {
   const host = document.getElementById("skbWorkspaceBody") || document.getElementById("skbDashboardScreen");
@@ -209,13 +247,20 @@ function ensureSkbUiMount_() {
     mount.className = "mt-4 border border-slate-200 bg-slate-50/80 rounded-xl p-4 space-y-3 text-xs";
     mount.innerHTML = `
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div class="font-extrabold text-slate-800">Sumber Data: BankSoalSKB</div>
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="skbSheetConnectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+              Memeriksa Koneksi...
+            </span>
+            <span id="skbQuestionCountIndicator" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-100 text-indigo-900">
+              0 Soal
+            </span>
+          </div>
           <p id="skbSyncStatusText" class="text-[11px] text-slate-500">Menghubungkan ke tab BankSoalSKB...</p>
         </div>
         <button type="button" id="skbReloadSheetBtn" onclick="syncSkbTracksAndQuestions(true)"
           class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition">
-          Muat Ulang BankSoalSKB
+          Muat Ulang dari Spreadsheet
         </button>
       </div>
       <div id="skbExplanationPanel" class="space-y-2"></div>
@@ -237,9 +282,11 @@ function syncSkbTrackDropdownOptions_() {
 
   trackSel.replaceChildren();
   allKeys.forEach(key => {
+    const qLen = Array.isArray(SKB_QUESTION_BANK[key]) ? SKB_QUESTION_BANK[key].length : 0;
+    const labelBase = SKB_TRACK_LABELS[key] || key.replace(/_/g, " ");
     const opt = document.createElement("option");
     opt.value = key;
-    opt.textContent = SKB_TRACK_LABELS[key] || key.replace(/_/g, " ");
+    opt.textContent = `${labelBase} (${qLen} soal)`;
     trackSel.appendChild(opt);
   });
 
@@ -270,29 +317,47 @@ function renderSkbExplanationsForActiveTrack_() {
   });
 }
 
+function normalizeSkbCellKey_(rawKey) {
+  return String(rawKey || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function applySkbRowsToBank_(rowsArray) {
   if (!Array.isArray(rowsArray) || rowsArray.length === 0) return false;
   const grouped = {};
-  rowsArray.forEach(item => {
-    const trackKey = String(item.bidang || "PRANATA_KOMPUTER").trim().toUpperCase();
-    if (item.jabatan && !SKB_TRACK_LABELS[trackKey]) {
-      SKB_TRACK_LABELS[trackKey] = String(item.jabatan).trim();
+
+  rowsArray.forEach(rawItem => {
+    if (!rawItem || typeof rawItem !== "object") return;
+    const item = {};
+    Object.entries(rawItem).forEach(([k, v]) => {
+      item[normalizeSkbCellKey_(k)] = v;
+    });
+
+    const qText = String(item.question || item.pertanyaan || item.soal || "").trim();
+    if (!qText || /^question$/i.test(qText)) return;
+
+    const trackKey = String(item.bidang || item.kode_bidang || "PRANATA_KOMPUTER").trim().toUpperCase();
+    const jabatanLabel = String(item.jabatan || item.nama_jabatan || "").trim();
+    if (jabatanLabel && !SKB_TRACK_LABELS[trackKey]) {
+      SKB_TRACK_LABELS[trackKey] = jabatanLabel;
     }
+
     if (!grouped[trackKey]) grouped[trackKey] = [];
-    if (item.question) {
-      grouped[trackKey].push({
-        id: String(item.id || `skb_srv_${grouped[trackKey].length + 1}`).trim(),
-        question: String(item.question || "").trim(),
-        options: {
-          A: String(item.opsi_a || "").trim(),
-          B: String(item.opsi_b || "").trim(),
-          C: String(item.opsi_c || "").trim(),
-          D: String(item.opsi_d || "").trim()
-        },
-        answer: String(item.jawaban || "A").trim().toUpperCase(),
-        explanation: String(item.pembahasan || "").trim()
-      });
-    }
+    grouped[trackKey].push({
+      id: String(item.id || `${trackKey.toLowerCase()}_${grouped[trackKey].length + 1}`).trim(),
+      question: qText,
+      options: {
+        A: String(item.opsi_a || item.option_a || item.a || "").trim(),
+        B: String(item.opsi_b || item.option_b || item.b || "").trim(),
+        C: String(item.opsi_c || item.option_c || item.c || "").trim(),
+        D: String(item.opsi_d || item.option_d || item.d || "").trim()
+      },
+      answer: String(item.jawaban || item.kunci || item.answer || "A").trim().toUpperCase(),
+      explanation: String(item.pembahasan || item.explanation || "").trim()
+    });
   });
 
   let applied = false;
@@ -308,13 +373,14 @@ function applySkbRowsToBank_(rowsArray) {
 async function fetchSkbFromGvizSheet_(spreadsheetId, sheetName) {
   if (!spreadsheetId || !sheetName) return null;
   try {
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-    const res = await fetch(gvizUrl);
+    const cacheBust = Date.now();
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&_=${cacheBust}`;
+    const res = await fetch(gvizUrl, { cache: "no-store" });
     const raw = await res.text();
     const match = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/);
     if (!match || !match[1]) return null;
     const parsed = JSON.parse(match[1]);
-    const cols = (parsed?.table?.cols || []).map(c => String(c?.label || c?.id || "").trim().toLowerCase());
+    const cols = (parsed?.table?.cols || []).map(c => normalizeSkbCellKey_(c?.label || c?.id || ""));
     const rows = parsed?.table?.rows || [];
     if (!cols.length || !rows.length) return null;
 
@@ -322,7 +388,9 @@ async function fetchSkbFromGvizSheet_(spreadsheetId, sheetName) {
       const cells = r?.c || [];
       const obj = {};
       cols.forEach((colName, idx) => {
-        obj[colName] = cells[idx] && cells[idx].v !== null && cells[idx].v !== undefined ? cells[idx].v : "";
+        if (colName) {
+          obj[colName] = cells[idx] && cells[idx].v !== null && cells[idx].v !== undefined ? cells[idx].v : "";
+        }
       });
       return obj;
     });
@@ -337,12 +405,19 @@ async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = SKB_SHEET_NA
 
   if (cleanUrl && !cleanUrl.includes("TEMPEL_URL")) {
     try {
-      const res = await fetch(`${cleanUrl}?mode=skb&sheet=${encodeURIComponent(targetSheet)}`);
+      const sep = cleanUrl.includes("?") ? "&" : "?";
+      const res = await fetch(`${cleanUrl}${sep}mode=skb&sheet=${encodeURIComponent(targetSheet)}&_=${Date.now()}`, { cache: "no-store" });
       const json = await res.json();
-      if (json && json.status === "sukses" && Array.isArray(json.soal_skb) && json.soal_skb.length > 0) {
-        if (applySkbRowsToBank_(json.soal_skb)) {
+      const rowsFromGs = Array.isArray(json?.soal_skb)
+        ? json.soal_skb
+        : (Array.isArray(json?.data) ? json.data : (Array.isArray(json?.rows) ? json.rows : []));
+
+      if (json && json.status === "sukses" && rowsFromGs.length > 0) {
+        if (applySkbRowsToBank_(rowsFromGs)) {
+          skbSheetConnected = true;
           syncSkbTrackDropdownOptions_();
           renderSkbPracticeQuestions();
+          updateSkbConnectionIndicator_();
           return true;
         }
       }
@@ -351,17 +426,34 @@ async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = SKB_SHEET_NA
 
   const gvizRows = await fetchSkbFromGvizSheet_(SKB_SPREADSHEET_ID, targetSheet);
   if (gvizRows && applySkbRowsToBank_(gvizRows)) {
+    skbSheetConnected = true;
     syncSkbTrackDropdownOptions_();
     renderSkbPracticeQuestions();
+    updateSkbConnectionIndicator_();
     return true;
   }
 
+  skbSheetConnected = false;
+  updateSkbConnectionIndicator_();
   return false;
+}
+
+function startSkbAutoRefresh_() {
+  if (skbAutoRefreshTimer) {
+    clearInterval(skbAutoRefreshTimer);
+  }
+  skbAutoRefreshTimer = setInterval(() => {
+    const skbSec = document.getElementById("skbDashboardScreen");
+    if (skbSec && !skbSec.classList.contains("hidden")) {
+      syncSkbTracksAndQuestions(true);
+    }
+  }, SKB_AUTO_REFRESH_MS);
 }
 
 async function syncSkbTracksAndQuestions(forceReload = false) {
   ensureSkbUiMount_();
   syncSkbTrackDropdownOptions_();
+  updateSkbConnectionIndicator_();
 
   const statusEl = document.getElementById("skbSyncStatusText");
   const directGs = typeof SKB_APPS_SCRIPT_URL !== "undefined" ? String(SKB_APPS_SCRIPT_URL || "").trim() : "";
@@ -370,16 +462,22 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
 
   if (!window.__skbSheetLoaded || forceReload) {
     window.__skbSheetLoaded = true;
-    if (statusEl) statusEl.textContent = `Memuat soal dari spreadsheet (${SKB_SHEET_NAME})...`;
+    if (statusEl) statusEl.textContent = `Menarik soal terbaru dari spreadsheet (${SKB_SHEET_NAME})...`;
     const loaded = await loadSkbFromSheetIfAvailable(endpoint, SKB_SHEET_NAME);
     syncSkbTrackDropdownOptions_();
+    updateSkbConnectionIndicator_();
+    const totalSoal = getTotalSkbQuestionsCount_();
     if (statusEl) {
+      const jam = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
       statusEl.textContent = loaded
-        ? `Soal berhasil dimuat dari tab ${SKB_SHEET_NAME}.`
-        : `Tab ${SKB_SHEET_NAME} belum dapat diakses langsung; memakai daftar lokal.`;
+        ? `Terhubung ke ${SKB_SHEET_NAME} • ${totalSoal} soal termuat • Diperbarui ${jam}`
+        : `Cadangan lokal aktif • ${totalSoal} soal siap dipakai (cek koneksi/sheet ${SKB_SHEET_NAME}).`;
     }
-  } else if (statusEl) {
-    statusEl.textContent = `Sumber aktif: ${SKB_SHEET_NAME} • Bidang siap dipilih.`;
+  } else {
+    updateSkbConnectionIndicator_();
+    if (statusEl) {
+      statusEl.textContent = `Sumber aktif: ${SKB_SHEET_NAME} • ${getTotalSkbQuestionsCount_()} soal tersedia.`;
+    }
   }
 
   renderSkbPracticeQuestions();
@@ -404,7 +502,8 @@ function openSkbFromHeader() {
   }
 
   calculateSkbCompositeScore();
-  syncSkbTracksAndQuestions(false);
+  syncSkbTracksAndQuestions(true);
+  startSkbAutoRefresh_();
 }
 
 function calculateSkbCompositeScore() {
@@ -439,12 +538,14 @@ function calculateSkbCompositeScore() {
 function renderSkbPracticeQuestions() {
   ensureSkbUiMount_();
   syncSkbTrackDropdownOptions_();
+  updateSkbConnectionIndicator_();
 
   const trackSel = document.getElementById("skbTrackSelect");
   const track = trackSel?.value || "PRANATA_KOMPUTER";
   const trackLabelEl = document.getElementById("skbActiveTrackLabel");
   if (trackLabelEl) {
-    trackLabelEl.textContent = trackSel?.selectedOptions?.[0]?.textContent || SKB_TRACK_LABELS[track] || track;
+    const rawLabel = SKB_TRACK_LABELS[track] || (trackSel?.selectedOptions?.[0]?.textContent || track);
+    trackLabelEl.textContent = rawLabel.replace(/\s*\(\d+\s*soal\)$/i, "");
   }
 
   const container = document.getElementById("skbQuestionsContainer");
