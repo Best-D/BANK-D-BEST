@@ -3291,3 +3291,51 @@ function clearVisibleChatMessages() {
     fbEl.classList.remove("hidden");
   }
 }
+
+
+let activeDonationPayTab = "QRIS";
+let isQrisZoomed = false;
+
+function switchDonationPaymentTab(tabName) {
+  activeDonationPayTab = ["QRIS", "EWALLET", "BSI"].includes(tabName) ? tabName : "QRIS";
+
+  const tabMap = {
+    QRIS: "payTabQrisBtn",
+    EWALLET: "payTabEwalletBtn",
+    BSI: "payTabBsiBtn"
+  };
+
+  Object.entries(tabMap).forEach(([key, btnId]) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.className = key === activeDonationPayTab
+      ? "donation-pay-tab py-2 px-2 rounded-lg text-[11px] font-extrabold bg-slate-900 text-white text-center leading-tight transition"
+      : "donation-pay-tab py-2 px-2 rounded-lg text-[11px] font-extrabold bg-white text-slate-800 border border-amber-200 hover:bg-amber-100/70 text-center leading-tight transition";
+  });
+
+  const panelMap = {
+    QRIS: "payPanelQRIS",
+    EWALLET: "payPanelEWALLET",
+    BSI: "payPanelBSI"
+  };
+
+  Object.entries(panelMap).forEach(([key, panelId]) => {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    panel.classList.toggle("hidden", key !== activeDonationPayTab);
+  });
+}
+
+function toggleQrisZoom() {
+  isQrisZoomed = !isQrisZoomed;
+  const imgEl = document.getElementById("donationQrisImg");
+  const btnEl = document.getElementById("qrisZoomBtn");
+  if (imgEl) {
+    imgEl.className = isQrisZoomed
+      ? "w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-lg bg-slate-50 p-1 border border-amber-300 shrink-0 transition-all"
+      : "w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-lg bg-slate-50 p-1 border border-slate-200 shrink-0 transition-all";
+  }
+  if (btnEl) {
+    btnEl.textContent = isQrisZoomed ? "Ukuran Normal" : "Perbesar QR";
+  }
+}
