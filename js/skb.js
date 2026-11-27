@@ -364,7 +364,9 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
   syncSkbTrackDropdownOptions_();
 
   const statusEl = document.getElementById("skbSyncStatusText");
-  const endpoint = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  const directGs = typeof SKB_APPS_SCRIPT_URL !== "undefined" ? String(SKB_APPS_SCRIPT_URL || "").trim() : "";
+  const cfgGs = typeof GOOGLE_SCRIPT_URL !== "undefined" ? String(GOOGLE_SCRIPT_URL || "").trim() : "";
+  const endpoint = directGs || cfgGs;
 
   if (!window.__skbSheetLoaded || forceReload) {
     window.__skbSheetLoaded = true;
