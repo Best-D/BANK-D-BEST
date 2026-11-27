@@ -1304,18 +1304,18 @@
 
       <div class="p-5 space-y-3">
         <!-- PILIH MODE RUANG: CHAT ANTAR PESERTA VS KONSULTASI PEMBERKASAN & DAFTAR ULANG -->
-        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-          <div class="inline-flex flex-wrap gap-1.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+          <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-1.5 w-full sm:w-auto">
             <button type="button" id="deskTabPeerBtn" onclick="switchDeskMode('PEER')"
-              class="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition">
+              class="w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition leading-snug">
               Chat Antar Peserta
             </button>
             <button type="button" id="deskTabConsultBtn" onclick="switchDeskMode('CONSULT')"
-              class="px-3.5 py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition">
+              class="w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition leading-snug">
               Konsultasi Pemberkasan &amp; Daftar Ulang
             </button>
           </div>
-          <span id="deskModeCaption" class="text-[11px] font-semibold text-slate-600 px-2">
+          <span id="deskModeCaption" class="text-[11px] font-semibold text-slate-600 px-2 text-center sm:text-left">
             Mode: Kirim pesan langsung ke peserta lain
           </span>
         </div>
