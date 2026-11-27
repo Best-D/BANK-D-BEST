@@ -6,6 +6,10 @@ const USERS_STORAGE_KEY = "cat_skd_registered_users_v1";
 const HISTORY_STORAGE_KEY = "cat_skd_exam_history_v1";
 const BACKUP_HISTORY_STORAGE_KEY = "cat_skd_exam_history_backup_v1";
 
+const APP_BRAND_NAME = "Bank D-BEST";
+const APP_BRAND_FULLNAME = "Bank D-BEST (Bank Digital Bimbingan, Evaluasi & Simulasi Tes)";
+const APP_VERSION = "v39";
+
 let questionBank = [];
 let reviewQuestions = [];
 let reviewAnswers = [];
