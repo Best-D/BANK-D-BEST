@@ -1217,5 +1217,6 @@ function applyStandardBknLabels_() {
 }
 
 function lockStandardBknDisplayObserver_() {
-  setTimeout(applyStandardBknLabels_, 800);
+  applyStandardBknLabels_();
+  setTimeout(applyStandardBknLabels_, 1200);
 }
