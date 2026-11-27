@@ -2771,8 +2771,8 @@ function switchDeskMode(mode) {
   const captionEl = document.getElementById("deskModeCaption");
   const inputEl = document.getElementById("chatMessageInput");
 
-  const activeCls = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition";
-  const idleCls = "px-3.5 py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition";
+  const activeCls = "w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition leading-snug";
+  const idleCls = "w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition leading-snug";
 
   if (peerBtn) peerBtn.className = activeDeskMode === "PEER" ? activeCls : idleCls;
   if (consultBtn) consultBtn.className = activeDeskMode === "CONSULT" ? activeCls : idleCls;
