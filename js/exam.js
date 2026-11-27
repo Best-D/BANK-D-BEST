@@ -1134,6 +1134,9 @@ function initializeAppOnLoad() {
   if (typeof startVisitorTrackingLoop_ === "function") {
     startVisitorTrackingLoop_();
   }
+  if (typeof lockStandardBknDisplayObserver_ === "function") {
+    lockStandardBknDisplayObserver_();
+  }
 
   try {
     const rawSession = localStorage.getItem(examSessionStorageKey);
@@ -1197,4 +1200,32 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initializeAppOnLoad);
 } else {
   initializeAppOnLoad();
+}
+
+
+function applyStandardBknLabels_() {
+  const heroBadge = document.getElementById("heroQuestionSummaryBadge");
+  if (heroBadge) {
+    heroBadge.textContent = "110 Soal (Standar BKN) • TWK (30) • TIU (35) • TKP (45)";
+  }
+  const twkLbl = document.getElementById("twkCountLabel");
+  if (twkLbl) twkLbl.textContent = "1. TWK (30 Soal • Standar BKN)";
+  const tiuLbl = document.getElementById("tiuCountLabel");
+  if (tiuLbl) tiuLbl.textContent = "2. TIU (35 Soal • Standar BKN)";
+  const tkpLbl = document.getElementById("tkpCountLabel");
+  if (tkpLbl) tkpLbl.textContent = "3. TKP (45 Soal • Standar BKN)";
+}
+
+function lockStandardBknDisplayObserver_() {
+  applyStandardBknLabels_();
+  const targetIds = ["heroQuestionSummaryBadge", "twkCountLabel", "tiuCountLabel", "tkpCountLabel"];
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.bknObserved) return;
+    el.dataset.bknObserved = "1";
+    const obs = new MutationObserver(() => {
+      applyStandardBknLabels_();
+    });
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+  });
 }
