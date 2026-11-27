@@ -74,10 +74,37 @@ function findProfanityInName(rawText) {
   return Array.from(hits);
 }
 
+function hasDigitInParticipantName(rawName) {
+  return /\d/.test(String(rawName || ""));
+}
+
+function validateParticipantNameRules(rawName) {
+  const cleaned = String(rawName || "").trim();
+  if (hasDigitInParticipantName(cleaned)) {
+    return "Nama lengkap peserta tidak boleh mengandung angka. Gunakan huruf saja.";
+  }
+  if (cleaned.length < 4) {
+    return "Nama lengkap peserta minimal 4 karakter.";
+  }
+  if (findProfanityInName(cleaned).length > 0) {
+    return "Nama lengkap mengandung kata tidak sopan.";
+  }
+  return "";
+}
+
 function validateFieldProfanityRealtime(inputId, warningId, fieldLabel) {
   const inputEl = document.getElementById(inputId);
   const warnEl = document.getElementById(warningId);
   if (!inputEl || !warnEl) return true;
+
+  if (inputId === "participantNameInput" && hasDigitInParticipantName(inputEl.value)) {
+    warnEl.textContent =
+      `⚠️ ${fieldLabel} tidak boleh mengandung angka. Silakan gunakan huruf saja.`;
+    warnEl.classList.remove("hidden");
+    inputEl.classList.remove("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
+    inputEl.classList.add("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
+    return false;
+  }
 
   const hits = findProfanityInName(inputEl.value);
   if (hits.length > 0) {
@@ -122,8 +149,11 @@ function validateInstitutionInputRealtime() {
 
 function checkInputAnomalyPreview(nameVal, formationVal, institutionVal) {
   const issues = [];
-  if (nameVal.length < 3 || /^[^a-zA-Z\s]+$/.test(nameVal)) {
-    issues.push("Nama peserta terlalu singkat atau tidak menggunakan huruf wajar");
+  if (nameVal.length < 4 || /^[^a-zA-Z\s]+$/.test(nameVal)) {
+    issues.push("Nama peserta kurang dari 4 karakter atau tidak menggunakan huruf wajar");
+  }
+  if (hasDigitInParticipantName(nameVal)) {
+    issues.push("Nama peserta mengandung angka");
   }
   if (
     /(.)\1{4,}/.test(nameVal) ||
@@ -229,12 +259,9 @@ async function handleRegisterSubmit() {
   const educationVal = document.getElementById("regEducationSelect")?.value.trim() || "";
   const passVal = document.getElementById("regPasswordInput")?.value || "";
 
-  if (!fullName || fullName.length < 3) {
-    showAuthFeedback("Nama lengkap peserta minimal 3 karakter.", true);
-    return;
-  }
-  if (findProfanityInName(fullName).length > 0) {
-    showAuthFeedback("Nama lengkap mengandung kata tidak sopan.", true);
+  const nameErr = validateParticipantNameRules(fullName);
+  if (nameErr) {
+    showAuthFeedback(nameErr, true);
     return;
   }
   if (!rawUsername || rawUsername.length < 3) {
@@ -693,12 +720,9 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
   const formationVal = (profFormEl?.value || "").trim();
   const institutionVal = (profInstEl?.value || "").trim();
 
-  if (!fullName || fullName.length < 4) {
-    showProfileFeedback("Nama lengkap peserta minimal 4 karakter.", true);
-    return;
-  }
-  if (findProfanityInName(fullName).length > 0) {
-    showProfileFeedback("Nama lengkap mengandung kata tidak sopan.", true);
+  const nameErr = validateParticipantNameRules(fullName);
+  if (nameErr) {
+    showProfileFeedback(nameErr, true);
     return;
   }
   if (!educationVal) {
@@ -850,14 +874,36 @@ function applyAutoCapitalizeToInput(inputEl, finalizeCase = false) {
   }
 }
 
-function attachAutoCapitalizeListeners_(inputEl, onAfterFormat) {
+function stripDigitsFromNameInput_(inputEl) {
+  if (!inputEl || !inputEl.value) return;
+  if (!hasDigitInParticipantName(inputEl.value)) return;
+  const selStart = inputEl.selectionStart;
+  const cleaned = inputEl.value.replace(/\d+/g, "");
+  if (cleaned !== inputEl.value) {
+    inputEl.value = cleaned;
+    if (typeof selStart === "number") {
+      const safePos = Math.max(0, Math.min(cleaned.length, selStart));
+      try {
+        inputEl.setSelectionRange(safePos, safePos);
+      } catch (err) {}
+    }
+  }
+}
+
+function attachAutoCapitalizeListeners_(inputEl, onAfterFormat, stripDigits = false) {
   if (!inputEl || inputEl.dataset.autoCapBound) return;
   inputEl.dataset.autoCapBound = "1";
   inputEl.addEventListener("input", () => {
+    if (stripDigits) {
+      stripDigitsFromNameInput_(inputEl);
+    }
     applyAutoCapitalizeToInput(inputEl, false);
     if (typeof onAfterFormat === "function") onAfterFormat(false);
   });
   inputEl.addEventListener("blur", () => {
+    if (stripDigits) {
+      stripDigitsFromNameInput_(inputEl);
+    }
     applyAutoCapitalizeToInput(inputEl, true);
     if (typeof onAfterFormat === "function") onAfterFormat(true);
   });
@@ -865,24 +911,24 @@ function attachAutoCapitalizeListeners_(inputEl, onAfterFormat) {
 
 function bindInstitutionAutoCapitalize() {
   const regNameInput = document.getElementById("regFullNameInput");
-  attachAutoCapitalizeListeners_(regNameInput, null);
+  attachAutoCapitalizeListeners_(regNameInput, null, true);
 
   const formInput = document.getElementById("appliedFormationInput");
   attachAutoCapitalizeListeners_(formInput, () => {
     validateFormationInputRealtime();
-  });
+  }, false);
 
   const instInput = document.getElementById("appliedInstitutionInput");
   attachAutoCapitalizeListeners_(instInput, () => {
     validateInstitutionInputRealtime();
-  });
+  }, false);
 
   const profileNameInput = document.getElementById("profileFullNameInput");
-  attachAutoCapitalizeListeners_(profileNameInput, null);
+  attachAutoCapitalizeListeners_(profileNameInput, null, true);
 
   const profileFormInput = document.getElementById("profileFormationInput");
-  attachAutoCapitalizeListeners_(profileFormInput, null);
+  attachAutoCapitalizeListeners_(profileFormInput, null, false);
 
   const profileInstInput = document.getElementById("profileInstitutionInput");
-  attachAutoCapitalizeListeners_(profileInstInput, null);
+  attachAutoCapitalizeListeners_(profileInstInput, null, false);
 }
