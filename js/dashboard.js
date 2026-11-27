@@ -1046,6 +1046,7 @@ async function refreshDashboardData() {
   renderDashboardTable();
   loadVerifiedDonationsForDashboard();
   renderDashboardSurveySummary();
+  pingAndRefreshVisitorStats_();
 }
 
 function renderTimeAnalysisOnResult() {
@@ -2512,4 +2513,112 @@ function requireSurveyBeforeAction(actionLabel = "melanjutkan") {
     setTimeout(() => fbInput.focus(), 120);
   }
   return false;
+}
+
+
+const VISITOR_ID_STORAGE_KEY = "cat_skd_visitor_uid_v1";
+const VISITOR_STATS_CACHE_KEY = "cat_skd_visitor_stats_cache_v1";
+let visitorHeartbeatTimer = null;
+
+function getOrCreateBrowserVisitorId_() {
+  try {
+    let vid = localStorage.getItem(VISITOR_ID_STORAGE_KEY);
+    if (!vid) {
+      vid = `vis_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem(VISITOR_ID_STORAGE_KEY, vid);
+    }
+    return vid;
+  } catch (err) {
+    return `vis_session_${Math.random().toString(36).slice(2, 8)}`;
+  }
+}
+
+function renderVisitorStatsUI_(stats) {
+  if (!stats || typeof stats !== "object") return;
+  const curVal = Number(stats.pengunjung_saat_ini ?? 0);
+  const totVal = Number(stats.total_pengunjung ?? 0);
+  const avgVal = Number(stats.rata_rata_pengunjung ?? 0);
+  const daysVal = Math.max(1, Number(stats.hari_aktif ?? 1));
+
+  const formatNum = (n) => Number.isFinite(n) ? n.toLocaleString("id-ID") : "-";
+  const formatAvg = (n) => Number.isFinite(n) ? n.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 1 }) : "-";
+
+  const heroCur = document.getElementById("heroVisitorCurrent");
+  const heroTot = document.getElementById("heroVisitorTotal");
+  const heroAvg = document.getElementById("heroVisitorAverage");
+  if (heroCur) heroCur.textContent = `${formatNum(curVal)} orang`;
+  if (heroTot) heroTot.textContent = `${formatNum(totVal)} orang`;
+  if (heroAvg) heroAvg.textContent = `${formatAvg(avgVal)} / hari`;
+
+  const dashCur = document.getElementById("dashVisitorCurrent");
+  const dashTot = document.getElementById("dashVisitorTotal");
+  const dashAvg = document.getElementById("dashVisitorAverage");
+  const dashDays = document.getElementById("dashVisitorActiveDaysBadge");
+  if (dashCur) dashCur.textContent = `${formatNum(curVal)} orang`;
+  if (dashTot) dashTot.textContent = `${formatNum(totVal)} orang`;
+  if (dashAvg) dashAvg.textContent = `${formatAvg(avgVal)} orang/hari`;
+  if (dashDays) dashDays.textContent = `Rentang ${formatNum(daysVal)} Hari`;
+}
+
+function loadCachedVisitorStats_() {
+  try {
+    const raw = localStorage.getItem(VISITOR_STATS_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed) renderVisitorStatsUI_(parsed);
+  } catch (err) {}
+}
+
+async function pingAndRefreshVisitorStats_() {
+  loadCachedVisitorStats_();
+  const endpoint = getScriptEndpoint();
+  const vid = getOrCreateBrowserVisitorId_();
+  const activeName = getActiveUserFilterName() || "Tamu";
+
+  if (!endpoint || endpoint.includes("TEMPEL_URL")) {
+    const fallbackStats = {
+      pengunjung_saat_ini: 1,
+      total_pengunjung: 1,
+      rata_rata_pengunjung: 1,
+      hari_aktif: 1
+    };
+    renderVisitorStatsUI_(fallbackStats);
+    return;
+  }
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "ping_visitor",
+        visitor_id: vid,
+        nama: activeName
+      })
+    });
+    const json = await res.json();
+    if (json && json.status === "sukses") {
+      localStorage.setItem(VISITOR_STATS_CACHE_KEY, JSON.stringify(json));
+      renderVisitorStatsUI_(json);
+    }
+  } catch (err) {
+    try {
+      const resGet = await fetch(`${endpoint}?mode=pengunjung`);
+      const jsonGet = await resGet.json();
+      if (jsonGet && jsonGet.status === "sukses") {
+        localStorage.setItem(VISITOR_STATS_CACHE_KEY, JSON.stringify(jsonGet));
+        renderVisitorStatsUI_(jsonGet);
+      }
+    } catch (e2) {}
+  }
+}
+
+function startVisitorTrackingLoop_() {
+  pingAndRefreshVisitorStats_();
+  if (visitorHeartbeatTimer) {
+    clearInterval(visitorHeartbeatTimer);
+  }
+  visitorHeartbeatTimer = setInterval(() => {
+    pingAndRefreshVisitorStats_();
+  }, 60000);
 }
