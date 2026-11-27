@@ -2786,6 +2786,15 @@ const CONSULTATION_GUIDES = {
       "Segera sampaikan detail kendala teknis yang dialami melalui kolom pesan di bawah."
     ],
     template: "[Konsultasi Daftar Ulang - Kendala Teknis & Deadline] Mohon bantuan solusi terkait kendala teknis/batas waktu daftar ulang: "
+  },
+  topik_lainnya: {
+    title: "Panduan Topik Lainnya — Kendala di Luar Daftar",
+    steps: [
+      "Tuliskan inti kendala atau pertanyaan Anda secara jelas pada kolom pesan di bawah meskipun belum tercantum pada pilihan daftar.",
+      "Sertakan detail konteks (seperti tahapan seleksi, formasi/instansi, atau keterangan pendukung) agar Admin D-BEST DESK lebih mudah memahami kasusnya.",
+      "Lampirkan foto atau tangkapan layar melalui tombol 📷 Gambar bila diperlukan."
+    ],
+    template: "[Konsultasi Topik Lainnya] Saya ingin berkonsultasi mengenai kendala di luar daftar berikut: "
   }
 };
 
@@ -2844,23 +2853,30 @@ function handleConsultationTopicChange() {
   const stepsEl = document.getElementById("consultGuidanceSteps");
 
   const rawTopic = String(topicSel?.value || "Pemberkasan Administrasi").trim();
-  const isDaftarUlang = /daftar\s*ulang/i.test(rawTopic);
-  const topicLabel = isDaftarUlang ? "Daftar Ulang" : "Pemberkasan Administrasi";
+  const isOtherTopic = /^lainnya$/i.test(rawTopic);
+  const isDaftarUlang = !isOtherTopic && /daftar\s*ulang/i.test(rawTopic);
+  const topicLabel = isOtherTopic
+    ? "Topik Lainnya"
+    : (isDaftarUlang ? "Daftar Ulang" : "Pemberkasan Administrasi");
 
-  const optionsByTopic = isDaftarUlang
+  const optionsByTopic = isOtherTopic
     ? [
-        { value: "checklist_pra_daftar_ulang", label: "Checklist Pra-Daftar Ulang (H-3 s.d. Hari-H)" },
-        { value: "alur_daftar_ulang", label: "Alur, Konfirmasi Kehadiran & Jadwal Daftar Ulang" },
-        { value: "kendala_teknis_deadline", label: "Antisipasi Kendala Teknis & Batas Waktu Daftar Ulang" }
+        { value: "topik_lainnya", label: "Kendala Lain di Luar Daftar (Tulis Bebas di Kolom Pesan)" }
       ]
-    : [
-        { value: "perbedaan_nama_data", label: "Perbedaan Nama / Tanggal Lahir / Gelar pada Dokumen" },
-        { value: "kualifikasi_formasi", label: "Kesesuaian Kualifikasi Pendidikan & Jabatan/Formasi" },
-        { value: "identitas_kependudukan", label: "Dokumen Identitas & Kependudukan (KTP, KK, Akta)" },
-        { value: "legalisir_ijazah_transkrip", label: "Legalisir Ijazah, Transkrip, atau Penyetaraan Dokumen" },
-        { value: "dokumen_kesehatan_skck", label: "Surat Keterangan Sehat, Bebas NAPZA & SKCK" },
-        { value: "format_ejaan_dokumen", label: "Penulisan, Tanda Apostrof (') & Format Dokumen Resmi" }
-      ];
+    : (isDaftarUlang
+        ? [
+            { value: "checklist_pra_daftar_ulang", label: "Checklist Pra-Daftar Ulang (H-3 s.d. Hari-H)" },
+            { value: "alur_daftar_ulang", label: "Alur, Konfirmasi Kehadiran & Jadwal Daftar Ulang" },
+            { value: "kendala_teknis_deadline", label: "Antisipasi Kendala Teknis & Batas Waktu Daftar Ulang" }
+          ]
+        : [
+            { value: "perbedaan_nama_data", label: "Perbedaan Nama / Tanggal Lahir / Gelar pada Dokumen" },
+            { value: "kualifikasi_formasi", label: "Kesesuaian Kualifikasi Pendidikan & Jabatan/Formasi" },
+            { value: "identitas_kependudukan", label: "Dokumen Identitas & Kependudukan (KTP, KK, Akta)" },
+            { value: "legalisir_ijazah_transkrip", label: "Legalisir Ijazah, Transkrip, atau Penyetaraan Dokumen" },
+            { value: "dokumen_kesehatan_skck", label: "Surat Keterangan Sehat, Bebas NAPZA & SKCK" },
+            { value: "format_ejaan_dokumen", label: "Penulisan, Tanda Apostrof (') & Format Dokumen Resmi" }
+          ]);
 
   if (subSel) {
     const prevVal = subSel.value;
