@@ -1,6 +1,3 @@
-// Modul Terpisah SKB — Bank D-BEST (js/skb.js)
-// Berdiri mandiri agar tidak mengganggu alur SKD pada auth.js, dashboard.js, dan exam.js.
-
 const SKB_QUESTION_BANK = {
   PRANATA_KOMPUTER: [
     {
@@ -82,20 +79,25 @@ const SKB_QUESTION_BANK = {
 
 let skbSelectedAnswers = {};
 
-function toggleSkbWorkspace() {
-  const bodyEl = document.getElementById("skbWorkspaceBody");
-  const btnEl = document.getElementById("toggleSkbWorkspaceBtn");
-  if (!bodyEl) return;
+function openSkbFromHeader() {
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum membuka Dashboard SKB.");
+    return;
+  }
 
-  const isNowOpen = bodyEl.classList.contains("hidden");
-  bodyEl.classList.toggle("hidden", !isNowOpen);
-  if (btnEl) {
-    btnEl.textContent = isNowOpen ? "Sembunyikan Modul SKB" : "Buka Latihan & Kalkulator SKB";
+  ["setupScreen", "examScreen", "resultScreen", "dashboardScreen", "profileScreen", "reviewSection"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+  });
+
+  const skbSec = document.getElementById("skbDashboardScreen");
+  if (skbSec) {
+    skbSec.classList.remove("hidden");
+    skbSec.scrollIntoView({ behavior: "smooth" });
   }
-  if (isNowOpen) {
-    calculateSkbCompositeScore();
-    renderSkbPracticeQuestions();
-  }
+
+  calculateSkbCompositeScore();
+  renderSkbPracticeQuestions();
 }
 
 function calculateSkbCompositeScore() {
@@ -104,7 +106,7 @@ function calculateSkbCompositeScore() {
   const wSkd = Number(document.getElementById("skbWeightSkdSelect")?.value || 40);
   const wSkb = Number(document.getElementById("skbWeightSkbSelect")?.value || 60);
   const outEl = document.getElementById("skbCompositeResultBox");
-  if (!outEl) return;
+  const highlightEl = document.getElementById("skbFinalScoreHighlight");
 
   const clampedSkd = Math.max(0, Math.min(550, skdRaw));
   const clampedSkb = Math.max(0, Math.min(100, skbRaw));
@@ -115,14 +117,26 @@ function calculateSkbCompositeScore() {
     ? ((skdNormalized100 * wSkd) + (clampedSkb * wSkb)) / totalWeight
     : 0;
 
-  outEl.innerHTML =
-    `Skor SKD Ternormalisasi: <strong>${skdNormalized100.toFixed(2)}</strong> / 100 • ` +
-    `Nilai SKB: <strong>${clampedSkb.toFixed(2)}</strong> / 100 • ` +
-    `Estimasi Nilai Akhir (${wSkd}% SKD + ${wSkb}% SKB): <span class="text-indigo-700 font-extrabold text-sm">${finalScore.toFixed(2)}</span>`;
+  if (highlightEl) {
+    highlightEl.textContent = finalScore.toFixed(2);
+  }
+
+  if (outEl) {
+    outEl.innerHTML =
+      `Skor SKD Ternormalisasi: <strong>${skdNormalized100.toFixed(2)}</strong> / 100 • ` +
+      `Nilai SKB: <strong>${clampedSkb.toFixed(2)}</strong> / 100 • ` +
+      `Estimasi Nilai Akhir (${wSkd}% SKD + ${wSkb}% SKB): <span class="text-indigo-700 font-extrabold text-sm">${finalScore.toFixed(2)}</span>`;
+  }
 }
 
 function renderSkbPracticeQuestions() {
-  const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
+  const trackSel = document.getElementById("skbTrackSelect");
+  const track = trackSel?.value || "PRANATA_KOMPUTER";
+  const trackLabelEl = document.getElementById("skbActiveTrackLabel");
+  if (trackLabelEl && trackSel?.selectedOptions?.[0]) {
+    trackLabelEl.textContent = trackSel.selectedOptions[0].textContent;
+  }
+
   const container = document.getElementById("skbQuestionsContainer");
   if (!container) return;
 
@@ -165,6 +179,7 @@ function submitSkbPractice() {
   const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
   const list = SKB_QUESTION_BANK[track] || SKB_QUESTION_BANK.PRANATA_KOMPUTER;
   const scoreEl = document.getElementById("skbPracticeScoreText");
+  const latestBadge = document.getElementById("skbLatestScoreBadge");
   if (!scoreEl) return;
 
   let correctCount = 0;
@@ -176,33 +191,14 @@ function submitSkbPractice() {
 
   const score100 = list.length > 0 ? Math.round((correctCount / list.length) * 100) : 0;
   scoreEl.textContent = `Skor Latihan SKB: ${score100} (${correctCount}/${list.length} benar)`;
+  if (latestBadge) {
+    latestBadge.textContent = `${score100} (${correctCount}/${list.length})`;
+  }
 
   const skbCalcInput = document.getElementById("skbCalcSkbInput");
   if (skbCalcInput) {
     skbCalcInput.value = String(score100);
     calculateSkbCompositeScore();
-  }
-}
-
-
-function openSkbFromHeader() {
-  if (typeof isExamActive !== "undefined" && isExamActive) {
-    alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum membuka Modul SKB.");
-    return;
-  }
-  if (typeof openDashboard === "function") {
-    openDashboard().then(() => {
-      const bodyEl = document.getElementById("skbWorkspaceBody");
-      const btnEl = document.getElementById("toggleSkbWorkspaceBtn");
-      const secEl = document.getElementById("skbModuleSection");
-      if (bodyEl && bodyEl.classList.contains("hidden")) {
-        bodyEl.classList.remove("hidden");
-        if (btnEl) btnEl.textContent = "Sembunyikan Modul SKB";
-        if (typeof calculateSkbCompositeScore === "function") calculateSkbCompositeScore();
-        if (typeof renderSkbPracticeQuestions === "function") renderSkbPracticeQuestions();
-      }
-      if (secEl) secEl.scrollIntoView({ behavior: "smooth" });
-    });
   }
 }
 
@@ -234,36 +230,6 @@ async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = "BankSoalSKB
       renderSkbPracticeQuestions();
       return true;
     }
-  } catch (err) {
-    console.warn("Bank soal SKB sheet baru belum aktif atau gagal dimuat:", err);
-  }
+  } catch (err) {}
   return false;
 }
-
-
-// ============================================================================
-// PANDUAN GOOGLE APPS SCRIPT (doGet) UNTUK SHEET BARU: "BankSoalSKB"
-// Salin ke dalam fungsi doGet(e) pada Google Apps Script Anda jika ingin menarik
-// soal SKB dari tab sheet baru bernama "BankSoalSKB".
-// Kolom sheet BankSoalSKB: id | bidang | question | opsi_a | opsi_b | opsi_c | opsi_d | jawaban | pembahasan
-// ============================================================================
-/*
-if (e && e.parameter && e.parameter.mode === "skb") {
-  var sheetName = e.parameter.sheet || "BankSoalSKB";
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(sheetName);
-  var rows = sh ? sh.getDataRange().getValues() : [];
-  var headers = rows.length > 0 ? rows[0] : [];
-  var soalSkb = [];
-  for (var r = 1; r < rows.length; r++) {
-    var obj = {};
-    for (var c = 0; c < headers.length; c++) {
-      obj[String(headers[c]).trim()] = rows[r][c];
-    }
-    if (obj.question) soalSkb.push(obj);
-  }
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: "sukses", soal_skb: soalSkb }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-*/
