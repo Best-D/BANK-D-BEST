@@ -78,10 +78,27 @@ function hasDigitInParticipantName(rawName) {
   return /\d/.test(String(rawName || ""));
 }
 
+function hasDisallowedSymbolInParticipantName(rawName) {
+  const cleaned = String(rawName || "").trim();
+  if (!cleaned) return false;
+  return /[^A-Za-zÀ-ÖØ-öø-ÿ\s'’]/.test(cleaned);
+}
+
+function sanitizeParticipantNameInput_(rawName) {
+  let s = String(rawName || "");
+  s = s.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'’]/g, "");
+  s = s.replace(/’/g, "'");
+  s = s.replace(/'{2,}/g, "'");
+  return s;
+}
+
 function validateParticipantNameRules(rawName) {
   const cleaned = String(rawName || "").trim();
   if (hasDigitInParticipantName(cleaned)) {
-    return "Nama lengkap peserta tidak boleh mengandung angka. Gunakan huruf saja.";
+    return "Nama lengkap peserta tidak boleh mengandung angka. Gunakan huruf saja (simbol hanya tanda ').";
+  }
+  if (hasDisallowedSymbolInParticipantName(cleaned)) {
+    return "Nama lengkap peserta hanya boleh menggunakan huruf dan tanda apostrof ('). Simbol lain tidak diperbolehkan.";
   }
   if (cleaned.length < 4) {
     return "Nama lengkap peserta minimal 4 karakter.";
@@ -92,6 +109,7 @@ function validateParticipantNameRules(rawName) {
   return "";
 }
 
+
 function validateFieldProfanityRealtime(inputId, warningId, fieldLabel) {
   const inputEl = document.getElementById(inputId);
   const warnEl = document.getElementById(warningId);
@@ -99,7 +117,15 @@ function validateFieldProfanityRealtime(inputId, warningId, fieldLabel) {
 
   if (inputId === "participantNameInput" && hasDigitInParticipantName(inputEl.value)) {
     warnEl.textContent =
-      `⚠️ ${fieldLabel} tidak boleh mengandung angka. Silakan gunakan huruf saja.`;
+      `⚠️ ${fieldLabel} tidak boleh mengandung angka. Silakan gunakan huruf saja (simbol hanya tanda ').`;
+    warnEl.classList.remove("hidden");
+    inputEl.classList.remove("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
+    inputEl.classList.add("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
+    return false;
+  }
+  if (inputId === "participantNameInput" && hasDisallowedSymbolInParticipantName(inputEl.value)) {
+    warnEl.textContent =
+      `⚠️ ${fieldLabel} hanya boleh menggunakan huruf dan tanda apostrof ('). Simbol lain tidak diperbolehkan.`;
     warnEl.classList.remove("hidden");
     inputEl.classList.remove("border-slate-300", "focus:ring-blue-600", "focus:border-blue-600");
     inputEl.classList.add("border-rose-500", "bg-rose-50/40", "focus:ring-rose-500", "focus:border-rose-500");
@@ -154,6 +180,9 @@ function checkInputAnomalyPreview(nameVal, formationVal, institutionVal) {
   }
   if (hasDigitInParticipantName(nameVal)) {
     issues.push("Nama peserta mengandung angka");
+  }
+  if (hasDisallowedSymbolInParticipantName(nameVal)) {
+    issues.push("Nama peserta mengandung simbol selain tanda '");
   }
   if (
     /(.)\1{4,}/.test(nameVal) ||
@@ -876,9 +905,8 @@ function applyAutoCapitalizeToInput(inputEl, finalizeCase = false) {
 
 function stripDigitsFromNameInput_(inputEl) {
   if (!inputEl || !inputEl.value) return;
-  if (!hasDigitInParticipantName(inputEl.value)) return;
   const selStart = inputEl.selectionStart;
-  const cleaned = inputEl.value.replace(/\d+/g, "");
+  const cleaned = sanitizeParticipantNameInput_(inputEl.value);
   if (cleaned !== inputEl.value) {
     inputEl.value = cleaned;
     if (typeof selStart === "number") {
