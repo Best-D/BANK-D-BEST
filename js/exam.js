@@ -1218,14 +1218,7 @@ function applyStandardBknLabels_() {
 
 function lockStandardBknDisplayObserver_() {
   applyStandardBknLabels_();
-  const targetIds = ["heroQuestionSummaryBadge", "twkCountLabel", "tiuCountLabel", "tkpCountLabel"];
-  targetIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el || el.dataset.bknObserved) return;
-    el.dataset.bknObserved = "1";
-    const obs = new MutationObserver(() => {
-      applyStandardBknLabels_();
-    });
-    obs.observe(el, { childList: true, characterData: true, subtree: true });
-  });
+  setTimeout(applyStandardBknLabels_, 400);
+  setTimeout(applyStandardBknLabels_, 1500);
+  setTimeout(applyStandardBknLabels_, 3500);
 }
