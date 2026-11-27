@@ -693,8 +693,8 @@ async function saveParticipantProfile(goToSetupAfterSave = false) {
   const formationVal = (profFormEl?.value || "").trim();
   const institutionVal = (profInstEl?.value || "").trim();
 
-  if (!fullName || fullName.length < 3) {
-    showProfileFeedback("Nama lengkap peserta minimal 3 karakter.", true);
+  if (!fullName || fullName.length < 4) {
+    showProfileFeedback("Nama lengkap peserta minimal 4 karakter.", true);
     return;
   }
   if (findProfanityInName(fullName).length > 0) {
