@@ -1544,28 +1544,94 @@
           </div>
         </div>
 
-        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 flex items-center gap-3">
-          <img
-            src="Qris-Shoope.jpeg"
-            alt="QRIS ShopeePay a.n. Budiman Putra"
-            class="w-28 h-28 object-contain rounded-lg bg-white p-1 border border-amber-200 shrink-0"
-          />
-          <div class="space-y-1.5 min-w-0 flex-1">
-            <div class="text-[11px] font-extrabold text-amber-950">QRIS ShopeePay / E-Wallet / BSI</div>
-            <div class="flex items-center justify-between gap-1.5 text-[11px]">
-              <span class="font-bold text-slate-800 truncate">082388494114 (Budiman Putra)</span>
-              <button type="button" onclick="copyDonationText('082388494114', 'donationCopyFeedback')" class="px-2 py-1 rounded bg-slate-900 text-white text-[10px] font-bold shrink-0">
-                Salin
-              </button>
-            </div>
-            <div class="flex items-center justify-between gap-1.5 text-[11px]">
-              <span class="font-bold text-slate-800 truncate">BSI 1149630924 (Budiman Putra)</span>
-              <button type="button" onclick="copyDonationText('1149630924', 'donationCopyFeedback')" class="px-2 py-1 rounded bg-blue-600 text-white text-[10px] font-bold shrink-0">
-                Salin
-              </button>
-            </div>
-            <p id="donationCopyFeedback" class="hidden text-[10px] font-bold text-emerald-700"></p>
+        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 space-y-2.5">
+          <div class="grid grid-cols-3 gap-1.5" role="tablist" aria-label="Pilih Kanal Pembayaran">
+            <button type="button" id="payTabQrisBtn" onclick="switchDonationPaymentTab('QRIS')"
+              class="donation-pay-tab py-2 px-2 rounded-lg text-[11px] font-extrabold bg-slate-900 text-white text-center leading-tight transition">
+              QRIS ShopeePay
+            </button>
+            <button type="button" id="payTabEwalletBtn" onclick="switchDonationPaymentTab('EWALLET')"
+              class="donation-pay-tab py-2 px-2 rounded-lg text-[11px] font-extrabold bg-white text-slate-800 border border-amber-200 hover:bg-amber-100/70 text-center leading-tight transition">
+              E-Wallet ShopeePay
+            </button>
+            <button type="button" id="payTabBsiBtn" onclick="switchDonationPaymentTab('BSI')"
+              class="donation-pay-tab py-2 px-2 rounded-lg text-[11px] font-extrabold bg-white text-slate-800 border border-amber-200 hover:bg-amber-100/70 text-center leading-tight transition">
+              BSI
+            </button>
           </div>
+
+          <!-- Panel 1: QRIS ShopeePay -->
+          <div id="payPanelQRIS" class="donation-pay-panel bg-white border border-amber-200 rounded-xl p-2.5 space-y-2">
+            <div class="flex items-center gap-3">
+              <img
+                id="donationQrisImg"
+                src="Qris-Shoope.jpeg"
+                alt="QRIS ShopeePay a.n. Budiman Putra"
+                class="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-lg bg-slate-50 p-1 border border-slate-200 shrink-0 transition-all"
+              />
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="text-[11px] font-extrabold text-slate-900">QRIS ShopeePay</div>
+                <div class="text-[11px] text-slate-600 leading-snug">
+                  Scan kode QR dari aplikasi ShopeePay atau e-wallet/m-banking pendukung.
+                </div>
+                <div class="text-[11px] font-bold text-amber-900">a.n. Budiman Putra</div>
+                <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <button type="button" onclick="toggleQrisZoom()" id="qrisZoomBtn"
+                    class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 text-[10px] font-extrabold transition">
+                    Perbesar QR
+                  </button>
+                  <button type="button" onclick="copyDonationText('QRIS ShopeePay a.n. Budiman Putra (082388494114)', 'donationCopyFeedback')"
+                    class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold transition">
+                    Salin Info
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: E-Wallet ShopeePay -->
+          <div id="payPanelEWALLET" class="donation-pay-panel hidden bg-white border border-amber-200 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-100 text-orange-900">
+                E-Wallet ShopeePay
+              </span>
+              <span class="text-[10px] font-semibold text-slate-500">Transfer Instan</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+              <div class="min-w-0">
+                <div class="text-[10px] text-slate-500">Nomor ShopeePay</div>
+                <div class="text-sm font-extrabold text-slate-900 tracking-wide">082388494114</div>
+                <div class="text-[11px] font-semibold text-slate-700">a.n. Budiman Putra</div>
+              </div>
+              <button type="button" onclick="copyDonationText('082388494114', 'donationCopyFeedback')"
+                class="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold shrink-0 transition">
+                Salin No.
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel 3: Bank Syariah Indonesia (BSI) -->
+          <div id="payPanelBSI" class="donation-pay-panel hidden bg-white border border-amber-200 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-900">
+                Rekening BSI
+              </span>
+              <span class="text-[10px] font-semibold text-slate-500">Bank Syariah Indonesia</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+              <div class="min-w-0">
+                <div class="text-[10px] text-slate-500">No. Rekening BSI</div>
+                <div class="text-sm font-extrabold text-slate-900 tracking-wide">1149630924</div>
+                <div class="text-[11px] font-semibold text-slate-700">a.n. Budiman Putra</div>
+              </div>
+              <button type="button" onclick="copyDonationText('1149630924', 'donationCopyFeedback')"
+                class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shrink-0 transition">
+                Salin Rek.
+              </button>
+            </div>
+          </div>
+
+          <p id="donationCopyFeedback" class="hidden text-[11px] font-bold text-emerald-700 px-1"></p>
         </div>
 
         <div class="flex items-center justify-between gap-2 pt-0.5">
