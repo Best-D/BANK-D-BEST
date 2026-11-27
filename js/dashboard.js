@@ -2843,9 +2843,40 @@ function handleConsultationTopicChange() {
   const titleEl = document.getElementById("consultGuidanceTitle");
   const stepsEl = document.getElementById("consultGuidanceSteps");
 
-  const subKey = subSel?.value || "perbedaan_nama_data";
-  const topicLabel = topicSel?.value || "Pemberkasan Administrasi";
-  const guide = CONSULTATION_GUIDES[subKey] || CONSULTATION_GUIDES.perbedaan_nama_data;
+  const rawTopic = String(topicSel?.value || "Pemberkasan Administrasi").trim();
+  const isDaftarUlang = /daftar\s*ulang/i.test(rawTopic);
+  const topicLabel = isDaftarUlang ? "Daftar Ulang" : "Pemberkasan Administrasi";
+
+  const optionsByTopic = isDaftarUlang
+    ? [
+        { value: "checklist_pra_daftar_ulang", label: "Checklist Pra-Daftar Ulang (H-3 s.d. Hari-H)" },
+        { value: "alur_daftar_ulang", label: "Alur, Konfirmasi Kehadiran & Jadwal Daftar Ulang" },
+        { value: "kendala_teknis_deadline", label: "Antisipasi Kendala Teknis & Batas Waktu Daftar Ulang" }
+      ]
+    : [
+        { value: "perbedaan_nama_data", label: "Perbedaan Nama / Tanggal Lahir / Gelar pada Dokumen" },
+        { value: "kualifikasi_formasi", label: "Kesesuaian Kualifikasi Pendidikan & Jabatan/Formasi" },
+        { value: "identitas_kependudukan", label: "Dokumen Identitas & Kependudukan (KTP, KK, Akta)" },
+        { value: "legalisir_ijazah_transkrip", label: "Legalisir Ijazah, Transkrip, atau Penyetaraan Dokumen" },
+        { value: "dokumen_kesehatan_skck", label: "Surat Keterangan Sehat, Bebas NAPZA & SKCK" },
+        { value: "format_ejaan_dokumen", label: "Penulisan, Tanda Apostrof (') & Format Dokumen Resmi" }
+      ];
+
+  if (subSel) {
+    const prevVal = subSel.value;
+    const validVals = optionsByTopic.map(o => o.value);
+    subSel.replaceChildren();
+    optionsByTopic.forEach(optData => {
+      const opt = document.createElement("option");
+      opt.value = optData.value;
+      opt.textContent = optData.label;
+      subSel.appendChild(opt);
+    });
+    subSel.value = validVals.includes(prevVal) ? prevVal : optionsByTopic[0].value;
+  }
+
+  const subKey = subSel?.value || optionsByTopic[0].value;
+  const guide = CONSULTATION_GUIDES[subKey] || CONSULTATION_GUIDES[optionsByTopic[0].value];
 
   if (titleEl) {
     titleEl.textContent = `${guide.title} (${topicLabel})`;
@@ -2859,7 +2890,6 @@ function handleConsultationTopicChange() {
     });
   }
 }
-
 function applyConsultPromptTemplate() {
   const subSel = document.getElementById("consultSubIssueSelect");
   const inputEl = document.getElementById("chatMessageInput");
