@@ -90,7 +90,7 @@ function buildExamQuestionSet(focusMode, orderMode) {
       .filter(q => String(q.subtest || "").trim().toUpperCase() === subName)
       .map(q => ({ ...q, options: Array.isArray(q.options) ? [...q.options] : [] }));
 
-    // Selalu acak dari bank soal (misalnya 630 soal) agar variasi soal berganti tiap sesi
+    // Selalu acak dari bank soal (misalnya 739 soal) agar variasi soal berganti tiap sesi
     const randomized = shuffleArray(pool);
     const sliced = typeof maxCount === "number" && maxCount > 0
       ? randomized.slice(0, maxCount)
@@ -318,9 +318,12 @@ function confirmFinishExam() {
   const unansweredTotal = examQuestions.length - answeredTotal;
 
   const msg =
-    `Selesaikan ujian sekarang?\n` +
-    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal\n` +
-    `• Belum terjawab: ${unansweredTotal} soal\n` +
+    `Selesaikan ujian sekarang?
+` +
+    `• Terjawab: ${answeredTotal} / ${examQuestions.length} soal
+` +
+    `• Belum terjawab: ${unansweredTotal} soal
+` +
     `• Ditandai Ragu-Ragu: ${doubtTotal} soal`;
 
   if (confirm(msg)) {
@@ -475,7 +478,7 @@ function finishExam(isAutoTimeout = false) {
   const anonAlert = document.getElementById("userAnomalyAlert");
   const anonDetail = document.getElementById("userAnomalyDetail");
 
-  if (titleEl) titleEl.textContent = `Hasil Simulasi — ${participantName}`;
+  if (titleEl) titleEl.textContent = `Hasil Simulasi Bank D-BEST — ${participantName}`;
   if (formEl) {
     formEl.textContent = `Formasi: ${appliedFormation || "-"} • Instansi: ${appliedInstitution || "-"} • Pendidikan: ${participantEducation || "-"}`;
   }
@@ -805,14 +808,14 @@ function toggleReviewSection() {
     reviewAnswers = [];
     reviewDurations = [];
     reviewDoubts = [];
-    reviewMetaLabel = "Kunci Jawaban & Pembahasan Bank Soal";
+    reviewMetaLabel = "Kunci Jawaban & Pembahasan Bank D-BEST";
   }
 
   if (isHidden) {
     sec.classList.remove("hidden");
     const titleEl = document.getElementById("reviewSectionTitle");
     const subEl = document.getElementById("reviewSessionSubtitle");
-    if (titleEl) titleEl.textContent = "Pembahasan Lengkap Soal SKD";
+    if (titleEl) titleEl.textContent = "Pembahasan Lengkap Soal Bank D-BEST";
     if (subEl) subEl.textContent = reviewMetaLabel;
     populateReviewCategoryFilter(reviewQuestions);
     updateWeakFilterButtonUI();
@@ -1131,14 +1134,9 @@ function initializeAppOnLoad() {
   if (typeof muatBankSoalDariSheet === "function") {
     muatBankSoalDariSheet();
   }
-  if (typeof syncHeroQuestionSummaryFromBank_ === "function") {
-    syncHeroQuestionSummaryFromBank_();
-    setTimeout(syncHeroQuestionSummaryFromBank_, 1500);
-  }
   if (typeof startVisitorTrackingLoop_ === "function") {
     startVisitorTrackingLoop_();
   }
-
 
   try {
     const rawSession = localStorage.getItem(examSessionStorageKey);
@@ -1202,43 +1200,4 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initializeAppOnLoad);
 } else {
   initializeAppOnLoad();
-}
-
-
-function applyStandardBknLabels_() {
-  const heroBadge = document.getElementById("heroQuestionSummaryBadge");
-  if (heroBadge) {
-    heroBadge.textContent = "110 Soal (Standar BKN) • TWK (30) • TIU (35) • TKP (45)";
-  }
-  const twkLbl = document.getElementById("twkCountLabel");
-  if (twkLbl) twkLbl.textContent = "1. TWK (30 Soal • Standar BKN)";
-  const tiuLbl = document.getElementById("tiuCountLabel");
-  if (tiuLbl) tiuLbl.textContent = "2. TIU (35 Soal • Standar BKN)";
-  const tkpLbl = document.getElementById("tkpCountLabel");
-  if (tkpLbl) tkpLbl.textContent = "3. TKP (45 Soal • Standar BKN)";
-}
-
-function lockStandardBknDisplayObserver_() {
-  applyStandardBknLabels_();
-  setTimeout(applyStandardBknLabels_, 1200);
-}
-
-
-function syncHeroQuestionSummaryFromBank_() {
-  const badgeEl = document.getElementById("heroQuestionSummaryBadge");
-  if (!badgeEl) return;
-  const bank = typeof questionBank !== "undefined" && Array.isArray(questionBank) ? questionBank : [];
-  if (!bank.length) return;
-
-  let twk = 0;
-  let tiu = 0;
-  let tkp = 0;
-  bank.forEach(q => {
-    const sub = String(q && q.subtest || "").trim().toUpperCase();
-    if (sub === "TWK") twk++;
-    else if (sub === "TIU") tiu++;
-    else if (sub === "TKP") tkp++;
-  });
-  const total = bank.length;
-  badgeEl.textContent = `Bank Soal : Total ${total} Soal. TWK (${twk}) . TIU (${tiu}). TKP (${tkp})`;
 }
