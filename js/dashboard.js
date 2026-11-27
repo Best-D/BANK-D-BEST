@@ -1971,12 +1971,19 @@ async function sendChatMessage(event) {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        action: "send_chat",
+        action: activeDeskMode === "CONSULT" ? "send_consultation" : "send_chat",
+        kategori_desk: activeDeskMode === "CONSULT"
+          ? `${document.getElementById("consultTopicSelect")?.value || "Konsultasi"} - ${document.getElementById("consultSubIssueSelect")?.value || "umum"}`
+          : "Chat Peserta",
         nama_pengirim: senderName,
         pengirim_key: myKey,
         nama_penerima: recipientName,
         penerima_key: recipientKey,
-        pesan: rawText || (imagePayload ? "[Mengirim gambar]" : ""),
+        pesan: (
+          activeDeskMode === "CONSULT" && rawText && !/^\[konsultasi/i.test(rawText)
+            ? `[D-BEST DESK - ${document.getElementById("consultTopicSelect")?.value || "Konsultasi"}] ${rawText}`
+            : (rawText || (imagePayload ? "[Mengirim gambar]" : ""))
+        ),
         gambar_data: imagePayload
       })
     });
@@ -2620,4 +2627,108 @@ function startVisitorTrackingLoop_() {
   visitorHeartbeatTimer = setInterval(() => {
     pingAndRefreshVisitorStats_();
   }, 60000);
+}
+
+
+let activeDeskMode = "PEER";
+
+const CONSULTATION_GUIDES = {
+  perbedaan_nama_data: {
+    title: "Panduan Pemberkasan Administrasi — Perbedaan Nama / Tanggal Lahir / Gelar",
+    steps: [
+      "Periksa kesesuaian nama lengkap, gelar, dan tanggal lahir pada dokumen utama (KTP, KK, ijazah/transkrip, dan akta).",
+      "Siapkan surat keterangan/dokumen pendukung resmi apabila terdapat perbedaan penulisan huruf atau gelar sesuai aturan instansi.",
+      "Lampirkan foto bagian dokumen yang ingin dikonsultasikan melalui tombol 📷 Gambar bila diperlukan."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Perbedaan Data/Gelar] Mohon arahan terkait perbedaan penulisan data pada berkas pemberkasan saya: "
+  },
+  legalisir_ijazah_transkrip: {
+    title: "Panduan Pemberkasan Administrasi — Legalisir Ijazah & Transkrip",
+    steps: [
+      "Pastikan keabsahan ijazah, transkrip nilai, dan dokumen penyetaraan (jika berlaku) sesuai jenjang pendidikan yang dilamar.",
+      "Cek ketentuan legalisir (basah maupun digital/tte) sesuai pengumuman resmi instansi.",
+      "Tuliskan detail kendala dokumen atau unggah gambar/tangkapan layar persyaratan."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Ijazah & Transkrip] Saya ingin berkonsultasi mengenai kelengkapan/legalisir ijazah dan transkrip: "
+  },
+  dokumen_kesehatan_skck: {
+    title: "Panduan Pemberkasan Administrasi — Surat Sehat, Bebas NAPZA & SKCK",
+    steps: [
+      "Siapkan dokumen pendukung yang dipersyaratkan instansi (surat keterangan sehat jasmani/rohani, bebas NAPZA, dan SKCK) dengan masa berlaku yang masih aktif.",
+      "Perhatikan format tanggal penerbitan serta kesesuaian identitas pada tiap surat keterangan.",
+      "Sampaikan kendala jadwal penerbitan atau format berkas pada kolom pesan di bawah."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Dokumen Sehat & SKCK] Mohon solusi terkait pengurusan berkas kesehatan/SKCK: "
+  },
+  alur_daftar_ulang: {
+    title: "Panduan Daftar Ulang — Alur, Kelengkapan & Jadwal Daftar Ulang",
+    steps: [
+      "Catat jadwal, mekanisme (daring atau luring), serta batas waktu daftar ulang agar tidak terlewat.",
+      "Periksa ulang daftar berkas asli dan salinan yang wajib dibawa atau diunggah saat daftar ulang.",
+      "Tuliskan pertanyaan spesifik terkait alur atau kendala daftar ulang Anda."
+    ],
+    template: "[Konsultasi Daftar Ulang] Mohon informasi/solusi terkait proses dan kelengkapan daftar ulang: "
+  }
+};
+
+function switchDeskMode(mode) {
+  activeDeskMode = mode === "CONSULT" ? "CONSULT" : "PEER";
+  const peerBtn = document.getElementById("deskTabPeerBtn");
+  const consultBtn = document.getElementById("deskTabConsultBtn");
+  const consultBox = document.getElementById("deskConsultationBox");
+  const captionEl = document.getElementById("deskModeCaption");
+  const inputEl = document.getElementById("chatMessageInput");
+
+  const activeCls = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition";
+  const idleCls = "px-3.5 py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition";
+
+  if (peerBtn) peerBtn.className = activeDeskMode === "PEER" ? activeCls : idleCls;
+  if (consultBtn) consultBtn.className = activeDeskMode === "CONSULT" ? activeCls : idleCls;
+
+  if (consultBox) {
+    consultBox.classList.toggle("hidden", activeDeskMode !== "CONSULT");
+  }
+  if (captionEl) {
+    captionEl.textContent = activeDeskMode === "CONSULT"
+      ? "D-BEST DESK: Dukungan Efektif & Solusi Komprehensif (Pemberkasan & Daftar Ulang)"
+      : "Mode: Kirim pesan langsung ke peserta lain";
+  }
+  if (inputEl && activeDeskMode === "CONSULT" && !inputEl.value.trim()) {
+    handleConsultationTopicChange();
+  }
+}
+
+function handleConsultationTopicChange() {
+  const topicSel = document.getElementById("consultTopicSelect");
+  const subSel = document.getElementById("consultSubIssueSelect");
+  const titleEl = document.getElementById("consultGuidanceTitle");
+  const stepsEl = document.getElementById("consultGuidanceSteps");
+
+  const subKey = subSel?.value || "perbedaan_nama_data";
+  const topicLabel = topicSel?.value || "Pemberkasan Administrasi";
+  const guide = CONSULTATION_GUIDES[subKey] || CONSULTATION_GUIDES.perbedaan_nama_data;
+
+  if (titleEl) {
+    titleEl.textContent = `${guide.title} (${topicLabel})`;
+  }
+  if (stepsEl) {
+    stepsEl.replaceChildren();
+    guide.steps.forEach(st => {
+      const li = document.createElement("li");
+      li.textContent = st;
+      stepsEl.appendChild(li);
+    });
+  }
+}
+
+function applyConsultPromptTemplate() {
+  const subSel = document.getElementById("consultSubIssueSelect");
+  const inputEl = document.getElementById("chatMessageInput");
+  const subKey = subSel?.value || "perbedaan_nama_data";
+  const guide = CONSULTATION_GUIDES[subKey] || CONSULTATION_GUIDES.perbedaan_nama_data;
+
+  if (inputEl) {
+    inputEl.value = guide.template;
+    inputEl.focus();
+  }
 }
