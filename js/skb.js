@@ -203,64 +203,86 @@ let skbSelectedAnswers = {};
 let skbAutoRefreshTimer = null;
 let skbSheetConnected = false;
 
-function isSkbUserAuthenticated_() {
-  const globalUserVars = [
+function getSkdAuthenticatedUser_() {
+  // 1. Cek variabel akun global yang dipakai oleh modul Login SKD (js/auth.js)
+  const candidates = [
     typeof currentUser !== "undefined" ? currentUser : null,
     typeof loggedInUser !== "undefined" ? loggedInUser : null,
-    typeof activeUser !== "undefined" ? activeUser : null,
     typeof authUser !== "undefined" ? authUser : null,
+    typeof activeUser !== "undefined" ? activeUser : null,
     typeof userSession !== "undefined" ? userSession : null,
-    window.__currentUser || null,
-    window.currentUser || null
+    window.currentUser || null,
+    window.loggedInUser || null,
+    window.authUser || null
   ];
 
-  const hasTruthyUserObj = globalUserVars.some(u => {
-    if (!u) return false;
-    if (typeof u === "string") return u.trim().length > 0 && u.trim().toLowerCase() !== "guest";
+  for (const u of candidates) {
+    if (!u) continue;
     if (typeof u === "object") {
-      return Boolean(u.username || u.email || u.nama || u.name || u.id || u.loggedIn);
+      const idVal = String(u.username || u.email || u.nama || u.name || u.id || "").trim();
+      if (idVal && idVal.toLowerCase() !== "guest" && idVal.toLowerCase() !== "tamu") {
+        return u;
+      }
+    } else if (typeof u === "string") {
+      const clean = u.trim();
+      if (clean && clean.toLowerCase() !== "guest" && clean.toLowerCase() !== "tamu") {
+        return { nama: clean, username: clean };
+      }
     }
-    return Boolean(u);
-  });
-  if (hasTruthyUserObj) return true;
-
-  if (typeof isLoggedIn !== "undefined" && Boolean(isLoggedIn)) return true;
-  if (window.__isLoggedIn === true || window.isLoggedIn === true) return true;
-
-  const badgeText = String(document.getElementById("userBadge")?.textContent || "").trim().toLowerCase();
-  if (badgeText && !badgeText.includes("tamu") && !badgeText.includes("guest") && !badgeText.includes("belum login")) {
-    return true;
   }
 
-  const storageKeys = [
-    "bankDbestUser",
-    "dbest_user",
-    "currentUser",
-    "loggedInUser",
-    "sessionUser",
-    "userLogin",
-    "authSession"
-  ];
+  // 2. Cek fungsi helper dari js/auth.js bila tersedia
+  if (typeof getCurrentUser === "function") {
+    try {
+      const u = getCurrentUser();
+      if (u && (u.username || u.email || u.nama || u.name)) return u;
+    } catch (e) {}
+  }
 
-  for (const store of [window.sessionStorage, window.localStorage]) {
+  // 3. Cek seluruh localStorage & sessionStorage yang dipakai sesi login SKD
+  for (const store of [window.localStorage, window.sessionStorage]) {
     if (!store) continue;
-    for (const key of storageKeys) {
-      try {
-        const raw = store.getItem(key);
-        if (!raw || raw === "null" || raw === "undefined") continue;
-        if (raw.startsWith("{") || raw.startsWith("[")) {
-          const parsed = JSON.parse(raw);
-          if (parsed && (parsed.username || parsed.email || parsed.nama || parsed.name || parsed.id || parsed.loggedIn)) {
-            return true;
+    try {
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (!k) continue;
+        const kl = k.toLowerCase();
+        if (kl.includes("user") || kl.includes("auth") || kl.includes("login") || kl.includes("session") || kl.includes("dbest")) {
+          const raw = store.getItem(k);
+          if (!raw || raw === "null" || raw === "undefined") continue;
+          if (raw.trim().startsWith("{")) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === "object") {
+              const idVal = String(parsed.username || parsed.email || parsed.nama || parsed.name || parsed.id || "").trim();
+              if (idVal && idVal.toLowerCase() !== "guest" && idVal.toLowerCase() !== "tamu") {
+                return parsed;
+              }
+            }
           }
-        } else if (raw.trim().length > 0 && raw.trim().toLowerCase() !== "guest") {
-          return true;
         }
-      } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  // 4. Cek indikator DOM dari sesi Login SKD (tombol logout/profil aktif atau badge user terisi)
+  const loggedInEl = document.getElementById("loggedInPanel") || document.getElementById("userProfileBtn") || document.getElementById("logoutBtn");
+  if (loggedInEl && !loggedInEl.classList.contains("hidden")) {
+    const label = String(
+      document.getElementById("userBadge")?.textContent ||
+      document.getElementById("headerUserName")?.textContent ||
+      document.getElementById("participantNameInput")?.value ||
+      "Peserta"
+    ).trim();
+    if (label && !label.toLowerCase().includes("tamu") && !label.toLowerCase().includes("guest") && !label.toLowerCase().includes("login")) {
+      return { nama: label };
     }
   }
 
-  return false;
+  return null;
+}
+
+function isSkbUserAuthenticated_() {
+  return Boolean(getSkdAuthenticatedUser_());
 }
 
 function promptSkbLoginRequired_() {
@@ -274,14 +296,31 @@ function promptSkbLoginRequired_() {
     skbSec.classList.add("hidden");
   }
 
+  // Gunakan dialog/panel Login SKD yang sama persis dengan ujian SKD
   if (typeof openLoginModal === "function") {
     openLoginModal();
+  } else if (typeof openAuthModal === "function") {
+    openAuthModal("login");
+  } else if (typeof showAuthModal === "function") {
+    showAuthModal("login");
   } else {
-    const loginModal = document.getElementById("loginModal") || document.getElementById("authModal");
-    if (loginModal) loginModal.classList.remove("hidden");
+    const modalEl = document.getElementById("loginModal") || document.getElementById("authModal");
+    if (modalEl) {
+      modalEl.classList.remove("hidden");
+    } else {
+      const setupEl = document.getElementById("setupScreen");
+      if (setupEl) {
+        setupEl.classList.remove("hidden");
+        setupEl.scrollIntoView({ behavior: "smooth" });
+      }
+      const loginTrigger = document.querySelector("[onclick*='openLoginModal'], [onclick*='openAuthModal'], [onclick*='showAuthModal'], #loginBtn, #openLoginBtn");
+      if (loginTrigger && typeof loginTrigger.click === "function") {
+        loginTrigger.click();
+      }
+    }
   }
 
-  alert("Silakan login terlebih dahulu untuk mengakses Modul SKB.");
+  alert("Modul SKB menggunakan akun Login SKD. Silakan login terlebih dahulu menggunakan akun SKD Anda.");
 }
 
 function getTotalSkbQuestionsCount_() {
@@ -302,8 +341,15 @@ function updateSkbConnectionIndicator_() {
   ensureSkbUiMount_();
   const badgeEl = document.getElementById("skbSheetConnectionBadge");
   const countEl = document.getElementById("skbQuestionCountIndicator");
+  const userPillEl = document.getElementById("skbLoggedUserBadge");
   const { count: activeCount } = getActiveTrackQuestionsCount_();
   const totalCount = getTotalSkbQuestionsCount_();
+  const skdUser = getSkdAuthenticatedUser_();
+
+  if (userPillEl && skdUser) {
+    const displayName = String(skdUser.nama || skdUser.name || skdUser.username || skdUser.email || "Peserta SKD").trim();
+    userPillEl.textContent = `Akun SKD: ${displayName}`;
+  }
 
   if (badgeEl) {
     badgeEl.textContent = skbSheetConnected
@@ -332,6 +378,9 @@ function ensureSkbUiMount_() {
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="space-y-1">
           <div class="flex flex-wrap items-center gap-2">
+            <span id="skbLoggedUserBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-800">
+              Akun SKD Aktif
+            </span>
             <span id="skbSheetConnectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
               Memeriksa Sumber Soal...
             </span>
