@@ -1,4 +1,4 @@
-const SKB_SHEET_NAME = "BankSoalSKB";
+const SKB_SHEET_NAME = "BankSoal";
 const SKB_SPREADSHEET_ID = "1rQlxl3rJ56xv_Z3282ic8KoNYFMN-PAtkRT-FKAvE4s";
 const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMbR9Hn8OthYXCeJceRIh2pTFpvjQT_QJB7r12cbDrNZWpCRHT0OJ_Ikxq7eIVch1GJw/exec";
 const SKB_AUTO_REFRESH_MS = 30000;
@@ -225,7 +225,7 @@ function updateSkbConnectionIndicator_() {
   if (badgeEl) {
     badgeEl.textContent = skbSheetConnected
       ? `Terhubung Spreadsheet (${SKB_SHEET_NAME})`
-      : "Mode Cadangan Lokal";
+      : "Mode Cadangan Lokal (skb.js)";
     badgeEl.className = skbSheetConnected
       ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200"
       : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200";
@@ -250,17 +250,17 @@ function ensureSkbUiMount_() {
         <div class="space-y-1">
           <div class="flex flex-wrap items-center gap-2">
             <span id="skbSheetConnectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
-              Memeriksa Koneksi...
+              Memeriksa Sumber Soal...
             </span>
             <span id="skbQuestionCountIndicator" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-100 text-indigo-900">
               0 Soal
             </span>
           </div>
-          <p id="skbSyncStatusText" class="text-[11px] text-slate-500">Menghubungkan ke tab BankSoalSKB...</p>
+          <p id="skbSyncStatusText" class="text-[11px] text-slate-500">Menyinkronkan soal dari tab ${SKB_SHEET_NAME}...</p>
         </div>
         <button type="button" id="skbReloadSheetBtn" onclick="syncSkbTracksAndQuestions(true)"
           class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition">
-          Muat Ulang dari Spreadsheet
+          Muat Ulang Soal
         </button>
       </div>
       <div id="skbExplanationPanel" class="space-y-2"></div>
@@ -429,7 +429,7 @@ function applySkbRowsToBank_(rowsArray) {
 
     const trackKey = String(item.bidang || item.kode_bidang || "PRANATA_KOMPUTER").trim().toUpperCase();
     const jabatanLabel = String(item.jabatan || item.nama_jabatan || "").trim();
-    if (jabatanLabel && !SKB_TRACK_LABELS[trackKey]) {
+    if (jabatanLabel) {
       SKB_TRACK_LABELS[trackKey] = jabatanLabel;
     }
 
@@ -524,7 +524,7 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
 
   if (!window.__skbSheetLoaded || forceReload) {
     window.__skbSheetLoaded = true;
-    if (statusEl) statusEl.textContent = `Menarik soal terbaru dari spreadsheet (${SKB_SHEET_NAME})...`;
+    if (statusEl) statusEl.textContent = `Menarik soal dari tab ${SKB_SHEET_NAME}...`;
     const loaded = await loadSkbFromSheetIfAvailable(endpoint, SKB_SHEET_NAME);
     syncSkbTrackDropdownOptions_();
     updateSkbConnectionIndicator_();
@@ -532,13 +532,13 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
     if (statusEl) {
       const jam = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
       statusEl.textContent = loaded
-        ? `Terhubung ke ${SKB_SHEET_NAME} • ${totalSoal} soal termuat • Diperbarui ${jam}`
-        : `Cadangan lokal aktif • ${totalSoal} soal siap dipakai (pastikan tab ${SKB_SHEET_NAME} dapat dibaca).`;
+        ? `Sumber aktif: Spreadsheet (${SKB_SHEET_NAME}) • ${totalSoal} soal • Diperbarui ${jam}`
+        : `Sumber aktif: Cadangan lokal skb.js • ${totalSoal} soal siap dipakai`;
     }
   } else {
     updateSkbConnectionIndicator_();
     if (statusEl) {
-      statusEl.textContent = `Sumber aktif: ${SKB_SHEET_NAME} • ${getTotalSkbQuestionsCount_()} soal tersedia.`;
+      statusEl.textContent = `Sumber aktif: ${skbSheetConnected ? "Spreadsheet (" + SKB_SHEET_NAME + ")" : "Cadangan lokal skb.js"} • ${getTotalSkbQuestionsCount_()} soal.`;
     }
   }
 
