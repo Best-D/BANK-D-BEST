@@ -1789,7 +1789,30 @@ function renderFilteredChatMessages() {
     return;
   }
 
-  allMsgs.forEach(msg => {
+  const visibleMsgs = allMsgs.filter(msg => {
+    const recKey = normalizeChatUserKey(msg.penerima_key || "");
+    const sndKey = normalizeChatUserKey(msg.pengirim_key || "");
+    const isConsultMsg =
+      recKey === DESK_ADMIN_CREDENTIALS.adminKey ||
+      sndKey === DESK_ADMIN_CREDENTIALS.adminKey ||
+      /^\[d-best desk|^\[konsultasi/i.test(String(msg.pesan || ""));
+    if (activeDeskMode === "CONSULT") {
+      return isConsultMsg && (deskAdminLoggedIn || sndKey === myKey || recKey === myKey);
+    }
+    return !isConsultMsg;
+  });
+
+  if (visibleMsgs.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "text-slate-500 text-center py-3";
+    empty.textContent = activeDeskMode === "CONSULT"
+      ? "Belum ada pesan konsultasi ke Admin D-BEST DESK."
+      : "Belum ada pesan. Pilih peserta tujuan dan kirim teks atau gambar kapan saja.";
+    listEl.appendChild(empty);
+    return;
+  }
+
+  visibleMsgs.forEach(msg => {
     const isMine = msg.pengirim_key === myKey;
     const item = document.createElement("div");
     item.className = isMine
@@ -1922,9 +1945,10 @@ async function sendChatMessage(event) {
   let recipientName = recSelect?.selectedOptions?.[0]?.dataset?.nama || recSelect?.selectedOptions?.[0]?.textContent || "";
 
   if (isConsultMode) {
+    // Konsultasi hanya ditujukan ke Admin D-BEST DESK (atau balasan Admin ke peserta terpilih)
     if (deskAdminLoggedIn && deskAdminReplyTargetKey) {
-      recipientKey = deskAdminReplyTargetKey;
-      recipientName = deskAdminReplyTargetName || deskAdminReplyTargetKey;
+      recipientKey = normalizeChatUserKey(deskAdminReplyTargetKey);
+      recipientName = deskAdminReplyTargetName || recipientKey;
     } else {
       recipientKey = DESK_ADMIN_CREDENTIALS.adminKey;
       recipientName = DESK_ADMIN_CREDENTIALS.adminLabel;
@@ -2768,11 +2792,17 @@ function switchDeskMode(mode) {
       : "Mode: Kirim pesan langsung ke peserta lain";
   }
   if (activeDeskMode === "CONSULT") {
+    deskAdminReplyTargetKey = "";
+    deskAdminReplyTargetName = "";
     updateDeskAdminPortalUI_();
     if (inputEl && !deskAdminLoggedIn && !inputEl.value.trim()) {
       handleConsultationTopicChange();
     }
+  } else {
+    deskAdminReplyTargetKey = "";
+    deskAdminReplyTargetName = "";
   }
+  renderFilteredChatMessages();
 }
 
 function handleConsultationTopicChange() {
