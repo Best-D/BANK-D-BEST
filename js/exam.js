@@ -1131,6 +1131,10 @@ function initializeAppOnLoad() {
   if (typeof muatBankSoalDariSheet === "function") {
     muatBankSoalDariSheet();
   }
+  if (typeof syncHeroQuestionSummaryFromBank_ === "function") {
+    syncHeroQuestionSummaryFromBank_();
+    setTimeout(syncHeroQuestionSummaryFromBank_, 1500);
+  }
   if (typeof startVisitorTrackingLoop_ === "function") {
     startVisitorTrackingLoop_();
   }
@@ -1217,4 +1221,24 @@ function applyStandardBknLabels_() {
 function lockStandardBknDisplayObserver_() {
   applyStandardBknLabels_();
   setTimeout(applyStandardBknLabels_, 1200);
+}
+
+
+function syncHeroQuestionSummaryFromBank_() {
+  const badgeEl = document.getElementById("heroQuestionSummaryBadge");
+  if (!badgeEl) return;
+  const bank = typeof questionBank !== "undefined" && Array.isArray(questionBank) ? questionBank : [];
+  if (!bank.length) return;
+
+  let twk = 0;
+  let tiu = 0;
+  let tkp = 0;
+  bank.forEach(q => {
+    const sub = String(q && q.subtest || "").trim().toUpperCase();
+    if (sub === "TWK") twk++;
+    else if (sub === "TIU") tiu++;
+    else if (sub === "TKP") tkp++;
+  });
+  const total = bank.length;
+  badgeEl.textContent = `Bank Soal : Total ${total} Soal. TWK (${twk}) . TIU (${tiu}). TKP (${tkp})`;
 }
