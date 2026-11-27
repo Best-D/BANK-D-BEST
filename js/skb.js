@@ -183,3 +183,87 @@ function submitSkbPractice() {
     calculateSkbCompositeScore();
   }
 }
+
+
+function openSkbFromHeader() {
+  if (typeof isExamActive !== "undefined" && isExamActive) {
+    alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum membuka Modul SKB.");
+    return;
+  }
+  if (typeof openDashboard === "function") {
+    openDashboard().then(() => {
+      const bodyEl = document.getElementById("skbWorkspaceBody");
+      const btnEl = document.getElementById("toggleSkbWorkspaceBtn");
+      const secEl = document.getElementById("skbModuleSection");
+      if (bodyEl && bodyEl.classList.contains("hidden")) {
+        bodyEl.classList.remove("hidden");
+        if (btnEl) btnEl.textContent = "Sembunyikan Modul SKB";
+        if (typeof calculateSkbCompositeScore === "function") calculateSkbCompositeScore();
+        if (typeof renderSkbPracticeQuestions === "function") renderSkbPracticeQuestions();
+      }
+      if (secEl) secEl.scrollIntoView({ behavior: "smooth" });
+    });
+  }
+}
+
+async function loadSkbFromSheetIfAvailable(endpointUrl, sheetName = "BankSoalSKB") {
+  const cleanUrl = String(endpointUrl || "").trim();
+  if (!cleanUrl || cleanUrl.includes("TEMPEL_URL")) return false;
+  try {
+    const res = await fetch(`${cleanUrl}?mode=skb&sheet=${encodeURIComponent(sheetName)}`);
+    const json = await res.json();
+    if (json && json.status === "sukses" && Array.isArray(json.soal_skb) && json.soal_skb.length > 0) {
+      json.soal_skb.forEach(item => {
+        const trackKey = String(item.bidang || "PRANATA_KOMPUTER").trim().toUpperCase();
+        if (!SKB_QUESTION_BANK[trackKey]) {
+          SKB_QUESTION_BANK[trackKey] = [];
+        }
+        SKB_QUESTION_BANK[trackKey].push({
+          id: item.id || `skb_srv_${SKB_QUESTION_BANK[trackKey].length + 1}`,
+          question: String(item.question || "").trim(),
+          options: {
+            A: String(item.opsi_a || "").trim(),
+            B: String(item.opsi_b || "").trim(),
+            C: String(item.opsi_c || "").trim(),
+            D: String(item.opsi_d || "").trim()
+          },
+          answer: String(item.jawaban || "A").trim().toUpperCase(),
+          explanation: String(item.pembahasan || "").trim()
+        });
+      });
+      renderSkbPracticeQuestions();
+      return true;
+    }
+  } catch (err) {
+    console.warn("Bank soal SKB sheet baru belum aktif atau gagal dimuat:", err);
+  }
+  return false;
+}
+
+
+// ============================================================================
+// PANDUAN GOOGLE APPS SCRIPT (doGet) UNTUK SHEET BARU: "BankSoalSKB"
+// Salin ke dalam fungsi doGet(e) pada Google Apps Script Anda jika ingin menarik
+// soal SKB dari tab sheet baru bernama "BankSoalSKB".
+// Kolom sheet BankSoalSKB: id | bidang | question | opsi_a | opsi_b | opsi_c | opsi_d | jawaban | pembahasan
+// ============================================================================
+/*
+if (e && e.parameter && e.parameter.mode === "skb") {
+  var sheetName = e.parameter.sheet || "BankSoalSKB";
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(sheetName);
+  var rows = sh ? sh.getDataRange().getValues() : [];
+  var headers = rows.length > 0 ? rows[0] : [];
+  var soalSkb = [];
+  for (var r = 1; r < rows.length; r++) {
+    var obj = {};
+    for (var c = 0; c < headers.length; c++) {
+      obj[String(headers[c]).trim()] = rows[r][c];
+    }
+    if (obj.question) soalSkb.push(obj);
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "sukses", soal_skb: soalSkb }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+*/
