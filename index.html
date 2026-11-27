@@ -122,6 +122,23 @@
         <p class="text-sm text-blue-100 max-w-2xl">
           Soal-Soal akan selalu diupdate Sesuai dengan Peraturan Kemenpan RB dan BKN Terbaru.
         </p>
+        <div id="heroVisitorStatsBar" class="mt-4 pt-3 border-t border-blue-400/25 grid grid-cols-3 gap-2.5 max-w-xl text-xs">
+          <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-2 border border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-blue-200 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+              Pengunjung Saat Ini
+            </div>
+            <div id="heroVisitorCurrent" class="text-base sm:text-lg font-extrabold text-white mt-0.5">-</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-2 border border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-blue-200">Telah Mampir</div>
+            <div id="heroVisitorTotal" class="text-base sm:text-lg font-extrabold text-amber-300 mt-0.5">-</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl px-3 py-2 border border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-blue-200">Rata-Rata / Hari</div>
+            <div id="heroVisitorAverage" class="text-base sm:text-lg font-extrabold text-sky-200 mt-0.5">-</div>
+          </div>
+        </div>
       </div>
 
       <div id="authCard" class="p-6 sm:p-8 border-b border-slate-200 bg-slate-50/70">
@@ -798,6 +815,35 @@
           <button type="button" onclick="refreshDashboardData()" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
             Muat Ulang Data Skor
           </button>
+        </div>
+      </div>
+
+      <div class="px-6 pt-5">
+        <div class="border border-teal-200 bg-teal-50/40 rounded-xl p-4 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-800">Statistik Pengunjung Aplikasi CAT SKD</h3>
+              <p class="text-[11px] text-slate-500">Pemantauan pengunjung aktif real-time, total pengunjung unik yang telah mampir, dan rata-rata kunjungan harian.</p>
+            </div>
+            <span id="dashVisitorActiveDaysBadge" class="text-xs font-bold text-teal-800 bg-teal-100 px-2.5 py-1 rounded-full">Aktif 1 Hari</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-white border border-teal-100 rounded-lg p-3">
+              <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+                Pengunjung Saat Ini
+              </div>
+              <div id="dashVisitorCurrent" class="text-xl font-extrabold text-emerald-700 mt-0.5">-</div>
+            </div>
+            <div class="bg-white border border-teal-100 rounded-lg p-3">
+              <div class="text-[11px] font-semibold text-slate-500">Pengunjung yang Telah Mampir</div>
+              <div id="dashVisitorTotal" class="text-xl font-extrabold text-slate-900 mt-0.5">-</div>
+            </div>
+            <div class="bg-white border border-teal-100 rounded-lg p-3">
+              <div class="text-[11px] font-semibold text-slate-500">Rata-Rata Pengunjung / Hari</div>
+              <div id="dashVisitorAverage" class="text-xl font-extrabold text-blue-700 mt-0.5">-</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1533,12 +1579,12 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=30"></script>
-  <script src="js/questions.js?v=30"></script>
-  <script src="js/questions-tambahan-5soal.js?v=30"></script>
-  <script src="js/questions-aturan-2026.js?v=30"></script>
-  <script src="js/auth.js?v=30"></script>
-  <script src="js/dashboard.js?v=30"></script>
-  <script src="js/exam.js?v=30"></script>
+  <script src="js/config.js?v=31"></script>
+  <script src="js/questions.js?v=31"></script>
+  <script src="js/questions-tambahan-5soal.js?v=31"></script>
+  <script src="js/questions-aturan-2026.js?v=31"></script>
+  <script src="js/auth.js?v=31"></script>
+  <script src="js/dashboard.js?v=31"></script>
+  <script src="js/exam.js?v=31"></script>
 </body>
 </html>
