@@ -1772,9 +1772,11 @@ function renderFilteredChatMessages() {
   if (!listEl) return;
 
   const allMsgs = Array.isArray(cachedChatMessages) ? cachedChatMessages : [];
-  const unreadCount = allMsgs.filter(
-    m => m.penerima_key === myKey && String(m.status || "").toUpperCase() !== "DIBACA"
-  ).length;
+  const unreadCount = allMsgs.filter(m => {
+    const isUnread = normalizeChatUserKey(m.penerima_key || "") === myKey && String(m.status || "").toUpperCase() !== "DIBACA";
+    if (!isUnread) return false;
+    return activeDeskMode === "CONSULT" ? isConsultationMessage_(m) : !isConsultationMessage_(m);
+  }).length;
 
   if (badgeEl) {
     if (unreadCount > 0) {
@@ -1798,14 +1800,11 @@ function renderFilteredChatMessages() {
   const visibleMsgs = allMsgs.filter(msg => {
     const recKey = normalizeChatUserKey(msg.penerima_key || "");
     const sndKey = normalizeChatUserKey(msg.pengirim_key || "");
-    const isConsultMsg =
-      recKey === DESK_ADMIN_CREDENTIALS.adminKey ||
-      sndKey === DESK_ADMIN_CREDENTIALS.adminKey ||
-      /^\[d-best desk|^\[konsultasi/i.test(String(msg.pesan || ""));
+    const isConsultMsg = isConsultationMessage_(msg);
     if (activeDeskMode === "CONSULT") {
       return isConsultMsg && (deskAdminLoggedIn || sndKey === myKey || recKey === myKey);
     }
-    return !isConsultMsg || recKey === myKey;
+    return !isConsultMsg;
   });
 
   if (visibleMsgs.length === 0) {
@@ -3093,4 +3092,22 @@ function toggleDeskAdminPortalBox() {
   if (isNowHidden) {
     updateDeskAdminPortalUI_();
   }
+}
+
+
+function isConsultationMessage_(msg) {
+  const recKey = normalizeChatUserKey(msg?.penerima_key || "");
+  const sndKey = normalizeChatUserKey(msg?.pengirim_key || "");
+  const catDesk = String(msg?.kategori_desk || "").toLowerCase();
+  const txt = String(msg?.pesan || "").trim();
+  const adminKey = typeof DESK_ADMIN_CREDENTIALS !== "undefined"
+    ? normalizeChatUserKey(DESK_ADMIN_CREDENTIALS.adminKey)
+    : "admin_dbest";
+
+  return (
+    recKey === adminKey ||
+    sndKey === adminKey ||
+    catDesk.includes("konsultasi") ||
+    /^\[d-best desk|^\[konsultasi|^\[balasan admin d-best desk/i.test(txt)
+  );
 }
