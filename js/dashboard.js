@@ -1540,6 +1540,7 @@ function openChatPanel() {
   const panel = document.getElementById("chatPanel");
   if (!panel) return;
   panel.classList.remove("hidden");
+  loadDeskAdminSession_();
   pingOnlinePresence_();
   loadChatMessages(true, true);
   startChatPolling_();
@@ -1884,6 +1885,9 @@ async function loadChatMessages(refreshRecipients = false, markRead = false) {
       const prevLen = cachedChatMessages.length;
       cachedChatMessages = json.chat;
       renderFilteredChatMessages();
+      if (deskAdminLoggedIn) {
+        renderDeskAdminConsultationQueue_();
+      }
       if (fbEl) fbEl.classList.add("hidden");
 
       if (markRead && json.chat.length >= prevLen) {
@@ -1909,9 +1913,24 @@ async function sendChatMessage(event) {
   const fbEl = document.getElementById("chatFeedbackText");
   const sendBtn = document.getElementById("sendChatBtn");
 
-  const myKey = getCurrentChatUserKey();
-  const recipientKey = (recSelect?.value || "").trim();
-  const recipientName = recSelect?.selectedOptions?.[0]?.dataset?.nama || recSelect?.selectedOptions?.[0]?.textContent || "";
+  const isConsultMode = activeDeskMode === "CONSULT";
+  const myKey = isConsultMode && deskAdminLoggedIn
+    ? DESK_ADMIN_CREDENTIALS.adminKey
+    : getCurrentChatUserKey();
+
+  let recipientKey = (recSelect?.value || "").trim();
+  let recipientName = recSelect?.selectedOptions?.[0]?.dataset?.nama || recSelect?.selectedOptions?.[0]?.textContent || "";
+
+  if (isConsultMode) {
+    if (deskAdminLoggedIn && deskAdminReplyTargetKey) {
+      recipientKey = deskAdminReplyTargetKey;
+      recipientName = deskAdminReplyTargetName || deskAdminReplyTargetKey;
+    } else {
+      recipientKey = DESK_ADMIN_CREDENTIALS.adminKey;
+      recipientName = DESK_ADMIN_CREDENTIALS.adminLabel;
+    }
+  }
+
   const rawText = (inputEl?.value || "").trim();
 
   if (!myKey) {
@@ -1922,7 +1941,7 @@ async function sendChatMessage(event) {
     }
     return;
   }
-  if (!recipientKey) {
+  if (!isConsultMode && !recipientKey) {
     if (fbEl) {
       fbEl.textContent = "Pilih peserta tujuan terlebih dahulu.";
       fbEl.className = "text-xs font-semibold text-rose-600";
@@ -1957,7 +1976,9 @@ async function sendChatMessage(event) {
     return;
   }
 
-  const senderName = getCurrentChatSenderName();
+  const senderName = isConsultMode && deskAdminLoggedIn
+    ? DESK_ADMIN_CREDENTIALS.adminLabel
+    : getCurrentChatSenderName();
   const imagePayload = pendingChatImageData;
 
   if (sendBtn) {
@@ -2633,6 +2654,24 @@ function startVisitorTrackingLoop_() {
 let activeDeskMode = "PEER";
 
 const CONSULTATION_GUIDES = {
+  kualifikasi_formasi: {
+    title: "Panduan Pemberkasan Administrasi — Kesesuaian Kualifikasi Pendidikan & Formasi",
+    steps: [
+      "Pastikan program studi, jenjang pendidikan, dan kompetensi pada ijazah/transkrip sesuai dengan persyaratan jabatan atau formasi yang dilamar.",
+      "Siapkan dokumen penyetaraan atau keterangan resmi apabila terdapat penyesuaian nomenklatur/bidang keilmuan sesuai ketentuan instansi.",
+      "Lampirkan foto bagian dokumen atau detail formasi melalui tombol 📷 Gambar bila ingin diperiksa lebih lanjut."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Kualifikasi & Formasi] Mohon arahan terkait kesesuaian kualifikasi pendidikan dan dokumen formasi saya: "
+  },
+  identitas_kependudukan: {
+    title: "Panduan Pemberkasan Administrasi — Dokumen Identitas & Kependudukan (KTP, KK, Akta)",
+    steps: [
+      "Periksa kesesuaian NIK, nomor KK, nama lengkap, serta tempat dan tanggal lahir antar dokumen kependudukan dan berkas pendaftaran.",
+      "Jika sedang mengurus pembaruan data kependudukan, simpan bukti pengajuan/proses resmi sembari memantau tenggat pemberkasan.",
+      "Sampaikan kendala spesifik atau unggah tangkapan layar/foto dokumen melalui tombol 📷 Gambar."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Identitas KTP/KK/Akta] Saya ingin berkonsultasi mengenai data KTP/KK/Akta pada pemberkasan: "
+  },
   perbedaan_nama_data: {
     title: "Panduan Pemberkasan Administrasi — Perbedaan Nama / Tanggal Lahir / Gelar",
     steps: [
@@ -2660,14 +2699,41 @@ const CONSULTATION_GUIDES = {
     ],
     template: "[Konsultasi Pemberkasan Administrasi - Dokumen Sehat & SKCK] Mohon solusi terkait pengurusan berkas kesehatan/SKCK: "
   },
-  alur_daftar_ulang: {
-    title: "Panduan Daftar Ulang — Alur, Kelengkapan & Jadwal Daftar Ulang",
+  format_ejaan_dokumen: {
+    title: "Panduan Pemberkasan Administrasi — Penulisan, Tanda Apostrof (') & Format Dokumen Resmi",
     steps: [
-      "Catat jadwal, mekanisme (daring atau luring), serta batas waktu daftar ulang agar tidak terlewat.",
-      "Periksa ulang daftar berkas asli dan salinan yang wajib dibawa atau diunggah saat daftar ulang.",
+      "Pastikan ejaan nama, tanda apostrof ('), serta format surat pernyataan/komitmen mengikuti pedoman resmi instansi dan ejaan bahasa Indonesia yang berlaku.",
+      "Periksa kembali tanda tangan, tanggal, dan kelengkapan lampiran sebelum berkas diserahkan atau diunggah.",
+      "Gunakan tombol 📷 Gambar bila ingin menanyakan kesesuaian format berkas atau surat pernyataan."
+    ],
+    template: "[Konsultasi Pemberkasan Administrasi - Penulisan & Format Dokumen] Mohon pengecekan terkait penulisan nama/format surat pernyataan: "
+  },
+  checklist_pra_daftar_ulang: {
+    title: "Panduan Daftar Ulang — Checklist Pra-Daftar Ulang (H-3 s.d. Hari-H)",
+    steps: [
+      "H-3 s.d. H-1: Susun checklist berkas asli, salinan/fotokopi, dan berkas digital sesuai ketentuan instansi agar tidak ada yang tertinggal.",
+      "Hari-H: Siapkan perlengkapan/atribut sesuai ketentuan, datang lebih awal dari jadwal sesi, dan pastikan identitas siap ditunjukkan.",
+      "Simpan bukti registrasi/tanda terima daftar ulang setelah proses selesai."
+    ],
+    template: "[Konsultasi Daftar Ulang - Checklist H-3 s.d. Hari-H] Mohon panduan checklist persiapan berkas dan perlengkapan daftar ulang: "
+  },
+  alur_daftar_ulang: {
+    title: "Panduan Daftar Ulang — Alur, Konfirmasi Kehadiran & Jadwal Daftar Ulang",
+    steps: [
+      "Catat jadwal, sesi/kelompok, mekanisme (daring atau luring), serta batas waktu daftar ulang agar tidak terlewat.",
+      "Pastikan konfirmasi kehadiran atau pengisian data pada sistem/loket sudah berstatus tercatat/terverifikasi.",
       "Tuliskan pertanyaan spesifik terkait alur atau kendala daftar ulang Anda."
     ],
-    template: "[Konsultasi Daftar Ulang] Mohon informasi/solusi terkait proses dan kelengkapan daftar ulang: "
+    template: "[Konsultasi Daftar Ulang - Alur & Jadwal] Mohon informasi/solusi terkait alur, jadwal, dan konfirmasi daftar ulang: "
+  },
+  kendala_teknis_deadline: {
+    title: "Panduan Daftar Ulang — Antisipasi Kendala Teknis & Batas Waktu Daftar Ulang",
+    steps: [
+      "Lakukan pengisian dan unggah berkas lebih awal dari batas waktu (deadline) untuk menghindari antrean akses sistem di jam terakhir.",
+      "Jika terjadi gangguan sistem atau gagal unggah, catat waktu kejadian serta ambil tangkapan layar sebagai bukti pendukung.",
+      "Segera sampaikan detail kendala teknis yang dialami melalui kolom pesan di bawah."
+    ],
+    template: "[Konsultasi Daftar Ulang - Kendala Teknis & Deadline] Mohon bantuan solusi terkait kendala teknis/batas waktu daftar ulang: "
   }
 };
 
@@ -2676,6 +2742,8 @@ function switchDeskMode(mode) {
   const peerBtn = document.getElementById("deskTabPeerBtn");
   const consultBtn = document.getElementById("deskTabConsultBtn");
   const consultBox = document.getElementById("deskConsultationBox");
+  const peerSelectorBlock = document.getElementById("deskPeerSelectorBlock");
+  const adminPortalBox = document.getElementById("deskAdminPortalBox");
   const captionEl = document.getElementById("deskModeCaption");
   const inputEl = document.getElementById("chatMessageInput");
 
@@ -2688,13 +2756,22 @@ function switchDeskMode(mode) {
   if (consultBox) {
     consultBox.classList.toggle("hidden", activeDeskMode !== "CONSULT");
   }
+  if (peerSelectorBlock) {
+    peerSelectorBlock.classList.toggle("hidden", activeDeskMode !== "PEER");
+  }
+  if (adminPortalBox) {
+    adminPortalBox.classList.toggle("hidden", activeDeskMode !== "CONSULT");
+  }
   if (captionEl) {
     captionEl.textContent = activeDeskMode === "CONSULT"
-      ? "D-BEST DESK: Dukungan Efektif & Solusi Komprehensif (Pemberkasan & Daftar Ulang)"
+      ? "Konsultasi khusus ditujukan ke Admin D-BEST DESK"
       : "Mode: Kirim pesan langsung ke peserta lain";
   }
-  if (inputEl && activeDeskMode === "CONSULT" && !inputEl.value.trim()) {
-    handleConsultationTopicChange();
+  if (activeDeskMode === "CONSULT") {
+    updateDeskAdminPortalUI_();
+    if (inputEl && !deskAdminLoggedIn && !inputEl.value.trim()) {
+      handleConsultationTopicChange();
+    }
   }
 }
 
@@ -2731,4 +2808,213 @@ function applyConsultPromptTemplate() {
     inputEl.value = guide.template;
     inputEl.focus();
   }
+}
+
+
+const DESK_ADMIN_CREDENTIALS = {
+  username: "admin_dbest",
+  passwordDisplay: "Db3st@Desk2026!",
+  passwordSha256: "20b88130a4585847e952c1a9f70f02f587966e22e564a01ba52d14e369bf9d42",
+  adminKey: "admin_dbest",
+  adminLabel: "Admin D-BEST DESK"
+};
+const DESK_ADMIN_SESSION_KEY = "dbest_desk_admin_session_v1";
+let deskAdminLoggedIn = false;
+let deskAdminReplyTargetKey = "";
+let deskAdminReplyTargetName = "";
+
+function loadDeskAdminSession_() {
+  try {
+    const raw = sessionStorage.getItem(DESK_ADMIN_SESSION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.loggedIn === true && parsed.username === DESK_ADMIN_CREDENTIALS.username) {
+        deskAdminLoggedIn = true;
+      }
+    }
+  } catch (err) {}
+  updateDeskAdminPortalUI_();
+}
+
+async function computeSha256Hex_(plainText) {
+  const clean = String(plainText || "");
+  if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+    const buf = new TextEncoder().encode(clean);
+    const digest = await window.crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+  return "";
+}
+
+function showDeskAdminFeedback_(msg, isError = false) {
+  const el = document.getElementById("deskAdminFeedbackText");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `text-xs font-semibold ${isError ? "text-rose-600" : "text-emerald-700"}`;
+  el.classList.remove("hidden");
+}
+
+function updateDeskAdminPortalUI_() {
+  const loginForm = document.getElementById("deskAdminLoginForm");
+  const activeBar = document.getElementById("deskAdminActiveBar");
+  const activeLabel = document.getElementById("deskAdminActiveLabel");
+  const badge = document.getElementById("deskAdminSessionBadge");
+  const queueWrap = document.getElementById("deskAdminQueueWrapper");
+
+  if (deskAdminLoggedIn) {
+    if (loginForm) loginForm.classList.add("hidden");
+    if (activeBar) activeBar.classList.remove("hidden");
+    if (activeLabel) activeLabel.textContent = `Login Aktif: ${DESK_ADMIN_CREDENTIALS.adminLabel} (@${DESK_ADMIN_CREDENTIALS.username})`;
+    if (badge) {
+      badge.textContent = "Admin Terverifikasi";
+      badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800";
+    }
+    if (queueWrap) queueWrap.classList.remove("hidden");
+    renderDeskAdminConsultationQueue_();
+  } else {
+    if (loginForm) loginForm.classList.remove("hidden");
+    if (activeBar) activeBar.classList.add("hidden");
+    if (badge) {
+      badge.textContent = "Belum Login Admin";
+      badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900";
+    }
+    if (queueWrap) queueWrap.classList.add("hidden");
+    deskAdminReplyTargetKey = "";
+    deskAdminReplyTargetName = "";
+  }
+}
+
+async function handleDeskAdminLogin() {
+  const uInput = document.getElementById("deskAdminUserInput");
+  const pInput = document.getElementById("deskAdminPassInput");
+  const uVal = String(uInput?.value || "").trim().toLowerCase();
+  const pVal = String(pInput?.value || "");
+
+  if (!uVal || !pVal) {
+    showDeskAdminFeedback_("Masukkan username dan password Admin D-BEST DESK.", true);
+    return;
+  }
+
+  const hashHex = await computeSha256Hex_(pVal);
+  const isUserMatch = uVal === DESK_ADMIN_CREDENTIALS.username;
+  const isPassMatch = (hashHex && hashHex === DESK_ADMIN_CREDENTIALS.passwordSha256) || pVal === DESK_ADMIN_CREDENTIALS.passwordDisplay;
+
+  if (!isUserMatch || !isPassMatch) {
+    showDeskAdminFeedback_("Username atau password Admin D-BEST DESK tidak sesuai.", true);
+    return;
+  }
+
+  deskAdminLoggedIn = true;
+  try {
+    sessionStorage.setItem(DESK_ADMIN_SESSION_KEY, JSON.stringify({
+      loggedIn: true,
+      username: DESK_ADMIN_CREDENTIALS.username,
+      loginAt: Date.now()
+    }));
+  } catch (err) {}
+
+  if (pInput) pInput.value = "";
+  updateDeskAdminPortalUI_();
+  showDeskAdminFeedback_("Berhasil login sebagai Admin D-BEST DESK.");
+  await loadChatMessages(true, false);
+}
+
+function handleDeskAdminLogout() {
+  deskAdminLoggedIn = false;
+  deskAdminReplyTargetKey = "";
+  deskAdminReplyTargetName = "";
+  try {
+    sessionStorage.removeItem(DESK_ADMIN_SESSION_KEY);
+  } catch (err) {}
+  updateDeskAdminPortalUI_();
+  showDeskAdminFeedback_("Sesi Admin D-BEST DESK telah ditutup.");
+  renderFilteredChatMessages();
+}
+
+function selectParticipantForAdminReply_(participantKey, participantName) {
+  deskAdminReplyTargetKey = normalizeChatUserKey(participantKey);
+  deskAdminReplyTargetName = String(participantName || participantKey || "Peserta").trim();
+  const captionEl = document.getElementById("deskModeCaption");
+  const inputEl = document.getElementById("chatMessageInput");
+  if (captionEl) {
+    captionEl.textContent = `Admin membalas konsultasi ke: ${deskAdminReplyTargetName}`;
+  }
+  if (inputEl) {
+    if (!inputEl.value.trim()) {
+      inputEl.value = `[Balasan Admin D-BEST DESK] `;
+    }
+    inputEl.focus();
+  }
+}
+
+function renderDeskAdminConsultationQueue_() {
+  const queueEl = document.getElementById("deskAdminConsultationQueue");
+  if (!queueEl || !deskAdminLoggedIn) return;
+
+  const allMsgs = Array.isArray(cachedChatMessages) ? cachedChatMessages : [];
+  const consultMsgs = allMsgs.filter(m => {
+    const recKey = normalizeChatUserKey(m.penerima_key || "");
+    const txt = String(m.pesan || "");
+    return recKey === DESK_ADMIN_CREDENTIALS.adminKey || /^\[d-best desk|^\[konsultasi/i.test(txt);
+  });
+
+  queueEl.replaceChildren();
+  if (consultMsgs.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "text-slate-500 text-center py-3";
+    empty.textContent = "Belum ada pesan konsultasi pemberkasan atau daftar ulang yang masuk ke Admin.";
+    queueEl.appendChild(empty);
+    return;
+  }
+
+  consultMsgs.forEach(m => {
+    const senderKey = normalizeChatUserKey(m.pengirim_key || "");
+    const senderName = String(m.nama_pengirim || senderKey || "Peserta").trim();
+    const isFromAdmin = senderKey === DESK_ADMIN_CREDENTIALS.adminKey;
+
+    const card = document.createElement("div");
+    card.className = isFromAdmin
+      ? "bg-emerald-50/70 border border-emerald-200 rounded-lg p-2.5 space-y-1"
+      : "bg-white border border-slate-200 rounded-lg p-2.5 space-y-1";
+
+    const topRow = document.createElement("div");
+    topRow.className = "flex items-center justify-between gap-2 text-[11px]";
+
+    const who = document.createElement("span");
+    who.className = "font-extrabold text-slate-800";
+    who.textContent = isFromAdmin
+      ? `Admin → ${m.nama_penerima || m.penerima_key || "Peserta"}`
+      : `${senderName} → Admin`;
+
+    const right = document.createElement("div");
+    right.className = "flex items-center gap-2";
+
+    const tm = document.createElement("span");
+    tm.className = "text-[10px] text-slate-400";
+    tm.textContent = formatShortDate(m.waktu);
+    right.appendChild(tm);
+
+    if (!isFromAdmin && senderKey) {
+      const replyBtn = document.createElement("button");
+      replyBtn.type = "button";
+      replyBtn.className = "px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold";
+      replyBtn.textContent = "Balas Peserta";
+      replyBtn.onclick = () => selectParticipantForAdminReply_(senderKey, senderName);
+      right.appendChild(replyBtn);
+    }
+
+    topRow.append(who, right);
+    card.appendChild(topRow);
+
+    if (m.pesan) {
+      const p = document.createElement("p");
+      p.className = "text-xs text-slate-700 break-words";
+      p.textContent = m.pesan;
+      card.appendChild(p);
+    }
+
+    queueEl.appendChild(card);
+  });
 }
