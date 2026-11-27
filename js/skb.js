@@ -9,6 +9,7 @@ const SKB_TRACK_LABELS = {
   ADMINISTRASI_KEBIJAKAN: "Administrasi Pemerintahan & Kebijakan Publik"
 };
 
+// Cadangan minimal di skb.js; penambahan soal utama dilakukan langsung di Google Spreadsheet tab BankSoal
 const SKB_QUESTION_BANK = {
   PRANATA_KOMPUTER: [
     {
@@ -202,6 +203,87 @@ let skbSelectedAnswers = {};
 let skbAutoRefreshTimer = null;
 let skbSheetConnected = false;
 
+function isSkbUserAuthenticated_() {
+  const globalUserVars = [
+    typeof currentUser !== "undefined" ? currentUser : null,
+    typeof loggedInUser !== "undefined" ? loggedInUser : null,
+    typeof activeUser !== "undefined" ? activeUser : null,
+    typeof authUser !== "undefined" ? authUser : null,
+    typeof userSession !== "undefined" ? userSession : null,
+    window.__currentUser || null,
+    window.currentUser || null
+  ];
+
+  const hasTruthyUserObj = globalUserVars.some(u => {
+    if (!u) return false;
+    if (typeof u === "string") return u.trim().length > 0 && u.trim().toLowerCase() !== "guest";
+    if (typeof u === "object") {
+      return Boolean(u.username || u.email || u.nama || u.name || u.id || u.loggedIn);
+    }
+    return Boolean(u);
+  });
+  if (hasTruthyUserObj) return true;
+
+  if (typeof isLoggedIn !== "undefined" && Boolean(isLoggedIn)) return true;
+  if (window.__isLoggedIn === true || window.isLoggedIn === true) return true;
+
+  const badgeText = String(document.getElementById("userBadge")?.textContent || "").trim().toLowerCase();
+  if (badgeText && !badgeText.includes("tamu") && !badgeText.includes("guest") && !badgeText.includes("belum login")) {
+    return true;
+  }
+
+  const storageKeys = [
+    "bankDbestUser",
+    "dbest_user",
+    "currentUser",
+    "loggedInUser",
+    "sessionUser",
+    "userLogin",
+    "authSession"
+  ];
+
+  for (const store of [window.sessionStorage, window.localStorage]) {
+    if (!store) continue;
+    for (const key of storageKeys) {
+      try {
+        const raw = store.getItem(key);
+        if (!raw || raw === "null" || raw === "undefined") continue;
+        if (raw.startsWith("{") || raw.startsWith("[")) {
+          const parsed = JSON.parse(raw);
+          if (parsed && (parsed.username || parsed.email || parsed.nama || parsed.name || parsed.id || parsed.loggedIn)) {
+            return true;
+          }
+        } else if (raw.trim().length > 0 && raw.trim().toLowerCase() !== "guest") {
+          return true;
+        }
+      } catch (e) {}
+    }
+  }
+
+  return false;
+}
+
+function promptSkbLoginRequired_() {
+  if (skbAutoRefreshTimer) {
+    clearInterval(skbAutoRefreshTimer);
+    skbAutoRefreshTimer = null;
+  }
+
+  const skbSec = document.getElementById("skbDashboardScreen");
+  if (skbSec) {
+    skbSec.classList.add("hidden");
+  }
+
+  if (typeof openLoginModal === "function") {
+    openLoginModal();
+  } else {
+    const loginModal = document.getElementById("loginModal") || document.getElementById("authModal");
+    if (loginModal) loginModal.classList.remove("hidden");
+  }
+
+  alert("Silakan login terlebih dahulu untuk mengakses Modul SKB.");
+}
+
 function getTotalSkbQuestionsCount_() {
   return Object.values(SKB_QUESTION_BANK).reduce(
     (sum, list) => sum + (Array.isArray(list) ? list.length : 0),
@@ -216,6 +298,7 @@ function getActiveTrackQuestionsCount_() {
 }
 
 function updateSkbConnectionIndicator_() {
+  if (!isSkbUserAuthenticated_()) return;
   ensureSkbUiMount_();
   const badgeEl = document.getElementById("skbSheetConnectionBadge");
   const countEl = document.getElementById("skbQuestionCountIndicator");
@@ -294,6 +377,7 @@ function syncSkbTrackDropdownOptions_() {
 }
 
 function renderSkbExplanationsForActiveTrack_() {
+  if (!isSkbUserAuthenticated_()) return;
   ensureSkbUiMount_();
   const expBox = document.getElementById("skbExplanationPanel");
   if (!expBox) return;
@@ -505,6 +589,10 @@ function startSkbAutoRefresh_() {
     clearInterval(skbAutoRefreshTimer);
   }
   skbAutoRefreshTimer = setInterval(() => {
+    if (!isSkbUserAuthenticated_()) {
+      promptSkbLoginRequired_();
+      return;
+    }
     const skbSec = document.getElementById("skbDashboardScreen");
     if (skbSec && !skbSec.classList.contains("hidden")) {
       syncSkbTracksAndQuestions(true);
@@ -513,6 +601,11 @@ function startSkbAutoRefresh_() {
 }
 
 async function syncSkbTracksAndQuestions(forceReload = false) {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+
   ensureSkbUiMount_();
   syncSkbTrackDropdownOptions_();
   updateSkbConnectionIndicator_();
@@ -547,6 +640,11 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
 }
 
 function openSkbFromHeader() {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+
   if (typeof isExamActive !== "undefined" && isExamActive) {
     alert("Selesaikan atau keluar dari sesi ujian aktif terlebih dahulu sebelum membuka Dashboard SKB.");
     return;
@@ -569,6 +667,11 @@ function openSkbFromHeader() {
 }
 
 function calculateSkbCompositeScore() {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+
   const skdRaw = Number(document.getElementById("skbCalcSkdInput")?.value || 0);
   const skbRaw = Number(document.getElementById("skbCalcSkbInput")?.value || 0);
   const wSkd = Number(document.getElementById("skbWeightSkdSelect")?.value || 40);
@@ -598,6 +701,11 @@ function calculateSkbCompositeScore() {
 }
 
 function renderSkbPracticeQuestions() {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+
   ensureSkbUiMount_();
   syncSkbTrackDropdownOptions_();
   updateSkbConnectionIndicator_();
@@ -652,6 +760,11 @@ function renderSkbPracticeQuestions() {
 }
 
 function submitSkbPractice() {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+
   const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
   const list = SKB_QUESTION_BANK[track] || SKB_QUESTION_BANK.PRANATA_KOMPUTER;
   const scoreEl = document.getElementById("skbPracticeScoreText");
