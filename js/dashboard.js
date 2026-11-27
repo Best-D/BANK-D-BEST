@@ -1805,7 +1805,7 @@ function renderFilteredChatMessages() {
     if (activeDeskMode === "CONSULT") {
       return isConsultMsg && (deskAdminLoggedIn || sndKey === myKey || recKey === myKey);
     }
-    return !isConsultMsg;
+    return !isConsultMsg || recKey === myKey;
   });
 
   if (visibleMsgs.length === 0) {
