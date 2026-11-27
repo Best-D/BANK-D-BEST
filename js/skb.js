@@ -1,6 +1,6 @@
 const SKB_SHEET_NAME = "BankSoalSKB";
 const SKB_SPREADSHEET_ID = "1rQlxl3rJ56xv_Z3282ic8KoNYFMN-PAtkRT-FKAvE4s";
-const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZpO9q1U1wtlRcL_JjksU_Jr55n3rgAQCg-vr-Ko8fjrFDYb1bbudqNCwwvWdp-S5Qnw/exec";
+const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwhdg1O3ut0U86xaPdSrHcE4nJoleLppWrbeiwo6C-RNsaAjY28CN9fDiv8V2mnGHDFg/exec";
 const SKB_TRACK_LABELS = {
   PRANATA_KOMPUTER: "Pranata Komputer / TI & Data",
   PENATA_LAYANAN_TI: "Penata Layanan Operasional / Layanan TI",
