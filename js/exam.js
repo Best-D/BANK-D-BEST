@@ -1134,9 +1134,7 @@ function initializeAppOnLoad() {
   if (typeof startVisitorTrackingLoop_ === "function") {
     startVisitorTrackingLoop_();
   }
-  if (typeof lockStandardBknDisplayObserver_ === "function") {
-    lockStandardBknDisplayObserver_();
-  }
+
 
   try {
     const rawSession = localStorage.getItem(examSessionStorageKey);
