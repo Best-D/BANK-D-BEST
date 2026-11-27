@@ -1,6 +1,6 @@
 const SKB_SHEET_NAME = "BankSoalSKB";
 const SKB_SPREADSHEET_ID = "1rQlxl3rJ56xv_Z3282ic8KoNYFMN-PAtkRT-FKAvE4s";
-const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_eXTFbJws2IBfVknVixiQf85IxVtcvh9tklY6O0IukWtaCpdV1TyQLo6EdE9GcDQUiQ/exec";
+const SKB_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMbR9Hn8OthYXCeJceRIh2pTFpvjQT_QJB7r12cbDrNZWpCRHT0OJ_Ikxq7eIVch1GJw/exec";
 const SKB_AUTO_REFRESH_MS = 30000;
 
 const SKB_TRACK_LABELS = {
