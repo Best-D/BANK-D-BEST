@@ -1102,6 +1102,90 @@
         </table>
       </div>
 
+
+      <!-- MODUL SKB TERPISAH (js/skb.js) -->
+      <div id="skbModuleSection" class="px-6 pb-6">
+        <div class="border border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 rounded-xl p-4 sm:p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900">
+                Modul Tambahan Terpisah • js/skb.js
+              </span>
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-800 mt-1">
+                Latihan SKB &amp; Kalkulator Estimasi Nilai Akhir (SKD + SKB)
+              </h3>
+              <p class="text-[11px] text-slate-600">
+                Latihan soal teknis per bidang/formasi dan simulasi bobot gabungan SKD + SKB tanpa mengganggu alur SKD utama.
+              </p>
+            </div>
+            <button type="button" id="toggleSkbWorkspaceBtn" onclick="toggleSkbWorkspace()"
+              class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">
+              Buka Latihan &amp; Kalkulator SKB
+            </button>
+          </div>
+
+          <div id="skbWorkspaceBody" class="hidden space-y-4 pt-2 border-t border-indigo-200/80 text-xs">
+            <!-- 1. Kalkulator Estimasi Nilai Akhir SKD + SKB -->
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+              <div class="font-extrabold text-slate-800">1. Kalkulator Estimasi Nilai Akhir (SKD + SKB)</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <div>
+                  <label for="skbCalcSkdInput" class="block text-[11px] font-bold text-slate-700 mb-1">Skor SKD (0–550)</label>
+                  <input type="number" id="skbCalcSkdInput" min="0" max="550" value="350" oninput="calculateSkbCompositeScore()"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-indigo-600 outline-none" />
+                </div>
+                <div>
+                  <label for="skbCalcSkbInput" class="block text-[11px] font-bold text-slate-700 mb-1">Nilai SKB (0–100)</label>
+                  <input type="number" id="skbCalcSkbInput" min="0" max="100" step="0.5" value="75" oninput="calculateSkbCompositeScore()"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-indigo-600 outline-none" />
+                </div>
+                <div>
+                  <label for="skbWeightSkdSelect" class="block text-[11px] font-bold text-slate-700 mb-1">Bobot SKD</label>
+                  <select id="skbWeightSkdSelect" onchange="calculateSkbCompositeScore()"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-indigo-600 outline-none">
+                    <option value="40" selected>40% SKD</option>
+                    <option value="50">50% SKD</option>
+                    <option value="60">60% SKD</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="skbWeightSkbSelect" class="block text-[11px] font-bold text-slate-700 mb-1">Bobot SKB</label>
+                  <select id="skbWeightSkbSelect" onchange="calculateSkbCompositeScore()"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:ring-2 focus:ring-indigo-600 outline-none">
+                    <option value="60" selected>60% SKB</option>
+                    <option value="50">50% SKB</option>
+                    <option value="40">40% SKB</option>
+                  </select>
+                </div>
+              </div>
+              <div id="skbCompositeResultBox" class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs font-semibold text-indigo-950">
+                Estimasi Nilai Akhir: -
+              </div>
+            </div>
+
+            <!-- 2. Latihan Soal SKB per Bidang / Formasi -->
+            <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="font-extrabold text-slate-800">2. Latihan Soal SKB per Bidang</div>
+                <select id="skbTrackSelect" onchange="renderSkbPracticeQuestions()"
+                  class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600 outline-none">
+                  <option value="PRANATA_KOMPUTER">Pranata Komputer / TI &amp; Data</option>
+                  <option value="ADMINISTRASI_KEBIJAKAN">Administrasi Pemerintahan &amp; Kebijakan Publik</option>
+                </select>
+              </div>
+              <div id="skbQuestionsContainer" class="space-y-3"></div>
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="submitSkbPractice()"
+                  class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+                  Hitung Skor Latihan SKB
+                </button>
+                <span id="skbPracticeScoreText" class="text-xs font-extrabold text-indigo-900"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- INFORMASI ASPEK, SKD & SKB DI BAGIAN BAWAH DASHBOARD -->
       <div id="dashboardStageInfoBox" class="px-6 pb-6">
         <div class="border border-slate-200 bg-slate-50/80 rounded-xl p-4 space-y-3">
@@ -1825,6 +1909,7 @@
   <script src="js/questions-aturan-2026.js?v=42"></script>
   <script src="js/auth.js?v=42"></script>
   <script src="js/dashboard.js?v=42"></script>
+  <script src="js/skb.js?v=42"></script>
   <script src="js/exam.js?v=42"></script>
 </body>
 </html>
