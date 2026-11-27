@@ -641,7 +641,7 @@ function updateQuestionStatsUI(sourceLabel) {
   if (twkLabel) twkLabel.textContent = `1. TWK (${twkTotal} Soal)`;
   if (tiuLabel) tiuLabel.textContent = `2. TIU (${tiuTotal} Soal)`;
   if (tkpLabel) tkpLabel.textContent = `3. TKP (${tkpTotal} Soal)`;
-  if (reviewBtn) reviewBtn.textContent = `Lihat Kunci Jawaban & Pembahasan (${allTotal} Soal)`;
+  if (reviewBtn) reviewBtn.textContent = `Lihat Kunci Jawaban & Pembahasan Bank D-BEST (${allTotal} Soal)`;
   if (sourceLabel && statusEl) statusEl.textContent = sourceLabel;
 }
 
@@ -654,7 +654,7 @@ async function muatBankSoalDariSheet() {
       badge.textContent = "Belum ditempel URL Apps Script (Mode Lokal)";
       badge.className = "font-semibold text-amber-700";
     }
-    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
+    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan Bank D-BEST (110 soal unik)");
     return;
   }
 
@@ -712,12 +712,12 @@ async function muatBankSoalDariSheet() {
         }
         return normalized;
       });
-      updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets (${questionBank.length} soal)`);
+      updateQuestionStatsUI(`Sumber Soal: Tab BankSoal Google Sheets Bank D-BEST (${questionBank.length} soal)`);
     } else {
-      updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
+      updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan Bank D-BEST (110 soal unik)");
     }
   } catch (err) {
     console.warn("Gagal mengambil bank soal dari Sheet, menggunakan bank soal bawaan.", err);
-    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan (110 soal unik)");
+    updateQuestionStatsUI("Sumber Soal: Bank Soal Bawaan Bank D-BEST (110 soal unik)");
   }
 }
