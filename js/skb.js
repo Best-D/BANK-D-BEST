@@ -202,9 +202,9 @@ const SKB_QUESTION_BANK = {
 let skbSelectedAnswers = {};
 let skbAutoRefreshTimer = null;
 let skbSheetConnected = false;
+let skbSessionFinished = false;
 
 function getSkdAuthenticatedUser_() {
-  // 1. Cek variabel akun global yang dipakai oleh modul Login SKD (js/auth.js)
   const candidates = [
     typeof currentUser !== "undefined" ? currentUser : null,
     typeof loggedInUser !== "undefined" ? loggedInUser : null,
@@ -231,7 +231,6 @@ function getSkdAuthenticatedUser_() {
     }
   }
 
-  // 2. Cek fungsi helper dari js/auth.js bila tersedia
   if (typeof getCurrentUser === "function") {
     try {
       const u = getCurrentUser();
@@ -239,7 +238,6 @@ function getSkdAuthenticatedUser_() {
     } catch (e) {}
   }
 
-  // 3. Cek seluruh localStorage & sessionStorage yang dipakai sesi login SKD
   for (const store of [window.localStorage, window.sessionStorage]) {
     if (!store) continue;
     try {
@@ -264,7 +262,6 @@ function getSkdAuthenticatedUser_() {
     } catch (e) {}
   }
 
-  // 4. Cek indikator DOM dari sesi Login SKD (tombol logout/profil aktif atau badge user terisi)
   const loggedInEl = document.getElementById("loggedInPanel") || document.getElementById("userProfileBtn") || document.getElementById("logoutBtn");
   if (loggedInEl && !loggedInEl.classList.contains("hidden")) {
     const label = String(
@@ -279,6 +276,56 @@ function getSkdAuthenticatedUser_() {
   }
 
   return null;
+}
+
+function getSkdParticipantName_() {
+  const inputVal = String(document.getElementById("participantNameInput")?.value || "").trim();
+  if (inputVal) return inputVal;
+  const userObj = getSkdAuthenticatedUser_();
+  if (userObj) {
+    const uName = String(userObj.nama || userObj.name || userObj.username || userObj.email || "").trim();
+    if (uName) return uName;
+  }
+  return "";
+}
+
+function injectSkbButtonIntoSkdArea_() {
+  const setupScreen = document.getElementById("setupScreen");
+  if (!setupScreen) return;
+  if (document.getElementById("skbLaunchFromSkdBtn")) return;
+
+  const nameInput = document.getElementById("participantNameInput");
+  const anchorParent =
+    nameInput?.closest("form") ||
+    nameInput?.parentElement?.parentElement ||
+    setupScreen;
+
+  const wrap = document.createElement("div");
+  wrap.id = "skbQuickLaunchBar";
+  wrap.className = "mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs";
+  wrap.innerHTML = `
+    <span class="text-slate-600">Data peserta memakai isian SKD yang sama.</span>
+    <button type="button" id="skbLaunchFromSkdBtn" onclick="startSkbFromSkdSetup()"
+      class="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">
+      Buka / Mulai SKB
+    </button>
+  `;
+  anchorParent.appendChild(wrap);
+}
+
+function startSkbFromSkdSetup() {
+  if (!isSkbUserAuthenticated_()) {
+    promptSkbLoginRequired_();
+    return;
+  }
+  const namaPeserta = getSkdParticipantName_();
+  if (!namaPeserta) {
+    const nameInput = document.getElementById("participantNameInput");
+    if (nameInput) nameInput.focus();
+    alert("Silakan isi data peserta pada form SKD terlebih dahulu sebelum membuka SKB.");
+    return;
+  }
+  openSkbFromHeader();
 }
 
 function isSkbUserAuthenticated_() {
@@ -296,7 +343,6 @@ function promptSkbLoginRequired_() {
     skbSec.classList.add("hidden");
   }
 
-  // Gunakan dialog/panel Login SKD yang sama persis dengan ujian SKD
   if (typeof openLoginModal === "function") {
     openLoginModal();
   } else if (typeof openAuthModal === "function") {
@@ -344,11 +390,12 @@ function updateSkbConnectionIndicator_() {
   const userPillEl = document.getElementById("skbLoggedUserBadge");
   const { count: activeCount } = getActiveTrackQuestionsCount_();
   const totalCount = getTotalSkbQuestionsCount_();
+  const pesertaNama = getSkdParticipantName_();
   const skdUser = getSkdAuthenticatedUser_();
 
-  if (userPillEl && skdUser) {
-    const displayName = String(skdUser.nama || skdUser.name || skdUser.username || skdUser.email || "Peserta SKD").trim();
-    userPillEl.textContent = `Akun SKD: ${displayName}`;
+  if (userPillEl) {
+    const displayName = pesertaNama || String(skdUser?.nama || skdUser?.name || skdUser?.username || skdUser?.email || "Peserta SKD").trim();
+    userPillEl.textContent = `Peserta: ${displayName}`;
   }
 
   if (badgeEl) {
@@ -379,7 +426,7 @@ function ensureSkbUiMount_() {
         <div class="space-y-1">
           <div class="flex flex-wrap items-center gap-2">
             <span id="skbLoggedUserBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-800">
-              Akun SKD Aktif
+              Peserta SKD
             </span>
             <span id="skbSheetConnectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
               Memeriksa Sumber Soal...
@@ -431,19 +478,29 @@ function renderSkbExplanationsForActiveTrack_() {
   const expBox = document.getElementById("skbExplanationPanel");
   if (!expBox) return;
 
-  const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
-  const list = SKB_QUESTION_BANK[track] || [];
   expBox.replaceChildren();
 
+  // Kunci jawaban dan pembahasan disembunyikan saat latihan berjalan; baru dibuka setelah mengakhiri SKB
+  if (!skbSessionFinished) {
+    const note = document.createElement("div");
+    note.className = "rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600";
+    note.textContent = "Kunci jawaban dan pembahasan soal ditampilkan setelah Anda mengakhiri / menghitung skor latihan SKB.";
+    expBox.appendChild(note);
+    return;
+  }
+
+  const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
+  const list = SKB_QUESTION_BANK[track] || [];
+
   list.forEach((q, idx) => {
-    if (!skbSelectedAnswers[q.id]) return;
-    const item = document.createElement("div");
+    const picked = skbSelectedAnswers[q.id] || "Belum dijawab";
     const isCorrect = skbSelectedAnswers[q.id] === q.answer;
+    const item = document.createElement("div");
     item.className = isCorrect
       ? "bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 text-[11px] text-slate-800"
       : "bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-[11px] text-slate-800";
     item.innerHTML = `
-      <div class="font-extrabold">${idx + 1}. Jawaban Anda: ${skbSelectedAnswers[q.id]} • Kunci: ${q.answer}</div>
+      <div class="font-extrabold">Pembahasan Soal ${idx + 1}: Jawaban Anda ${picked} • Kunci: ${q.answer}</div>
       <div class="text-slate-700 mt-0.5">${q.explanation || ""}</div>
     `;
     expBox.appendChild(item);
@@ -650,6 +707,7 @@ function startSkbAutoRefresh_() {
 }
 
 async function syncSkbTracksAndQuestions(forceReload = false) {
+  injectSkbButtonIntoSkdArea_();
   if (!isSkbUserAuthenticated_()) {
     promptSkbLoginRequired_();
     return;
@@ -689,6 +747,7 @@ async function syncSkbTracksAndQuestions(forceReload = false) {
 }
 
 function openSkbFromHeader() {
+  injectSkbButtonIntoSkdArea_();
   if (!isSkbUserAuthenticated_()) {
     promptSkbLoginRequired_();
     return;
@@ -710,6 +769,7 @@ function openSkbFromHeader() {
     skbSec.scrollIntoView({ behavior: "smooth" });
   }
 
+  skbSessionFinished = false;
   calculateSkbCompositeScore();
   syncSkbTracksAndQuestions(true);
   startSkbAutoRefresh_();
@@ -814,6 +874,8 @@ function submitSkbPractice() {
     return;
   }
 
+  skbSessionFinished = true;
+
   const track = document.getElementById("skbTrackSelect")?.value || "PRANATA_KOMPUTER";
   const list = SKB_QUESTION_BANK[track] || SKB_QUESTION_BANK.PRANATA_KOMPUTER;
   const scoreEl = document.getElementById("skbPracticeScoreText");
@@ -840,4 +902,10 @@ function submitSkbPractice() {
   }
 
   renderSkbExplanationsForActiveTrack_();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", injectSkbButtonIntoSkdArea_);
+} else {
+  injectSkbButtonIntoSkdArea_();
 }
