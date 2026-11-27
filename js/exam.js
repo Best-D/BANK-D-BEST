@@ -582,7 +582,11 @@ function startExam() {
     return;
   }
   if (typeof hasDigitInParticipantName === "function" && hasDigitInParticipantName(nameVal)) {
-    alert("Nama peserta tidak boleh mengandung angka. Gunakan huruf saja.");
+    alert("Nama peserta tidak boleh mengandung angka. Gunakan huruf saja (simbol hanya tanda ').");
+    return;
+  }
+  if (typeof hasDisallowedSymbolInParticipantName === "function" && hasDisallowedSymbolInParticipantName(nameVal)) {
+    alert("Nama peserta hanya boleh menggunakan huruf dan tanda apostrof ('). Simbol lain tidak diperbolehkan.");
     return;
   }
   if (nameVal.length < 4) {
