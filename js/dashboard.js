@@ -1461,6 +1461,9 @@ function normalizeChatUserKey(raw) {
 }
 
 function getCurrentChatUserKey() {
+  if (typeof deskAdminLoggedIn !== "undefined" && deskAdminLoggedIn && typeof DESK_ADMIN_CREDENTIALS !== "undefined") {
+    return normalizeChatUserKey(DESK_ADMIN_CREDENTIALS.adminKey);
+  }
   let raw = "";
   if (typeof loggedUser !== "undefined" && loggedUser) {
     raw = loggedUser.username || loggedUser.nama || loggedUser.email || "";
@@ -1480,6 +1483,9 @@ function getCurrentChatUserKey() {
 }
 
 function getCurrentChatSenderName() {
+  if (typeof deskAdminLoggedIn !== "undefined" && deskAdminLoggedIn && typeof DESK_ADMIN_CREDENTIALS !== "undefined") {
+    return DESK_ADMIN_CREDENTIALS.adminLabel;
+  }
   if (typeof loggedUser !== "undefined" && loggedUser && loggedUser.nama) {
     return String(loggedUser.nama).trim();
   }
@@ -2771,8 +2777,8 @@ function switchDeskMode(mode) {
   const captionEl = document.getElementById("deskModeCaption");
   const inputEl = document.getElementById("chatMessageInput");
 
-  const activeCls = "w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg bg-white text-slate-900 shadow-sm text-xs font-extrabold transition leading-snug";
-  const idleCls = "w-full sm:w-auto text-center px-3.5 py-2 sm:py-1.5 rounded-lg text-slate-700 hover:bg-white/70 text-xs font-extrabold transition leading-snug";
+  const activeCls = "w-full sm:w-auto text-center px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-teal-700 text-white border border-teal-800 shadow-sm text-xs font-extrabold transition leading-snug";
+  const idleCls = "w-full sm:w-auto text-center px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-white text-slate-900 border border-slate-300 hover:bg-amber-50 text-xs font-extrabold transition leading-snug";
 
   if (peerBtn) peerBtn.className = activeDeskMode === "PEER" ? activeCls : idleCls;
   if (consultBtn) consultBtn.className = activeDeskMode === "CONSULT" ? activeCls : idleCls;
@@ -2985,20 +2991,28 @@ function selectParticipantForAdminReply_(participantKey, participantName) {
 
 function renderDeskAdminConsultationQueue_() {
   const queueEl = document.getElementById("deskAdminConsultationQueue");
-  if (!queueEl || !deskAdminLoggedIn) return;
+  if (!queueEl) return;
+
+  if (!deskAdminLoggedIn) {
+    queueEl.replaceChildren();
+    return;
+  }
 
   const allMsgs = Array.isArray(cachedChatMessages) ? cachedChatMessages : [];
   const consultMsgs = allMsgs.filter(m => {
     const recKey = normalizeChatUserKey(m.penerima_key || "");
+    const sndKey = normalizeChatUserKey(m.pengirim_key || "");
     const txt = String(m.pesan || "");
-    return recKey === DESK_ADMIN_CREDENTIALS.adminKey || /^\[d-best desk|^\[konsultasi/i.test(txt);
+    return recKey === DESK_ADMIN_CREDENTIALS.adminKey ||
+      sndKey === DESK_ADMIN_CREDENTIALS.adminKey ||
+      /^\[d-best desk|^\[konsultasi/i.test(txt);
   });
 
   queueEl.replaceChildren();
   if (consultMsgs.length === 0) {
     const empty = document.createElement("div");
-    empty.className = "text-slate-500 text-center py-3";
-    empty.textContent = "Belum ada pesan konsultasi pemberkasan atau daftar ulang yang masuk ke Admin.";
+    empty.className = "bg-white border border-slate-200 rounded-lg p-3 text-slate-600 text-center";
+    empty.textContent = "Belum ada pesan konsultasi ke Admin D-BEST DESK. Kirim tes konsultasi atau klik Segarkan Antrean.";
     queueEl.appendChild(empty);
     return;
   }
@@ -3007,17 +3021,20 @@ function renderDeskAdminConsultationQueue_() {
     const senderKey = normalizeChatUserKey(m.pengirim_key || "");
     const senderName = String(m.nama_pengirim || senderKey || "Peserta").trim();
     const isFromAdmin = senderKey === DESK_ADMIN_CREDENTIALS.adminKey;
+    const isSelectedTarget = Boolean(deskAdminReplyTargetKey && senderKey === deskAdminReplyTargetKey);
 
     const card = document.createElement("div");
-    card.className = isFromAdmin
-      ? "bg-emerald-50/70 border border-emerald-200 rounded-lg p-2.5 space-y-1"
-      : "bg-white border border-slate-200 rounded-lg p-2.5 space-y-1";
+    card.className = isSelectedTarget
+      ? "bg-teal-50 border-2 border-teal-600 rounded-lg p-3 space-y-1.5 select-text"
+      : (isFromAdmin
+        ? "bg-emerald-50/80 border border-emerald-200 rounded-lg p-3 space-y-1.5 select-text"
+        : "bg-white border border-slate-300 rounded-lg p-3 space-y-1.5 select-text");
 
     const topRow = document.createElement("div");
-    topRow.className = "flex items-center justify-between gap-2 text-[11px]";
+    topRow.className = "flex flex-wrap items-center justify-between gap-2 text-[11px]";
 
     const who = document.createElement("span");
-    who.className = "font-extrabold text-slate-800";
+    who.className = "font-extrabold text-slate-900";
     who.textContent = isFromAdmin
       ? `Admin → ${m.nama_penerima || m.penerima_key || "Peserta"}`
       : `${senderName} → Admin`;
@@ -3026,25 +3043,39 @@ function renderDeskAdminConsultationQueue_() {
     right.className = "flex items-center gap-2";
 
     const tm = document.createElement("span");
-    tm.className = "text-[10px] text-slate-400";
+    tm.className = "text-[10px] font-medium text-slate-500";
     tm.textContent = formatShortDate(m.waktu);
     right.appendChild(tm);
 
     if (!isFromAdmin && senderKey) {
       const replyBtn = document.createElement("button");
       replyBtn.type = "button";
-      replyBtn.className = "px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold";
-      replyBtn.textContent = "Balas Peserta";
-      replyBtn.onclick = () => selectParticipantForAdminReply_(senderKey, senderName);
+      replyBtn.className = isSelectedTarget
+        ? "px-2.5 py-1 rounded-md bg-slate-900 text-white text-[10px] font-extrabold cursor-pointer"
+        : "px-2.5 py-1 rounded-md bg-teal-700 hover:bg-teal-800 text-white text-[10px] font-extrabold cursor-pointer transition";
+      replyBtn.textContent = isSelectedTarget ? "Terpilih untuk Balas ✓" : "Balas Peserta";
+      replyBtn.onclick = () => {
+        selectParticipantForAdminReply_(senderKey, senderName);
+        renderDeskAdminConsultationQueue_();
+      };
       right.appendChild(replyBtn);
     }
 
     topRow.append(who, right);
     card.appendChild(topRow);
 
+    const safeImg = String(m.gambar_data || "").trim();
+    if (/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(safeImg)) {
+      const imgEl = document.createElement("img");
+      imgEl.src = safeImg;
+      imgEl.alt = "Lampiran konsultasi peserta";
+      imgEl.className = "max-h-44 rounded-lg border border-slate-200 bg-white object-contain";
+      card.appendChild(imgEl);
+    }
+
     if (m.pesan) {
       const p = document.createElement("p");
-      p.className = "text-xs text-slate-700 break-words";
+      p.className = "text-xs text-slate-800 leading-relaxed break-words whitespace-pre-line";
       p.textContent = m.pesan;
       card.appendChild(p);
     }
@@ -3052,7 +3083,6 @@ function renderDeskAdminConsultationQueue_() {
     queueEl.appendChild(card);
   });
 }
-
 
 function toggleDeskAdminPortalBox() {
   const adminPortalBox = document.getElementById("deskAdminPortalBox");
