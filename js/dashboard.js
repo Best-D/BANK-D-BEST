@@ -1911,7 +1911,7 @@ async function loadChatMessages(refreshRecipients = false, markRead = false) {
     const json = await res.json();
     if (json && json.status === "sukses" && Array.isArray(json.chat)) {
       const prevLen = cachedChatMessages.length;
-      cachedChatMessages = json.chat;
+      cachedChatMessages = mergeServerAndLocalChatMessages_(json.chat);
       renderFilteredChatMessages();
       if (deskAdminLoggedIn) {
         renderDeskAdminConsultationQueue_();
@@ -2021,7 +2021,7 @@ async function sendChatMessage(event) {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        action: activeDeskMode === "CONSULT" ? "send_consultation" : "send_chat",
+        action: "send_chat",
         kategori_desk: activeDeskMode === "CONSULT"
           ? `${document.getElementById("consultTopicSelect")?.value || "Konsultasi"} - ${document.getElementById("consultSubIssueSelect")?.value || "umum"}`
           : "Chat Peserta",
@@ -2039,6 +2039,25 @@ async function sendChatMessage(event) {
     });
     const json = await res.json();
     if (json && json.status === "sukses") {
+      const sentMsgText = (
+        activeDeskMode === "CONSULT" && rawText && !/^\[konsultasi/i.test(rawText)
+          ? `[D-BEST DESK - ${document.getElementById("consultTopicSelect")?.value || "Konsultasi"}] ${rawText}`
+          : (rawText || (imagePayload ? "[Mengirim gambar]" : ""))
+      );
+      if (activeDeskMode === "CONSULT") {
+        saveLocalConsultationCache_({
+          id: `cns_${Date.now()}`,
+          waktu: new Date().toISOString(),
+          kategori_desk: `${document.getElementById("consultTopicSelect")?.value || "Konsultasi"} - ${document.getElementById("consultSubIssueSelect")?.value || "umum"}`,
+          nama_pengirim: senderName,
+          pengirim_key: myKey,
+          nama_penerima: recipientName,
+          penerima_key: recipientKey,
+          pesan: sentMsgText,
+          gambar_data: imagePayload,
+          status: "TERKIRIM"
+        });
+      }
       if (inputEl) inputEl.value = "";
       clearChatImageSelection();
       if (fbEl) {
@@ -3110,4 +3129,45 @@ function isConsultationMessage_(msg) {
     catDesk.includes("konsultasi") ||
     /^\[d-best desk|^\[konsultasi|^\[balasan admin d-best desk/i.test(txt)
   );
+}
+
+
+const DESK_CONSULT_LOCAL_KEY = "dbest_desk_consult_local_v1";
+
+function getLocalConsultationCache_() {
+  try {
+    const raw = localStorage.getItem(DESK_CONSULT_LOCAL_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveLocalConsultationCache_(entry) {
+  try {
+    const list = getLocalConsultationCache_();
+    list.push(entry);
+    localStorage.setItem(DESK_CONSULT_LOCAL_KEY, JSON.stringify(list.slice(-100)));
+  } catch (err) {}
+}
+
+function mergeServerAndLocalChatMessages_(serverList) {
+  const srv = Array.isArray(serverList) ? serverList : [];
+  const loc = getLocalConsultationCache_();
+  if (!loc.length) return srv;
+
+  const existingKeys = new Set(
+    srv.map(m => `${normalizeChatUserKey(m.pengirim_key)}|${normalizeChatUserKey(m.penerima_key)}|${String(m.pesan || "").trim()}`)
+  );
+
+  const merged = [...srv];
+  loc.forEach(item => {
+    const k = `${normalizeChatUserKey(item.pengirim_key)}|${normalizeChatUserKey(item.penerima_key)}|${String(item.pesan || "").trim()}`;
+    if (!existingKeys.has(k)) {
+      existingKeys.add(k);
+      merged.push(item);
+    }
+  });
+  return merged;
 }
